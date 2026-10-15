@@ -29,7 +29,7 @@ jobs:
       - run: pnpm --filter web test
       - run: pnpm --filter web build
 
-    browser-tests:
+  browser-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
