@@ -196,6 +196,7 @@ describe('Users and listings HTTP flow', () => {
     app = module.createNestApplication();
     configureApp(app);
     await app.init();
+    await app.listen(0);
   });
   beforeEach(() => {
     resetThrottle(app);
