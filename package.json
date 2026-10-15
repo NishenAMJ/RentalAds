@@ -1,0 +1,15 @@
+{
+  "name": "rental-platform",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api start:dev",
+    "db:generate": "pnpm --filter db generate",
+    "db:migrate": "pnpm --filter db migrate"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "prisma": "5.22.0"
+  }
+}
