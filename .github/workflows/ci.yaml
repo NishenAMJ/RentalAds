@@ -29,3 +29,18 @@ jobs:
       - run: pnpm --filter web test
       - run: pnpm --filter web build
 
+    browser-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_CHANNEL: chrome      # your config defaults to Edge, which GitHub doesn't have
+    steps:
+      # ...same setup steps...
+      - run: pnpm --filter web run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()                 # only keep evidence when something broke
+        with:
+          name: playwright-results
+          path: apps/web/test-results
+    
+
