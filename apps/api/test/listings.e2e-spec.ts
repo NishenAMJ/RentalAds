@@ -196,6 +196,9 @@ describe('Users and listings HTTP flow', () => {
     app = module.createNestApplication();
     configureApp(app);
     await app.init();
+    // Listen once on a free port. Without this, supertest starts a temporary listener per request and stops it when
+    // that request ends, which can cut off requests still in flight in the concurrent test (read ECONNRESET on CI).
+    await app.listen(0);
   });
   beforeEach(() => {
     resetThrottle(app);
