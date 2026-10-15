@@ -28,9 +28,7 @@ type RentalRequest = SavedSearchArea & {
   followUpAt?: string | null;
 };
 
-type MatchStatus =
-  "SUGGESTED" | "SENT" | "INTERESTED" | "NOT_INTERESTED" | "RENTED";
-import { MatchCriteria } from "@/components/match-criteria";
+import { MatchSuggestionCard, type MatchStatus } from "@/components/match-suggestion-card";
 import type { MatchAssessment } from "@/lib/matching";
 
 type Suggestion = MatchAssessment & {
@@ -63,6 +61,10 @@ function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNod
     null,
   );
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  // "epoch" changes whenever the admin picks Expand all / Collapse all, which resets every card of that request.
+  const [expansion, setExpansion] = useState<Record<string, { open: boolean; epoch: number }>>({});
+  const setAllOpen = (requestId: string, open: boolean) =>
+    setExpansion((current) => ({ ...current, [requestId]: { open, epoch: (current[requestId]?.epoch ?? 0) + 1 } }));
 
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -292,103 +294,30 @@ function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNod
                     No active properties on this page.
                   </p>
                 )}
-                {suggestionsByRequest[r.id].data.map((s) => (
-                  <div key={s.listingId} className="match-suggestion">
-                    <strong>{s.areaText}</strong>
-                    <p>Listing ID: {s.reference ?? "Not assigned"}</p>
-                    <p>Owner contact (admin only): {s.ownerContact}</p>
-                    {s.distanceKm != null && (
-                      <p>
-                        Exact distance: {s.distanceKm.toFixed(2)} km (admin
-                        only)
-                      </p>
-                    )}
-                    {(s.recommendationReason || s.locationOverrideReason) && (
-                      <p className="notice">
-                        Reviewed recommendation:{" "}
-                        {s.recommendationReason || s.locationOverrideReason}
-                      </p>
-                    )}
-                    <MatchCriteria criteria={s.criteria} />
-                    {!s.matchId && s.requiresReview && (
-                      <label htmlFor={`review-${r.id}-${s.listingId}`}>
-                        Recommendation reason (required to save a potential
-                        match)
-                        <textarea
-                          id={`review-${r.id}-${s.listingId}`}
-                          maxLength={1000}
-                          disabled={!!savingMatch}
-                          value={reviewReasons[`${r.id}:${s.listingId}`] ?? ""}
-                          onChange={(event) =>
-                            setReviewReasons((current) => ({
-                              ...current,
-                              [`${r.id}:${s.listingId}`]: event.target.value,
-                            }))
-                          }
-                          placeholder="Explain which differences the renter is willing to consider."
-                        />
-                      </label>
-                    )}
-                    {s.matchId ? (
-                      <label>
-                        Match status
-                        <select
-                          value={s.status ?? "SUGGESTED"}
-                          disabled={!!savingMatch || loadingMatchesFor !== null}
-                          onChange={(event) =>
-                            void saveMatch(
-                              r.id,
-                              s,
-                              event.target.value as MatchStatus,
-                            )
-                          }
-                        >
-                          {(
-                            [
-                              "SUGGESTED",
-                              "SENT",
-                              "INTERESTED",
-                              "NOT_INTERESTED",
-                              "RENTED",
-                            ] as const
-                          ).map((status) => (
-                            <option key={status} value={status}>
-                              {status.replaceAll("_", " ")}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : (
-                      <button
-                        disabled={
-                          !!savingMatch ||
-                          loadingMatchesFor !== null ||
-                          r.status === "CLOSED"
-                        }
-                        onClick={() => void saveMatch(r.id, s)}
-                      >
-                        {savingMatch === `${r.id}:${s.listingId}`
-                          ? "Saving..."
-                          : "Save match"}
-                      </button>
-                    )}
-
-                    <div className="record-heading match-tools">
-                      <span className="font-medium text-sm">
-                        Match: {s.matchPercentage}%
-                      </span>
-                      <button
-                        onClick={() =>
-                          void copyMessage(r.id, s.listingId, s.whatsappMessage)
-                        }
-                        className="text-button"
-                      >
-                        {copiedKey === `${r.id}:${s.listingId}`
-                          ? "Copied!"
-                          : "Copy message"}
-                      </button>
-                    </div>
+                {suggestionsByRequest[r.id].data.length > 0 && (
+                  <div className="match-bar">
+                    <span className="small-copy">{suggestionsByRequest[r.id].data.length} potential matches on this page</span>
+                    <span className="match-bar-actions">
+                      <button type="button" className="text-button" onClick={() => setAllOpen(r.id, true)}>Expand all</button>
+                      <button type="button" className="text-button" onClick={() => setAllOpen(r.id, false)}>Collapse all</button>
+                    </span>
                   </div>
+                )}
+                {suggestionsByRequest[r.id].data.map((s) => (
+                  <MatchSuggestionCard
+                    key={`${s.listingId}:${expansion[r.id]?.epoch ?? 0}`}
+                    suggestion={s}
+                    defaultOpen={expansion[r.id]?.open ?? false}
+                    reason={reviewReasons[`${r.id}:${s.listingId}`] ?? ""}
+                    onReasonChange={(value) => setReviewReasons((current) => ({ ...current, [`${r.id}:${s.listingId}`]: value }))}
+                    busy={!!savingMatch || loadingMatchesFor !== null}
+                    saving={savingMatch === `${r.id}:${s.listingId}`}
+                    requestClosed={r.status === "CLOSED"}
+                    copied={copiedKey === `${r.id}:${s.listingId}`}
+                    onSave={() => void saveMatch(r.id, s)}
+                    onStatusChange={(status) => void saveMatch(r.id, s, status)}
+                    onCopy={() => void copyMessage(r.id, s.listingId, s.whatsappMessage)}
+                  />
                 ))}
               </div>
             )}

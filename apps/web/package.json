@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "node --experimental-strip-types --test tests/listing-form.test.mjs tests/auth.test.mjs tests/seo.test.mjs tests/image-host.test.mjs tests/message-templates.test.mjs tests/i18n.test.mjs",
+    "test": "node --experimental-strip-types --test tests/listing-form.test.mjs tests/auth.test.mjs tests/seo.test.mjs tests/image-host.test.mjs tests/message-templates.test.mjs tests/i18n.test.mjs tests/match-summary.test.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

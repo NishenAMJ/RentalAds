@@ -17,6 +17,21 @@ export const sampleListing = {
   approximateLocation: null, ownerContact: "+94712345678", latitude: null, longitude: null, status: "PENDING_APPROVAL",
 };
 
+const REQUEST_ID = "55555555-5555-4555-8555-555555555555";
+export const sampleRequest = {
+  id: REQUEST_ID, areaText: "Colombo 5", budgetMin: null, budgetMax: 100000, durationMonths: 12, propertyType: "APARTMENT",
+  status: "OPEN", renterContact: "+94710000002", createdAt: NOW, searchLatitude: null, searchLongitude: null, searchRadiusKm: null,
+  assignedAdmin: null, adminNotes: null, followUpAt: null,
+};
+const criterion = (key: string, label: string, status: string, detail: string) => ({ key, label, status, detail });
+const suggestionBase = { ownerContact: "+94712345678", distanceKm: null, latitude: null, longitude: null, matchId: null, status: null, score: 80, reasons: [], whatsappMessage: "Hello from the team" };
+export const sampleSuggestions = [
+  { ...suggestionBase, listingId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", reference: "SL-000101", areaText: "Colombo 5 (best fit)", monthlyRent: 95000, matchPercentage: 92, requiresReview: false,
+    criteria: [criterion("area", "Area", "matched", "Area matched exactly."), criterion("budget", "Budget", "matched", "Within budget."), criterion("propertyType", "Property type", "matched", "Apartment offered.")] },
+  { ...suggestionBase, listingId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", reference: "SL-000102", areaText: "Nugegoda (needs a reason)", monthlyRent: 130000, matchPercentage: 61, requiresReview: true,
+    criteria: [criterion("area", "Area", "unknown", "No map pin."), criterion("budget", "Budget", "different", "LKR 30,000 over budget."), criterion("parking", "Parking", "different", "No parking offered.")] },
+];
+
 const cors = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers": "authorization,content-type",
@@ -73,7 +88,9 @@ export async function mockBackend(browserPage: Page, role: Role): Promise<Backen
     if (path === "/listings/mine" || path === "/listings/pending") return json(route, page([sampleListing]));
     if (path === `/listings/${LISTING_ID}/approve`) return json(route, { ...sampleListing, status: "ACTIVE" });
     if (path === "/requests" && method === "POST") return json(route, { id: "33333333-3333-4333-8333-333333333333", ...(body as object) }, 201);
-    if (path === "/requests/mine" || path === "/requests") return json(route, page([]));
+    if (path === "/requests" && method === "GET") return json(route, page([sampleRequest]));
+    if (path === "/requests/mine") return json(route, page([]));
+    if (path === `/matching/requests/${REQUEST_ID}/suggestions` && method === "GET") return json(route, page(sampleSuggestions));
     if (path === "/complaints") return json(route, page([]));
     if (path === "/matching/dashboard") return json(route, page([]));
     return json(route, { message: `Unmocked API call: ${method} ${path}` }, 501);

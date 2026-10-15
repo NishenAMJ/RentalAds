@@ -231,3 +231,24 @@
 
 /* Language switcher */
 .language-switcher { min-height: 36px; width: auto; padding: 4px 28px 4px 10px; border-radius: 8px; font-size: 13px; background-color: transparent; }
+
+/* Collapsible match cards */
+.match-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 14px 0 4px; }
+.match-bar-actions { display: flex; gap: 14px; }
+.match-bar .text-button { min-height: 32px; font-size: 13px; }
+.match-card { padding: 14px 16px; }
+.match-card-head { display: grid; gap: 8px; }
+.match-toggle { display: flex; align-items: center; gap: 10px; width: 100%; padding: 4px 0; min-height: 36px; background: transparent; border: 0; color: var(--foreground); text-align: left; font-weight: 400; }
+.match-toggle:hover { background: transparent; filter: none; color: var(--accent); }
+.match-chevron { width: 14px; color: var(--muted); flex-shrink: 0; }
+.match-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; flex: 1; min-width: 0; }
+.match-title strong { font-size: 16px; overflow-wrap: anywhere; }
+.match-title .record-reference { margin: 0; }
+.match-percent { font-family: var(--font-mono); font-weight: 600; color: var(--accent); }
+.match-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 0 0 0 24px; font-size: 13px; color: var(--muted); }
+.match-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-left: 24px; }
+.match-actions button:not(.text-button) { min-height: 36px; padding: 6px 14px; font-size: 13px; }
+.match-status select { min-height: 36px; font-size: 13px; }
+.match-details { margin: 12px 0 0 24px; padding-top: 12px; border-top: 1px solid var(--border); }
+.match-details p { margin: 0 0 6px; font-size: 14px; }
+.match-details label { display: grid; gap: 6px; font-size: 13px; }

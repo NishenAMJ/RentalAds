@@ -165,6 +165,46 @@ test.describe("administrators", () => {
     await expect.poll(() => backend.called("PATCH", "/listings/22222222-2222-4222-8222-222222222222/approve").length).toBe(1);
   });
 
+  test("match cards start collapsed, expand on demand, and send you to the reason field when one is required", async ({ page }) => {
+    const backend = await mockBackend(page, "ADMIN");
+    await signIn(page);
+    await page.getByRole("link", { name: "Rental requests" }).first().click();
+    await page.getByRole("button", { name: "Find potential matches" }).click();
+
+    const best = page.locator(".match-suggestion", { hasText: "SL-000101" });
+    const risky = page.locator(".match-suggestion", { hasText: "SL-000102" });
+    await expect(best).toBeVisible();
+    // Collapsed: triage information and actions only, no contact details or criteria list.
+    await expect(best).toContainText("92%");
+    await expect(best).toContainText("3 matched");
+    await expect(risky).toContainText("Needs a reason");
+    await expect(best.getByRole("button", { name: "Save match" })).toBeVisible();
+    await expect(best.getByRole("button", { name: "Copy message" })).toBeVisible();
+    await expect(page.getByText("Owner contact (admin only)")).toHaveCount(0);
+    await expect(best.locator("button[aria-expanded]")).toHaveAttribute("aria-expanded", "false");
+
+    // Expanding one reveals only that card's details.
+    await best.locator("button[aria-expanded]").click();
+    await expect(best.getByText("Owner contact (admin only)")).toBeVisible();
+    await expect(best.getByText("Area matched exactly.")).toBeVisible();
+    await expect(risky.getByText("Owner contact (admin only)")).toHaveCount(0);
+
+    // Saving a match that needs a reason opens the card and focuses the reason box instead of failing silently.
+    await risky.getByRole("button", { name: "Save match" }).click();
+    const reason = risky.getByLabel(/Recommendation reason/);
+    await expect(reason).toBeVisible();
+    await expect(reason).toBeFocused();
+    expect(backend.called("POST", "/matching/requests/55555555-5555-4555-8555-555555555555/suggestions")).toHaveLength(0);
+
+    // Expand all and Collapse all work across the whole page, and what you typed is kept.
+    await reason.fill("Renter agreed to a higher budget.");
+    await page.getByRole("button", { name: "Collapse all" }).click();
+    await expect(page.getByText("Owner contact (admin only)")).toHaveCount(0);
+    await page.getByRole("button", { name: "Expand all" }).click();
+    await expect(page.getByText("Owner contact (admin only)")).toHaveCount(2);
+    await expect(risky.getByLabel(/Recommendation reason/)).toHaveValue("Renter agreed to a higher budget.");
+  });
+
   test("see the admin menu only when they have permission", async ({ page }) => {
     await mockBackend(page, "RENTER");
     await signIn(page);
