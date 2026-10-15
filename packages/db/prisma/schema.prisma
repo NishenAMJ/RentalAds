@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  OWNER
+  RENTER
+  ADMIN
+}
+
+model User {
+  id         String   @id @default(uuid())
+  authUserId String   @unique
+  role       UserRole
+  email      String   @unique
+  phone      String?
+  createdAt  DateTime @default(now())
+
+  listings        Listing[]
+  rentalRequests  RentalRequest[] @relation("RenterRequests")
+  assignedRequests RentalRequest[] @relation("AssignedRequests")
+  adminPermission AdminPermission?
+  complaints      Complaint[]
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+model AdminPermission {
+  id                  String  @id @default(uuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id])
+  canApproveListings  Boolean @default(false)
+  canManageAdmins     Boolean @default(false)
+  canManageComplaints Boolean @default(false)
+
+ 
+  @@map("admin_permissions")
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+}
+
+enum PropertySize {
+  STUDIO
+  ONE_BR
+  TWO_BR
+  THREE_BR_PLUS
+  N_A
+}
+
+enum FurnishingStatus {
+  FURNISHED
+  SEMI_FURNISHED
+  UNFURNISHED
+}
+
+enum ListingStatus {
+  PENDING_APPROVAL
+  ACTIVE
+  REJECTED
+  INACTIVE
+}
+
+model Listing {
+  id           String       @id @default(uuid())
+  // Assigned once by the approval trigger in migration 20260920000000.
+  reference    String?      @unique
+  ownerId      String
+  owner        User         @relation(fields: [ownerId], references: [id])
+
+  propertyType PropertyType
+  size         PropertySize
+  bedrooms     Int
+  bathrooms    Int
+  parking      Boolean      @default(false)
+  furnishing   FurnishingStatus
+
+  areaText     String
+
+  latitude   Decimal? @db.Decimal(9, 6)
+  longitude  Decimal? @db.Decimal(9, 6)
+  mapLink      String?
+
+  monthlyRent       Int
+  minDurationMonths Int
+  keyMoney          Boolean @default(false)
+  keyMoneyAmount    Int?
+
+  ownerContact String
+  photoUrls    String[]
+
+  status                       ListingStatus @default(PENDING_APPROVAL)
+  lastAvailabilityConfirmedAt  DateTime?
+  createdAt                    DateTime      @default(now())
+  updatedAt                    DateTime      @updatedAt
+  deletedAt                    DateTime?
+  deletedByAdminId             String?
+  deletionReason               String?
+  // Set when the owner has been reminded to confirm availability; cleared on reconfirmation.
+  reminderSentAt               DateTime?
+
+  matches      Match[]
+
+  @@index([status, propertyType, areaText])
+  @@index([status, monthlyRent])
+  @@index([latitude, longitude])
+  // Default public browse order, and an owner's own list.
+  @@index([status, deletedAt, createdAt])
+  @@index([ownerId, deletedAt, createdAt])
+  @@map("listings")
+}
+
+enum RequestStatus {
+  OPEN
+  MATCHED
+  CLOSED
+}
+
+model RentalRequest {
+  id             String            @id @default(uuid())
+  renterId       String
+  renter         User              @relation("RenterRequests", fields: [renterId], references: [id])
+
+  areaText       String
+  budgetMin      Int?
+  budgetMax      Int
+  durationMonths Int
+  propertyType   PropertyType
+  size           PropertySize?
+  bedrooms       Int?
+  parking        Boolean?
+  furnishing     FurnishingStatus?
+
+  renterContact  String
+  searchLatitude  Float?
+  searchLongitude Float?
+  searchRadiusKm  Float?
+  status         RequestStatus     @default(OPEN)
+  createdAt      DateTime          @default(now())
+  deletedAt      DateTime?
+  deletedByAdminId String?
+  deletionReason String?
+
+  // Internal work queue fields. Never shown to renters.
+  assignedAdminId String?
+  assignedAdmin   User?     @relation("AssignedRequests", fields: [assignedAdminId], references: [id])
+  assignedAt      DateTime?
+  adminNotes      String?
+  followUpAt      DateTime?
+
+  matches        Match[]
+
+  @@index([status, propertyType, areaText])
+  @@index([assignedAdminId, status])
+  // A renter's own list, and the admin queue.
+  @@index([renterId, deletedAt, createdAt])
+  @@index([deletedAt, createdAt])
+  @@map("rental_requests")
+}
+
+enum MatchStatus {
+  SUGGESTED
+  SENT
+  INTERESTED
+  NOT_INTERESTED
+  RENTED
+}
+
+model Match {
+  id        String        @id @default(uuid())
+  listingId String
+  listing   Listing       @relation(fields: [listingId], references: [id])
+  requestId String
+  request   RentalRequest @relation(fields: [requestId], references: [id])
+
+  score     Float
+  locationOverrideReason String?
+  locationOverrideAdminId String?
+  locationOverrideAt DateTime?
+  recommendationReason String?
+  recommendedByAdminId String?
+  recommendationReviewedAt DateTime?
+  status    MatchStatus @default(SUGGESTED)
+  createdAt DateTime    @default(now())
+  invalidatedAt DateTime?
+  invalidationReason String?
+
+  @@unique([listingId, requestId])
+  @@index([requestId])
+  @@map("matches")
+}
+
+enum ComplaintTargetType {
+  LISTING
+  USER
+}
+
+enum ComplaintStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+}
+
+model Complaint {
+  id         String              @id @default(uuid())
+  reporterId String?
+  reporter   User?               @relation(fields: [reporterId], references: [id])
+  targetType ComplaintTargetType
+  targetId   String
+  reason     String
+  status     ComplaintStatus     @default(OPEN)
+  adminNotes String?
+  createdAt  DateTime            @default(now())
+
+  @@index([status, createdAt])
+  @@index([reporterId])
+  @@map("complaints")
+}
+
+enum NotificationType {
+  ADMIN_DELETION
+  AVAILABILITY_REMINDER
+}
+model Notification {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  type NotificationType
+  title String
+  message String
+  readAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
