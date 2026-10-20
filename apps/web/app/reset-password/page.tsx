@@ -50,6 +50,7 @@ export default function ResetPasswordPage() {
           </>
           : done ? <p role="status" className="notice">Your password has been updated. Redirecting…</p>
           : <form className="auth-form" onSubmit={submit} aria-busy={busy}>
+            <p className="small-copy">Use at least {MIN_LENGTH} characters and avoid reusing an important password.</p>
             <PasswordField id="new-password" name="password" label="New password" minLength={MIN_LENGTH} autoComplete="new-password" disabled={busy} required />
             <PasswordField id="confirm-password" name="confirm" label="Confirm new password" minLength={MIN_LENGTH} autoComplete="new-password" disabled={busy} required />
             {error && <p className="notice error" role="alert">{error}</p>}

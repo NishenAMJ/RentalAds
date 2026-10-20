@@ -12,6 +12,14 @@ import { useT } from "@/components/i18n-provider";
 
 type Mode = "login" | "signup" | "forgot";
 
+function authErrorMessage(cause: unknown): string {
+  const message = cause instanceof Error ? cause.message.toLowerCase() : "";
+  if (message.includes("invalid login credentials")) return "Email or password is incorrect.";
+  if (message.includes("user already registered")) return "An account already exists for this email. Try signing in instead.";
+  if (message.includes("email not confirmed")) return "Please confirm your email before signing in.";
+  return cause instanceof Error ? cause.message : "Sign-in failed. Please try again.";
+}
+
 export default function LoginPage() {
   return <Suspense fallback={<p role="status">Loading sign-in...</p>}><LoginForm /></Suspense>;
 }
@@ -68,7 +76,7 @@ function LoginForm() {
           "Check your email to confirm your account, then come back here to sign in.",
         );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Sign-in failed.");
+      setError(authErrorMessage(cause));
     } finally {
       setBusy(false);
     }
@@ -107,16 +115,20 @@ function LoginForm() {
             <input id="login-email" name="email" type="email" autoComplete="email" placeholder="name@example.com" disabled={busy} required />
           </div>
           {mode !== "forgot" && (
-            <PasswordField
-              key={mode}
-              id="login-password"
-              label={t("login.password")}
-              name="password"
-              minLength={mode === "signup" ? 8 : undefined}
-              disabled={busy}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              required
-            />
+            <>
+              <PasswordField
+                key={mode}
+                id="login-password"
+                label={t("login.password")}
+                name="password"
+                minLength={mode === "signup" ? 8 : undefined}
+                disabled={busy}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                aria-describedby={mode === "signup" ? "password-help" : undefined}
+                required
+              />
+              {mode === "signup" && <small id="password-help" className="small-copy">Use at least 8 characters. A unique password helps protect your rental account.</small>}
+            </>
           )}
           {mode === "login" && (
             <button type="button" className="text-button auth-forgot" disabled={busy} onClick={() => switchMode("forgot")}>

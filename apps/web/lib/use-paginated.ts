@@ -17,8 +17,9 @@ export function usePaginated<T>(
   path: string,
   authenticated = false,
   query = "",
+  initialPage = 1,
 ) {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<{
     result: Page<T> | null;
