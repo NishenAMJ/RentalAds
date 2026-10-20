@@ -1,7 +1,7 @@
 import { dictionaries, en, LOCALES, type Locale, type MessageKey } from "./messages.ts";
 
 export const DEFAULT_LOCALE: Locale = "en";
-export const LOCALE_STORAGE_KEY = "sewana-lang";
+export const LOCALE_STORAGE_KEY = "rentalhub-lang";
 
 export function isLocale(value: unknown): value is Locale {
   return LOCALES.some((locale) => locale.code === value);

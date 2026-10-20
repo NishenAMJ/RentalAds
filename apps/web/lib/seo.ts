@@ -30,7 +30,7 @@ export function listingTitle(listing: SeoListing): string {
 
 export function listingDescription(listing: SeoListing): string {
   const rent = `LKR ${listing.monthlyRent.toLocaleString("en-LK")} per month`;
-  return `${listing.bedrooms} bed, ${listing.bathrooms} bath, ${readable(listing.furnishing)} ${readable(listing.propertyType)} in ${listing.areaText}. ${rent}. Reviewed by Sewana Lanka; owner contact details stay private.`;
+  return `${listing.bedrooms} bed, ${listing.bathrooms} bath, ${readable(listing.furnishing)} ${readable(listing.propertyType)} in ${listing.areaText}. ${rent}. Reviewed by RentalHub Sri Lanka; owner contact details stay private.`;
 }
 
 /** schema.org structured data so search engines can show rent and location. */

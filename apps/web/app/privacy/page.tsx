@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
 import { CONTACT_EMAIL, OPERATOR_NAME } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Privacy policy | Sewana Lanka", description: "What personal information Sewana Lanka collects, why, who sees it and how you can control it." };
+export const metadata: Metadata = { title: "Privacy policy | RentalHub Sri Lanka", description: "What personal information RentalHub Sri Lanka collects, why, who sees it and how you can control it." };
 
 export default function PrivacyPage() {
   return (

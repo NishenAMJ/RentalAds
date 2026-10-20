@@ -91,21 +91,7 @@ input[type="checkbox"] { min-height: 0; flex-shrink: 0; }
 .concierge-hero .intro { font-size: 16px; max-width: 480px; line-height: 1.85; margin-bottom: 26px; }
 .concierge-hero .eyebrow { font-size: 9px; letter-spacing: .13em; }
 .concierge-hero .actions { gap: 22px; }
-.hero-copy > .privacy-note { margin-top: 26px; max-width: 360px; }
-.hero-art { position: relative; height: 490px; background: #d9e0d0; border-radius: 180px 180px 18px 18px; overflow: hidden; isolation: isolate; }
-.art-sun { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: #f4ebc8; right: 55px; top: 45px; }
-.art-building { position: absolute; width: 77%; height: 58%; left: 4%; bottom: 68px; background: #e9e2d3; border-top: 14px solid #a8967a; box-shadow: 18px 16px 0 #c3c5af; }
-.art-door { position: absolute; width: 32%; height: 75%; bottom: 0; left: 38%; border-radius: 65px 65px 0 0; background: repeating-linear-gradient(90deg, #344e3f 0 8px, #294333 8px 10px); border: 9px solid #d8cbb6; }
-.art-window { position: absolute; width: 23%; height: 32%; top: 30%; left: 6%; background: #93a391; border: 7px solid #f2ecdd; box-shadow: 0 8px 0 #c6b99d; }
-.art-window::after { content: ""; position: absolute; top: 0; left: 45%; width: 4px; height: 100%; background: #f2ecdd; }
-.art-shutter { position: absolute; width: 14%; height: 45%; top: 24%; right: 6%; background: repeating-linear-gradient(#798572 0 5px, #9aa28b 5px 8px); }
-.art-path { position: absolute; height: 80px; width: 140%; left: -15%; bottom: 0; background: #c8b798; transform: rotate(-7deg); z-index: -1; }
-.art-planter { position: absolute; width: 55px; height: 74px; right: 36px; bottom: 68px; background: #a67454; border-radius: 3px 3px 22px 22px; }
-.art-leaf { position: absolute; width: 105px; height: 210px; border-radius: 90% 0 90% 0; background: #496849; right: 5px; bottom: 130px; transform-origin: bottom center; }
-.leaf-one { transform: rotate(-42deg); background: #5c7750; }
-.leaf-two { transform: rotate(10deg); }
-.leaf-three { height: 155px; transform: rotate(40deg); background: #769166; }
-.art-caption { position: absolute; bottom: 18px; left: 24px; right: 24px; display: flex; justify-content: space-between; gap: 16px; color: #35412e; font-size: 10px; letter-spacing: .03em; }
+.hero-reveal > .privacy-note { margin-top: 26px; max-width: 420px; }
 .how-section { padding: 76px 0; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 36px; }
 .section-heading h2, .owner-invitation h2 { font-family: var(--font-heading); font-weight: 400; font-size: clamp(30px, 3.5vw, 43px); line-height: 1.16; }
@@ -189,7 +175,7 @@ input[type="checkbox"] { min-height: 0; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (max-width: 1050px) {
-  .concierge-hero { gap: 32px; } .hero-art { height: 420px; }
+  .concierge-hero { gap: 32px; }
   .site-header { flex-wrap: wrap; } .site-header nav { gap: 18px; }
   .request-layout { gap: 32px; grid-template-columns: .75fr 1.25fr; }
   .owner-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -212,7 +198,7 @@ input[type="checkbox"] { min-height: 0; flex-shrink: 0; }
   .container { padding: 32px 20px 56px; } .site-header { padding: 18px 20px; gap: 12px; }
   .site-header nav { gap: 10px 20px; font-size: 12px; } .brand { font-size: 26px; }
   .concierge-hero { grid-template-columns: 1fr; gap: 36px; padding-bottom: 36px; }
-  .concierge-hero h1 { font-size: clamp(46px, 9vw, 66px); } .hero-art { height: 340px; border-radius: 100px 100px 16px 16px; }
+  .concierge-hero h1 { font-size: clamp(46px, 9vw, 66px); }
   .concierge-hero .intro { max-width: none; }
   .how-section { padding: 44px 0; } .section-heading { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 24px; }
   .process-grid { grid-template-columns: 1fr; gap: 18px; } .step-number { font-size: 26px; margin-bottom: 12px; } .process-grid p { margin-bottom: 8px; }
@@ -229,7 +215,6 @@ input[type="checkbox"] { min-height: 0; flex-shrink: 0; }
 @media (max-width: 400px) {
   .request-panel { padding: 20px 16px; } .wizard-actions { flex-wrap: wrap; }
   .wizard-actions > .ui-button-primary { flex: 1; }
-  .art-caption { font-size: 9px; left: 16px; right: 16px; }
 }
 @media (max-width: 640px) {
   .admin-sidebar, .admin-sidebar.is-expanded { position: relative; width: 100%; padding: 16px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-right: 0; border-bottom: 1px solid var(--border); box-shadow: none; }

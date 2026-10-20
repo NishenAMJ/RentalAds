@@ -26,7 +26,7 @@ export function AdminSidebar() {
         }
       }}>
       <Link className="brand" href="/admin" onClick={() => setExpanded(false)}>
-        Sewana<span>Lanka</span>
+        RentalHub<span>Sri Lanka</span>
       </Link>
       <p className="eyebrow">Administration</p>
       <button className="admin-menu-toggle secondary" aria-expanded={expanded}

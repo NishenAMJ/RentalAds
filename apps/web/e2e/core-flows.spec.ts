@@ -42,6 +42,65 @@ test.describe("public visitors", () => {
   });
 });
 
+test.describe("home page hero", () => {
+  const HEADLINE = /A place to live\.\s*A little help finding it\./;
+
+  test("has no illustration and types the headline, then shows the buttons", async ({ page }) => {
+    await mockBackend(page, "RENTER");
+    await page.goto("/");
+    await expect(page.locator(".hero-art")).toHaveCount(0);
+    // Assistive technology and search engines get the complete headline straight away, before any typing.
+    await expect(page.getByRole("heading", { level: 1, name: HEADLINE })).toBeAttached();
+    // The buttons wait until the text is in place.
+    const buttons = page.locator(".hero-reveal");
+    await expect(buttons).toHaveAttribute("data-pending", "true");
+    await expect(page.locator("h1 .tw-live")).toHaveText(HEADLINE, { timeout: 15000 });
+    await expect(page.locator(".intro .tw-live")).toContainText("Our local team brings together your needs", { timeout: 15000 });
+    await expect(buttons).toHaveAttribute("data-pending", "false");
+    await expect(page.getByRole("link", { name: /Find a property for me/ }).first()).toBeVisible();
+    await expect(page.locator(".tw-cursor")).toHaveCount(0);
+  });
+
+  test("types again after a refresh, but not when you return to Home without reloading", async ({ page }) => {
+    await mockBackend(page, "RENTER");
+    await page.goto("/");
+    await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false", { timeout: 15000 });
+
+    // Leaving and coming back inside the app shows the finished text straight away.
+    await page.getByRole("link", { name: "Explore homes" }).first().click();
+    await expect(page).toHaveURL(/\/listings/);
+    await page.locator(".brand").first().click();
+    await expect(page.locator("h1 .tw-live")).toHaveText(HEADLINE);
+    await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false");
+
+    // A real refresh starts the typing again.
+    await page.reload();
+    await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "true");
+    await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false", { timeout: 15000 });
+    await expect(page.locator("h1 .tw-live")).toHaveText(HEADLINE);
+  });
+
+  test("switching language after the typing has finished changes the text at once", async ({ page }) => {
+    await mockBackend(page, "RENTER");
+    await page.goto("/");
+    await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false", { timeout: 15000 });
+    await page.getByLabel("Language").selectOption("si");
+    await expect(page.locator("h1 .tw-live")).toContainText("ජීවත් වීමට තැනක්");
+    await expect(page.locator(".tw-cursor")).toHaveCount(0);
+  });
+
+  test.describe("when the visitor prefers reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+    test("shows all of the text and the buttons immediately", async ({ page }) => {
+      await mockBackend(page, "RENTER");
+      await page.goto("/");
+      await expect(page.locator("h1 .tw-live")).toHaveText(HEADLINE);
+      await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false");
+      await expect(page.locator(".tw-cursor")).toHaveCount(0);
+    });
+  });
+});
+
 test.describe("language and account", () => {
   test("language can be switched to Sinhala and is remembered", async ({ page }) => {
     await mockBackend(page, "RENTER");
@@ -84,7 +143,7 @@ test.describe("language and account", () => {
     await page.getByRole("link", { name: "Account and privacy" }).click();
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download my data" }).click();
-    expect((await download).suggestedFilename()).toBe("sewana-lanka-my-data.json");
+    expect((await download).suggestedFilename()).toBe("rentalhub-sri-lanka-my-data.json");
     expect(backend.called("GET", "/users/me/export")).toHaveLength(1);
   });
 });

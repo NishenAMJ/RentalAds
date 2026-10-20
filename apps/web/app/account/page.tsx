@@ -29,7 +29,7 @@ function Account() {
     setExporting(true); setError(""); setMessage("");
     try {
       const data = await apiRequest("/users/me/export", { authenticated: true });
-      download("sewana-lanka-my-data.json", data);
+      download("rentalhub-sri-lanka-my-data.json", data);
       setMessage("Your data has been downloaded.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to export your data.");

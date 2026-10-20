@@ -1,4 +1,4 @@
-/* Sewana Lanka theme: dark (default) and light token sets plus the shared look from the Figma redesign. Loaded after globals.css and concierge.css. */
+/* RentalHub Sri Lanka theme: dark (default) and light token sets plus the shared look from the Figma redesign. Loaded after globals.css and concierge.css. */
 :root, :root[data-theme="dark"] {
   color-scheme: dark;
   --background: #0c0c0d; --foreground: #ececee; --muted: #9b9ba3;
@@ -127,7 +127,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 
 /* Admin console */
 .admin-sidebar { width: 240px; padding: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-.admin-sidebar .brand { padding: 0 24px; display: flex; align-items: center; height: 64px; border-bottom: 1px solid var(--border); font-size: 20px; }
+.admin-sidebar .brand { padding: 0 24px; display: flex; align-items: center; height: 64px; border-bottom: 1px solid var(--border); font-size: 18px; }
 .admin-sidebar .eyebrow { padding: 0 24px; margin: 28px 0 10px; color: var(--muted); }
 .admin-side-links { padding: 0 8px; gap: 4px; }
 .admin-side-links a { padding: 9px 14px; border-radius: 8px; color: var(--foreground); border-left: 2px solid transparent; }
@@ -135,7 +135,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .admin-side-links a[aria-current="page"] { background: var(--surface-soft); color: var(--foreground); border-left-color: var(--accent); font-weight: 600; }
 .admin-side-links a:last-child { margin-top: auto; }
 .site-header.admin-topbar { margin-left: 240px; width: auto; padding: 0 32px; min-height: 64px; background: var(--background); justify-content: space-between; }
-.admin-topbar::before { content: "CONSOLE // SEWANA-LK"; font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+.admin-topbar::before { content: "CONSOLE // RENTALHUB-LK"; font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--muted); }
 .admin-topbar ~ .container { padding: 28px 32px 56px; }
 .admin-topbar ~ .site-footer { margin-left: 240px; }
 .admin-workspace { max-width: 1120px; }
@@ -148,9 +148,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .leaflet-container { background: var(--map-bg); border-radius: 12px; }
 :root:not([data-theme="light"]) .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
 @media (prefers-color-scheme: light) { :root:not([data-theme]) .leaflet-tile-pane { filter: none; } }
-.hero-art { border-radius: 14px; }
-:root:not([data-theme="light"]) .hero-art { filter: brightness(.78) saturate(.85); }
-@media (prefers-color-scheme: light) { :root:not([data-theme]) .hero-art { filter: none; } }
 
 /* Tailwind gray utilities used in pages follow the theme */
 .text-gray-500, .text-gray-600, .text-gray-700 { color: var(--muted); }

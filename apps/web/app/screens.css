@@ -252,3 +252,20 @@
 .match-details { margin: 12px 0 0 24px; padding-top: 12px; border-top: 1px solid var(--border); }
 .match-details p { margin: 0 0 6px; font-size: 14px; }
 .match-details label { display: grid; gap: 6px; font-size: 13px; }
+
+/* Home hero: one column of typed text (the illustration was removed) */
+.concierge-hero { grid-template-columns: 1fr; gap: 0; padding: 72px 0 64px; }
+.hero-copy { max-width: 880px; }
+.concierge-hero h1 { font-size: clamp(40px, 6.4vw, 80px); line-height: 1.06; margin: 20px 0 24px; }
+.concierge-hero .intro { max-width: 660px; font-size: 18px; line-height: 1.75; color: var(--muted); margin-bottom: 32px; }
+.concierge-hero .eyebrow { font-size: 11px; letter-spacing: .12em; }
+
+/* Typewriter: the invisible full text reserves the final size, so nothing jumps while the live copy types over it. */
+.tw-stage { position: relative; display: block; }
+.tw-ghost { display: block; visibility: hidden; }
+.tw-live { position: absolute; inset: 0; display: block; }
+.tw-cursor { display: inline-block; width: .075em; height: .95em; margin-left: 3px; vertical-align: -.1em; background: var(--accent); animation: tw-blink 1s steps(2, start) infinite; }
+.intro .tw-cursor { height: 1em; width: 2px; background: var(--muted); }
+@keyframes tw-blink { to { visibility: hidden; } }
+.hero-reveal { transition: opacity .6s ease; }
+.hero-reveal[data-pending="true"] { opacity: 0; visibility: hidden; }

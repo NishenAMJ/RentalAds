@@ -35,7 +35,7 @@ export function SiteHeader() {
     {adminView && !navigationLoading && <AdminSidebar />}
     <header className={`site-header${adminView ? " admin-topbar" : ""}`}>
       {!adminView && <Link className="brand" href="/">
-        Sewana<span>Lanka</span>
+        RentalHub<span>Sri Lanka</span>
       </Link>}
       {!adminView && <button type="button" className="site-menu-toggle secondary" aria-expanded={menuExpanded} aria-controls="site-navigation" onClick={() => setOpenPath(menuExpanded ? null : pathname)}>{menuExpanded ? t("nav.closeMenu") : t("nav.menu")}</button>}
       <nav id="site-navigation" className={adminView ? "" : "public-nav"} data-open={menuExpanded} aria-label={adminView ? "Account navigation" : "Main navigation"}>

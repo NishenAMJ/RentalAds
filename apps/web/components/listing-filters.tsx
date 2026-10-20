@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
+import { useState } from "react";
 import { useT } from "@/components/i18n-provider";
 
 /** Query-string keys the listings API understands. Anything else in the URL is ignored. */
@@ -17,14 +18,27 @@ export function cleanFilters(source: URLSearchParams | Record<string, string | u
   return clean;
 }
 
+export function validateRentRange(minRent: string, maxRent: string): string {
+  if (minRent && maxRent && Number(minRent) > Number(maxRent)) {
+    return "Minimum rent cannot be higher than maximum rent.";
+  }
+  return "";
+}
+
 export function ListingFilters({ applied }: { applied: URLSearchParams }) {
   const router = useRouter();
   const t = useT();
+  const [rangeError, setRangeError] = useState("");
   const value = (key: string) => applied.get(key) ?? "";
 
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const minRent = String(form.get("minRent") ?? "").trim();
+    const maxRent = String(form.get("maxRent") ?? "").trim();
+    const nextError = validateRentRange(minRent, maxRent);
+    setRangeError(nextError);
+    if (nextError) return;
     const next = cleanFilters(Object.fromEntries([...form.entries()].map(([key, field]) => [key, String(field)])));
     router.replace(next.size ? `/listings?${next}` : "/listings", { scroll: false });
   }
@@ -37,8 +51,8 @@ export function ListingFilters({ applied }: { applied: URLSearchParams }) {
         <select id="f-type" name="propertyType" defaultValue={value("propertyType")}><option value="">{t("filter.any")}</option><option value="APARTMENT">{t("filter.apartment")}</option><option value="HOUSE">{t("filter.house")}</option></select></div>
       <div className="ui-field"><label htmlFor="f-beds">{t("filter.bedrooms")}</label>
         <select id="f-beds" name="minBedrooms" defaultValue={value("minBedrooms")}><option value="">{t("filter.any")}</option>{[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}+</option>)}</select></div>
-      <div className="ui-field"><label htmlFor="f-min">{t("filter.minRent")}</label><input id="f-min" name="minRent" type="number" min={0} step={1000} defaultValue={value("minRent")} inputMode="numeric" /></div>
-      <div className="ui-field"><label htmlFor="f-max">{t("filter.maxRent")}</label><input id="f-max" name="maxRent" type="number" min={0} step={1000} defaultValue={value("maxRent")} inputMode="numeric" /></div>
+      <div className="ui-field"><label htmlFor="f-min">{t("filter.minRent")}</label><input id="f-min" name="minRent" type="number" min={0} step={1000} defaultValue={value("minRent")} inputMode="numeric" aria-invalid={!!rangeError} aria-describedby={rangeError ? "filter-rent-error" : undefined} /></div>
+      <div className="ui-field"><label htmlFor="f-max">{t("filter.maxRent")}</label><input id="f-max" name="maxRent" type="number" min={0} step={1000} defaultValue={value("maxRent")} inputMode="numeric" aria-invalid={!!rangeError} aria-describedby={rangeError ? "filter-rent-error" : undefined} />{rangeError && <small id="filter-rent-error" className="field-error" role="alert">{rangeError}</small>}</div>
       <div className="ui-field"><label htmlFor="f-furnishing">{t("filter.furnishing")}</label>
         <select id="f-furnishing" name="furnishing" defaultValue={value("furnishing")}><option value="">{t("filter.any")}</option><option value="FURNISHED">{t("filter.furnished")}</option><option value="SEMI_FURNISHED">{t("filter.semi")}</option><option value="UNFURNISHED">{t("filter.unfurnished")}</option></select></div>
       <div className="ui-field"><label htmlFor="f-sort">{t("filter.sort")}</label>

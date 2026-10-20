@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { usePaginated } from "@/lib/use-paginated";
 import { Pagination } from "@/components/pagination";
 
@@ -34,6 +34,7 @@ function ListingsContent() {
 
 function ListingResults({ filters }: { filters: string }) {
   const t = useT();
+  const router = useRouter();
   const pager = usePaginated<PublicListing>("/listings", false, filters);
   const { items: listings, error, loading } = pager;
   const filtered = filters !== "";
@@ -51,7 +52,7 @@ function ListingResults({ filters }: { filters: string }) {
         <EmptyState
           title={pager.page > 1 ? t("listings.empty.more") : filtered ? t("listings.empty.filtered") : t("listings.empty.title")}
           description={filtered ? t("listings.empty.filteredHelp") : t("listings.empty.help")}
-          action={<ActionLink href="/renter/new">{t("listings.empty.cta")}</ActionLink>} />
+          action={filtered ? <button type="button" className="ui-button ui-button-ghost" onClick={() => router.replace("/listings", { scroll: false })}>Clear filters</button> : <ActionLink href="/renter/new">{t("listings.empty.cta")}</ActionLink>} />
       ) : (
         <div className="listing-grid">
           {listings.map((listing) => (

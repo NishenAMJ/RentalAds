@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   const { permissions, user } = useAuth();
   return <section className="admin-dashboard">
     <div className="admin-heading"><div>
-      <p className="eyebrow">Sewana Lanka / Administration</p>
+      <p className="eyebrow">RentalHub Sri Lanka / Administration</p>
       <h1>Your platform at a glance.</h1>
       <p>Review properties, connect renters with homes, and keep reports moving.</p>
     </div><span className="admin-account">Signed in as <strong>{user?.email ?? "Administrator"}</strong></span></div>

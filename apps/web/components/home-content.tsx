@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { ActionLink, PrivacyNote } from "@/components/ui/primitives";
 import { useT } from "@/components/i18n-provider";
+import { Cursor, useTypewriter } from "@/components/typewriter";
 
 const PILLARS = ["home.pillar1", "home.pillar2", "home.pillar3"] as const;
 const STEPS = ["home.step1", "home.step2", "home.step3"] as const;
@@ -9,15 +10,34 @@ const STEPS = ["home.step1", "home.step2", "home.step3"] as const;
 /** The marketing content of the home page, translated. */
 export function HomeContent() {
   const t = useT();
+  const [title1, title2, intro] = [t("home.title1"), t("home.title2"), t("home.intro")];
+  const typing = useTypewriter([title1, title2, intro]);
+  const typed = typing.lines;
   return <>
     <section className="concierge-hero">
+      {/* Visitors without JavaScript get the finished text and buttons straight away. */}
+      <noscript><style>{".tw-live{display:none}.tw-ghost{visibility:visible!important}.hero-reveal{opacity:1!important;visibility:visible!important}"}</style></noscript>
       <div className="hero-copy"><p className="eyebrow"><span className="live-dot" /> {t("home.eyebrow")}</p>
-        <h1>{t("home.title1")}<br /><em>{t("home.title2")}</em></h1>
-        <p className="intro">{t("home.intro")}</p>
-        <div className="actions"><ActionLink href="/renter/new">{t("home.cta.find")} ↗</ActionLink><Link className="quiet-link" href="/listings">{t("home.cta.explore")} →</Link></div>
-        <PrivacyNote>{t("home.privacy")}</PrivacyNote>
+        {/* Screen readers and search engines read the full text immediately; only the animated copy is hidden from them. */}
+        <h1 className="hero-title">
+          <span className="sr-only">{title1} {title2}</span>
+          <span className="tw-stage" aria-hidden="true">
+            <span className="tw-ghost">{title1}<br /><em>{title2}</em></span>
+            <span className="tw-live">{typed[0]}{typing.cursorLine === 0 && <Cursor />}<br /><em>{typed[1]}{typing.cursorLine === 1 && <Cursor />}</em></span>
+          </span>
+        </h1>
+        <p className="intro">
+          <span className="sr-only">{intro}</span>
+          <span className="tw-stage" aria-hidden="true">
+            <span className="tw-ghost">{intro}</span>
+            <span className="tw-live">{typed[2]}{typing.cursorLine === 2 && <Cursor />}</span>
+          </span>
+        </p>
+        <div className="hero-reveal" data-pending={!typing.done}>
+          <div className="actions"><ActionLink href="/renter/new">{t("home.cta.find")} ↗</ActionLink><Link className="quiet-link" href="/listings">{t("home.cta.explore")} →</Link></div>
+          <PrivacyNote>{t("home.privacy")}</PrivacyNote>
+        </div>
       </div>
-      <div className="hero-art" role="img" aria-label="Illustration of a quiet tropical courtyard home"><div className="art-sun" /><div className="art-building"><div className="art-window" /><div className="art-door" /><div className="art-shutter" /></div><div className="art-path" /><div className="art-planter" /><div className="art-leaf leaf-one" /><div className="art-leaf leaf-two" /><div className="art-leaf leaf-three" /><div className="art-caption"><span>Colombo, Sri Lanka</span><span>A more considered way home.</span></div></div>
     </section>
     <section className="pillars" aria-label="Our approach">{PILLARS.map((key, index) =>
       <article className="pillar" key={key}><span className="pillar-number">PILLAR 0{index + 1}</span><h3>{t(`${key}.title`)}</h3><p>{t(`${key}.body`)}</p></article>)}</section>

@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { CONTACT_EMAIL, OPERATOR_NAME } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Terms of service | Sewana Lanka", description: "The rules for using Sewana Lanka as a renter or property owner." };
+export const metadata: Metadata = { title: "Terms of service | RentalHub Sri Lanka", description: "The rules for using RentalHub Sri Lanka as a renter or property owner." };
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of service" intro="Plain rules for using Sewana Lanka as a renter or a property owner.">
+    <LegalPage title="Terms of service" intro="Plain rules for using RentalHub Sri Lanka as a renter or a property owner.">
       <h2>What the service is</h2>
       <p>{OPERATOR_NAME} helps renters and property owners in Sri Lanka find each other. Our team reviews submissions and arranges introductions personally. We are an introduction service. We are not a party to any tenancy agreement, we do not collect rent or deposits, and we do not guarantee that a request will be matched or that a property is suitable or available.</p>
 
