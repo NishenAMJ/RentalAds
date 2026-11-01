@@ -27,6 +27,7 @@ describe('area-first potential matches', () => {
     propertyType: 'HOUSE',
     size: 'N_A',
     bedrooms: 2,
+    bathrooms: 1,
     furnishing: 'UNFURNISHED',
     minDurationMonths: 6,
     parking: true,

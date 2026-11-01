@@ -1,5 +1,6 @@
 import 'reflect-metadata';
-import { Prisma, Listing, RentalRequest } from '@prisma/client';
+import type { PropertyListing } from '../src/modules/matching/property-listing';
+import { Prisma, RentalRequest } from '@prisma/client';
 import { MatchingService } from '../src/modules/matching/matching.service';
 import { PrismaService } from '../src/common/prisma.service';
 import * as geography from '../src/common/geography';
@@ -9,7 +10,7 @@ import {
 } from '../src/modules/matching/matching.logic';
 
 describe('exact admin matching and attributable location overrides', () => {
-  let listing: Listing;
+  let listing: PropertyListing;
   let rental: RentalRequest;
   let service: MatchingService;
   let saved: Record<string, unknown>;
@@ -34,11 +35,12 @@ describe('exact admin matching and attributable location overrides', () => {
       monthlyRent: 80000,
       minDurationMonths: 6,
       bedrooms: 2,
+      bathrooms: 1,
       parking: true,
       areaText: 'Different text',
       furnishing: 'UNFURNISHED',
       photoUrls: [],
-    } as unknown as Listing;
+    } as unknown as PropertyListing;
     rental = {
       id: 'brief',
       status: 'OPEN',

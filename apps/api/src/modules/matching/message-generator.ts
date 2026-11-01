@@ -1,6 +1,6 @@
-import { Listing } from '@prisma/client';
+import type { PropertyListing } from './property-listing';
 
-function formatSize(listing: Listing): string {
+function formatSize(listing: PropertyListing): string {
   if (listing.propertyType === 'HOUSE') return 'House';
   const labels: Record<string, string> = {
     STUDIO: 'Studio',
@@ -21,7 +21,7 @@ function formatFurnishing(furnishing: string): string {
 }
 
 export function buildWhatsAppMessage(
-  listing: Listing,
+  listing: PropertyListing,
   publicUrl: string,
 ): string {
   const lines = [

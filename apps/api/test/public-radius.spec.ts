@@ -21,6 +21,7 @@ describe('public radius lookup', () => {
       { listing: { findMany } } as unknown as PrismaService,
       {} as UsersService,
       { get: () => undefined } as unknown as ConfigService,
+      { send: jest.fn() } as never,
     );
     const result = await service.browse({
       page: 1,
@@ -49,6 +50,7 @@ describe('public radius lookup', () => {
       { listing: { findMany } } as unknown as PrismaService,
       {} as UsersService,
       { get: () => undefined } as unknown as ConfigService,
+      { send: jest.fn() } as never,
     );
     const query = {
       page: 1,

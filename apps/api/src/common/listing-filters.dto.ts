@@ -1,6 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsEnum,
   IsIn,
   IsInt,
   IsOptional,
@@ -9,6 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { ListingCategory } from '@prisma/client';
 import { PaginationQuery } from './pagination';
 
 export const LISTING_SORTS = ['newest', 'price_asc', 'price_desc'] as const;
@@ -22,6 +24,25 @@ const booleanFlag = ({ value }: { value: unknown }) =>
 
 /** Optional public search filters for the listings browse endpoint. */
 export class ListingFilterQuery extends PaginationQuery {
+  /** Which kind of listing to browse. Homes when omitted, so the existing property pages are unchanged. */
+  @IsOptional()
+  @IsEnum(ListingCategory)
+  category?: ListingCategory;
+
+  /** The category's type, for example CAR for vehicles. Needs `category`. */
+  @IsOptional()
+  @Transform(trimmed)
+  @IsString()
+  @MaxLength(40)
+  subtype?: string;
+
+  /** Words in an item listing's title. */
+  @IsOptional()
+  @Transform(trimmed)
+  @IsString()
+  @MaxLength(100)
+  q?: string;
+
   /** Case-insensitive match on the area text, for example "Nugegoda". */
   @IsOptional()
   @Transform(trimmed)

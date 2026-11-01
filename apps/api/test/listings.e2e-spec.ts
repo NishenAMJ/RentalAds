@@ -29,6 +29,16 @@ jest.mock('@supabase/supabase-js', () => ({
 
 // HTTP tests exercise the real auth guard, admin guard, validation and services.
 // Supabase verification and Prisma persistence are test doubles; no live data is changed.
+/** The defaults the real database applies to new rows. */
+const databaseDefaults: Partial<Listing> = {
+  category: 'PROPERTY',
+  ratePeriod: 'MONTH',
+  attributes: null,
+  title: null,
+  description: null,
+  depositAmount: null,
+};
+
 describe('Users and listings HTTP flow', () => {
   it('registers the radius guard on the actual public endpoint without throttling ordinary browsing', async () => {
     for (let attempt = 0; attempt < 20; attempt++)
@@ -143,6 +153,7 @@ describe('Users and listings HTTP flow', () => {
             deletedByAdminId: null,
             deletionReason: null,
             reminderSentAt: null,
+            ...databaseDefaults,
             ...data,
           };
           listings.push(listing);

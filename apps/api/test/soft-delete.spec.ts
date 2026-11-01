@@ -23,6 +23,7 @@ describe('soft-deleted listings', () => {
       prisma as never,
       { findOrCreate: jest.fn() } as never,
       { get: () => undefined } as never,
+      { send: jest.fn() } as never,
     );
 
   it('cannot be approved or rejected', async () => {
@@ -63,6 +64,7 @@ describe('soft-deleted listings', () => {
         findOrCreate: jest.fn().mockResolvedValue({ id: 'owner' }),
       } as never,
       { get: () => undefined } as never,
+      { send: jest.fn() } as never,
     );
     await expect(
       service.reconfirm({ authUserId: 'auth' } as never, 'l1'),

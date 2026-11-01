@@ -1,4 +1,4 @@
-import type { Listing } from '@prisma/client';
+import type { PropertyListing } from '../src/modules/matching/property-listing';
 import { listingIdentifierWhere } from '../src/modules/listings/listing-identifier';
 import { buildWhatsAppMessage } from '../src/modules/matching/message-generator';
 import { toPublicListing } from '../src/modules/listings/public-listing';
@@ -21,7 +21,7 @@ describe('listing references and owner-contact privacy', () => {
     longitude: null,
     mapLink: 'https://maps.example/precise-home',
     photoUrls: [],
-  } as unknown as Listing;
+  } as unknown as PropertyListing;
 
   it('normalizes reference case and uses an indexed unique lookup', () => {
     expect(listingIdentifierWhere(' sl-000123 ')).toEqual({
