@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { PaginationQuery } from '../../common/pagination';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -22,6 +23,7 @@ import { ComplaintsService } from './complaints.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
 import { UpdateComplaintDto } from './dto/update-complaint.dto';
 
+@ApiTags('complaints')
 @Controller('complaints')
 export class ComplaintsController {
   constructor(

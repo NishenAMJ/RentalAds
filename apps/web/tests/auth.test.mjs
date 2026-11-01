@@ -58,11 +58,11 @@ function renderGuard(file, state, pathname, redirects = []) {
       if (path.endsWith('theme-toggle')) return { ThemeToggle: () => React.createElement('button', { className: 'theme-toggle' }) };
       if (path.endsWith('access-redirect')) return { AccessRedirect: ({ href }) => React.createElement('a', { href }, 'Redirect') };
       throw new Error(`Unexpected import: ${path}`);
-    } });
+    }, document: { addEventListener() {}, removeEventListener() {} } });
     return exports;
   }
   const component = loadComponent(file);
-  return renderToStaticMarkup(React.createElement(component.default ?? component.RequireSession ?? component.HomeAccess ?? component.SiteHeader, null, 'PRIVATE CONTENT'));
+  return renderToStaticMarkup(React.createElement(component.default ?? component.RequireSession ?? component.SiteHeader, null, 'PRIVATE CONTENT'));
 }
 
 const verified = {
@@ -71,21 +71,19 @@ const verified = {
   permissions: { canApproveListings: false, canManageAdmins: false, canManageComplaints: false },
 };
 
-test('home does not redirect a renter with admin permissions into administration', () => {
-  const redirects = [];
-  const html = renderGuard('components/home-access', { ...verified, role: 'RENTER', isAdmin: true }, '/', redirects);
-  assert.deepEqual(redirects, []);
-  assert.match(html, /PRIVATE CONTENT/);
-});
-
 test('renter pages retain renter navigation even when the account has admin permissions', () => {
   const state = { ...verified, role: 'RENTER', isAdmin: true };
-  for (const path of ['/renter/dashboard', '/renter/new', '/login', '/']) {
+  for (const path of ['/renter/dashboard', '/renter/new']) {
     const html = renderGuard('components/site-header', state, path);
     assert.doesNotMatch(html, /admin-sidebar|admin-topbar/);
     assert.match(html, /My requests/);
   }
   assert.match(renderGuard('components/site-header', state, '/admin'), /admin-sidebar/);
+});
+
+test('the landing and sign-in pages have no site navigation, only their own slim top bar', () => {
+  for (const path of ['/', '/login', '/reset-password'])
+    assert.equal(renderGuard('components/site-header', verified, path), '');
 });
 
 test('login defaults follow the verified account role, including renters with admin permissions', () => {
@@ -99,11 +97,17 @@ test('login defaults follow the verified account role, including renters with ad
 });
 
 test('login preserves renter destinations instead of overriding them with the admin dashboard', () => {
-  for (const role of ['RENTER', 'OWNER', 'ADMIN']) {
+  for (const role of ['RENTER', 'OWNER']) {
     for (const path of ['/renter/new', '/renter/dashboard', '/owner/new', '/owner/listings']) {
       assert.equal(loginDestination(path, role, { ...verified.permissions, canManageAdmins: true }), path);
     }
   }
+});
+
+test('administrators always land on the dashboard after signing in', () => {
+  const admin = { ...verified.permissions, canApproveListings: true };
+  for (const next of [null, '/listings', '/owner/new', '/renter/dashboard', '/admin/listings', '//evil.example'])
+    assert.equal(loginDestination(next, 'ADMIN', admin), '/admin');
 });
 
 test('login rejects unauthorized admin destinations and external return URLs', () => {
@@ -111,8 +115,8 @@ test('login rejects unauthorized admin destinations and external return URLs', (
     assert.equal(loginDestination(path, 'RENTER', verified.permissions), '/renter/dashboard');
   }
   const limited = { ...verified.permissions, canManageComplaints: true };
-  assert.equal(loginDestination('/admin/complaints', 'ADMIN', limited), '/admin/complaints');
-  assert.equal(loginDestination('/admin/requests', 'ADMIN', limited), '/admin');
+  assert.equal(loginDestination('/admin/complaints', 'OWNER', limited), '/admin/complaints');
+  assert.equal(loginDestination('/admin/requests', 'OWNER', limited), '/owner/listings');
 });
 
 test('Supabase disables saved browser sessions and reuses the active in-memory client', () => {
@@ -231,4 +235,13 @@ test('photo uploads keep browser-generated multipart headers and authentication'
     return new Response('{}');
   });
   await apiRequest('/uploads/property-images', { method: 'POST', authenticated: true, body });
+});
+
+test('signing in to book returns to the item page, but only for a real item address', () => {
+  const none = verified.permissions;
+  const id = '3f2b8c1e-9d4a-4b6e-8f10-2a7c5d9e0b14';
+  assert.equal(loginDestination(`/item/${id}`, 'RENTER', none), `/item/${id}`);
+  assert.equal(loginDestination('/bookings', 'RENTER', none), '/bookings');
+  for (const next of ['/item/not-an-id', `/item/${id}/../../admin`, `/item/${id}?x=1`, `//item/${id}`])
+    assert.equal(loginDestination(next, 'RENTER', none), '/renter/dashboard');
 });

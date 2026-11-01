@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { isIP } from 'node:net';
 import helmet from 'helmet';
 import { requestLogger } from './common/request-logger';
-import type { Express, Response } from 'express';
+import type { Express, Request, Response } from 'express';
 
 export function configureApp(app: INestApplication) {
   const config = app.get(ConfigService);
@@ -63,7 +63,15 @@ export function configureApp(app: INestApplication) {
     response.setHeader('Cache-Control', 'no-store');
     next();
   });
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  const secureHeaders = helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  });
+  // The interactive docs page needs inline scripts that these strict headers forbid. It carries no private data.
+  app.use((request: Request, response: Response, next: () => void) =>
+    request.path.startsWith('/docs')
+      ? next()
+      : secureHeaders(request, response, next),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -79,7 +87,7 @@ export function configureApp(app: INestApplication) {
       callback(null, origin === frontendOrigin);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
   app.enableShutdownHooks();

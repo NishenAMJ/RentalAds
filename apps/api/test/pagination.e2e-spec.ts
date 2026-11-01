@@ -54,6 +54,12 @@ const base: Listing = {
   latitude: null,
   longitude: null,
   monthlyRent: 80000,
+  ratePeriod: 'MONTH' as const,
+  category: 'PROPERTY' as const,
+  attributes: null,
+  title: null,
+  description: null,
+  depositAmount: null,
   minDurationMonths: 12,
   keyMoney: false,
   keyMoneyAmount: null,
@@ -274,6 +280,7 @@ describe('Collection pagination', () => {
       expect.objectContaining({
         where: {
           status: 'ACTIVE',
+          category: 'PROPERTY',
           deletedAt: null,
           AND: [expect.any(Object)],
         },

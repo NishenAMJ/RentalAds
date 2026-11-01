@@ -14,6 +14,8 @@ import { MatchingModule } from './modules/matching/matching.module';
 import { ComplaintsModule } from './modules/complaints/complaints.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ComplaintsModule,
     AdminModule,
     NotificationsModule,
+    CategoriesModule,
+    BookingsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

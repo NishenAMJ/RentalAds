@@ -6,6 +6,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -16,6 +17,7 @@ import { CloudinaryService } from './cloudinary.service';
 import { matchesDeclaredImageType } from '../../common/image-signature';
 import { WriteThrottle } from '../../common/decorators/write-throttle.decorator';
 
+@ApiTags('uploads')
 @Controller('uploads')
 @UseGuards(AuthGuard)
 export class CloudinaryController {

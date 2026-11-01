@@ -12,14 +12,24 @@ function Inbox() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [marking, setMarking] = useState(false);
+  const [markingId, setMarkingId] = useState<string | null>(null);
   useEffect(() => {
     void apiRequest<Notice[]>("/notifications", { authenticated: true }).then(setItems)
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load notifications."))
       .finally(() => setLoading(false));
   }, []);
   async function read(id: string) {
-    await apiRequest(`/notifications/${id}/read`, { method: "PATCH", authenticated: true });
-    setItems(current => current.map(n => n.id === id ? { ...n, readAt: new Date().toISOString() } : n));
+    if (markingId) return;
+    setMarkingId(id);
+    setError("");
+    try {
+      await apiRequest(`/notifications/${id}/read`, { method: "PATCH", authenticated: true });
+      setItems(current => current.map(n => n.id === id ? { ...n, readAt: new Date().toISOString() } : n));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to mark notification as read.");
+    } finally {
+      setMarkingId(null);
+    }
   }
   async function readAll() {
     if (marking) return;
@@ -43,11 +53,11 @@ function Inbox() {
       {(["all", "unread"] as const).map(value => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{value === "all" ? "All activity" : "Unread"}</button>)}
     </div>
     {error && <p role="alert" className="notice error">{error}</p>}
-    {loading ? <p role="status">Loading notifications…</p> : !shown.length ? <p className="notice">{filter === "unread" ? "You’re all caught up." : "No notifications yet."}</p> :
+    {loading ? <p role="status">Loading notifications…</p> : error && !items.length ? <button type="button" className="secondary" onClick={() => window.location.reload()}>Retry</button> : !shown.length ? <p className="notice">{filter === "unread" ? "You’re all caught up." : "No notifications yet."}</p> :
       <ul className="notice-list">{shown.map(n => <li key={n.id} className={n.readAt ? "is-read" : "is-unread"}>
         <span className="notice-dot" aria-hidden="true" />
-        <div className="notice-body"><h2>{n.title}{!n.readAt && <span className="sr-only"> (unread)</span>}</h2><p>{n.message}</p><small>{new Date(n.createdAt).toLocaleString()}</small></div>
-        {!n.readAt && <button type="button" className="ui-button ui-button-ghost" onClick={() => void read(n.id)}>Mark as read</button>}
+        <div className="notice-body"><h2>{n.title}{!n.readAt && <span className="sr-only"> (unread)</span>}</h2><p>{n.message}</p><small>{new Date(n.createdAt).toLocaleString("en-GB", { timeZone: "Asia/Colombo" })}</small></div>
+        {!n.readAt && <button type="button" className="ui-button ui-button-ghost" disabled={markingId !== null} aria-busy={markingId === n.id || undefined} onClick={() => void read(n.id)}>{markingId === n.id ? "Marking…" : "Mark as read"}</button>}
       </li>)}</ul>}
     <p className="small-copy notice-end">{items.length} {items.length === 1 ? "notification" : "notifications"} · End of recent activity</p>
   </section>;

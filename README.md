@@ -1,163 +1,121 @@
-# Rental Platform — v0 pilot
+# RentalHub Sri Lanka
 
-The pilot includes persistent users, photo uploads, listing submission and moderation,
-rental requests, admin matching, and complaint handling. Deployment remains a
-separate step.
+A rental marketplace for Sri Lanka with two ways to rent:
 
-## Local setup
+- **Homes**, introduced personally. A renter posts a private request and the team matches them with reviewed listings.
+- **Items** (vehicles, tools and equipment, event gear), booked by date and paid online. Dates can't be double-booked, payments are verified, and cancellations follow a refund policy.
 
-Use pnpm from `D:\RentalAds\rental-platform`:
+The interface is in **English, Sinhala and Tamil**.
 
-```powershell
+> Built as a full-stack project with the aim of being runnable for real, not just demonstrable. [ARCHITECTURE.md](docs/ARCHITECTURE.md) explains the decisions and their trade-offs; [DEPLOYMENT.md](docs/DEPLOYMENT.md) covers going live.
+
+## What it does
+
+**For renters**
+- Browse homes and item categories with filters; see exactly what a booking costs (rental, service fee, refundable deposit) before paying.
+- Book items for chosen dates and pay through PayHere. The owner's phone number is revealed only once the booking is paid.
+- Cancel with the refund shown up front. Get email and in-site alerts when something changes.
+- Homes: submit a private request; the team recommends matches.
+
+**For owners**
+- List a home, vehicle, piece of equipment or event gear; edit it later; take dates off the calendar.
+- Price, deposit and phone changes apply instantly. Changes to what renters read or see go back for review, so approval can't be bypassed.
+- See paid bookings with the renter's number and a WhatsApp link; cancel one (the renter is refunded in full) with a reason.
+
+**For the team**
+- Review, approve, reject, deactivate or delete listings across all statuses.
+- Overview counts, a refund queue ("I have sent this refund"), booking management, complaints, matching for homes, and per-admin permissions.
+
+## How it's built
+
+```mermaid
+flowchart LR
+  Browser["Next.js 16 + React 19"] -->|"Bearer token"| API["NestJS 11 API"]
+  API --> DB[("PostgreSQL via Prisma")]
+  Browser --> Auth["Supabase Auth"]
+  PayHere["PayHere"] -->|"signed webhook"| API
+  API --> Cloudinary
+  API -->|"optional"| Resend
+```
+
+| | |
+| --- | --- |
+| Web | Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, Playwright |
+| API | NestJS 11, TypeScript, class-validator, helmet, OpenAPI at `/docs` |
+| Data | PostgreSQL (Supabase), Prisma 5.22, 14 migrations |
+| Auth | Supabase Auth, permissions enforced server-side |
+| Payments | PayHere checkout with a signed, idempotent webhook |
+| Infra | Docker images and a compose file, GitHub Actions CI |
+
+It is a **modular monolith** on purpose. The central guarantee, that two renters never hold the same dates, is one database transaction, and splitting it across services would trade that simplicity for distributed-transaction machinery with no benefit at this scale. The modules have clear seams, and the first one I would extract (notifications) is identified in [ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Things worth reading in the code
+
+- `apps/api/src/modules/categories/category-registry.ts`: one definition per category drives validation, `GET /categories`, and the web forms and filters. New categories are mostly configuration.
+- `apps/api/src/modules/bookings/`: date locking, price quotes, the PayHere webhook (signature, amount check, idempotency, late-payment handling), the cancellation policy and refund tracking.
+- `apps/api/src/modules/notifications/`: alerts that never break the operation that caused them.
+- `apps/web/components/booking-panel.tsx`: live price from the API, so the page can't show a different amount than the booking charges.
+- `packages/db/prisma/migrations/`: every schema change, applied to an empty database in CI. The recent ones only add tables, columns and values, or relax constraints, so older code keeps working against a newer database.
+
+## Run it
+
+### With Docker (needs a free Supabase project for sign-in)
+
+```bash
+cp .env.docker.example .env.docker        # add your Supabase URL and publishable key
+docker compose --env-file .env.docker up --build
+```
+
+Website <http://localhost:3000> · API <http://localhost:3001> · API docs <http://localhost:3001/docs>. The API creates the database tables on start. Payments and email stay off until their keys are added.
+
+### Without Docker
+
+```bash
 pnpm install
+cp apps/api/.env.example apps/api/.env          # database, Supabase, Cloudinary
+cp apps/web/.env.example apps/web/.env.local
 pnpm db:generate
-pnpm --filter api build
-pnpm dev:api
+pnpm --filter db exec prisma migrate deploy
+pnpm dev:api        # http://localhost:3001
+pnpm dev:web        # http://localhost:3000
 ```
 
-In a second terminal, run `pnpm dev:web`. API: `http://localhost:3001`.
-Web: `http://localhost:3000`. Prisma CLI and client are pinned to **5.22.0**.
-The DB workspace manifest is `packages/db/package.json` (corrected from `packege.json`).
-Use `pnpm db:migrate` only for intentional schema changes. No additional migration
-is needed for this milestone.
-Stop any running API process before regenerating Prisma on Windows; otherwise
-its loaded query engine DLL can cause an EPERM rename error.
+Stop the API before running `pnpm db:generate` on Windows, otherwise the database engine file is locked.
 
-Environment files are ignored by Git. Never place a service-role key in a
-`NEXT_PUBLIC_*` variable. API `.env` needs `DATABASE_URL`, `FRONTEND_URL`, and
-Supabase URL and API key. Existing `NEXT_PUBLIC_SUPABASE_URL` and
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` names are supported in the API; server
-names `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are preferred. A publishable
-or anon key suffices for token verification. Prisma uses API `DATABASE_URL`,
-not the browser's Supabase connection. Use the working pooler connection from
-your setup, with URL-encoded credentials; keep migrations on session port 5432.
+### Sample data
 
-DB `.env` needs `DATABASE_URL` and `DIRECT_URL`. Web `.env.local` needs
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`), and `NEXT_PUBLIC_API_URL=http://localhost:3001`.
+```bash
+cd apps/api && node --env-file=.env scripts/seed-demo.cjs --yes
+```
 
-## API contract
+Adds eight sample vehicles, tools and event-gear listings under one fake owner, and `--remove --yes` takes them out again. It prints the database it will write to and refuses to run without `--yes`.
 
-| Route | Access and behavior |
+## Checks
+
+`pnpm verify` runs everything CI runs: type-check, lint, all tests and a production build.
+
+| Suite | Count | What it covers |
+| --- | --- | --- |
+| API unit | 188 | Pricing, dates, refund policy, category validation, PayHere signing and webhook edge cases, edits, blocked dates, alerts, seed data |
+| API HTTP | 126 | Real guards, validation and routes against an in-memory database |
+| Web unit | 63 | Sign-in redirects, translations (all three languages must cover every text), helpers |
+| Browser (Playwright) | 28 | Booking and payment hand-off, cancellation, owner edits and calendar, admin refunds, sign-in, landing page |
+
+CI also applies every migration to an empty Postgres and fails if the result differs from `schema.prisma`, and builds both Docker images.
+
+Browser tests run against a mocked backend, and the Docker files are verified by CI, not by hand. PayHere's real sandbox has not been exercised yet; [DEPLOYMENT.md](docs/DEPLOYMENT.md) lists the steps before going live.
+
+## Documentation
+
+| | |
 | --- | --- |
-| `GET /users/me` | Verified token; creates or returns the current user and their admin permission flags. |
-| `POST /listings` | Verified token; creates a pending listing using the caller's database ID. |
-| `GET /listings` | Public; active listings only, public field whitelist. |
-| `GET /listings/:id` | Public; active listing only, otherwise 404. |
-| `GET /listings/mine` | Verified token; caller's listings in any status. |
-| `GET /listings/pending` | `canApproveListings`; paginated pending-only review queue. |
-| `PATCH /listings/:id/approve` | `canApproveListings`; pending → active. |
-| `PATCH /listings/:id/reject` | Same permission; pending → rejected. |
-| `PATCH /listings/:id/reconfirm` | Listing owner only; updates timestamp without changing status. |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design decisions, data model, security, known limitations |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosting, settings, going live with payments, backups |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Original homes pilot: API contract, upload rules, configuration |
+| `/docs` on the API | Interactive OpenAPI reference |
 
-Unknown body fields, including `ownerId`, `role`, and `status`, are rejected with
-400. Money is integer LKR; rent and minimum duration must be positive. Key money
-requires a positive amount when enabled and no amount when disabled. Photo and
-map URLs must use HTTP(S). New listings require a Sri Lankan mobile number in
-`ownerContact`, normalized as `+947XXXXXXXX`. The form supplies the fixed +94
-prefix and accepts nine digits starting with 7, with optional spaces or dashes.
-Existing database contacts are not rewritten. Apartments require a size;
-houses always save `N_A`. Zero bedrooms is allowed for studios.
-The owner form accepts up to 10 JPG, PNG, or WebP
-photos, 8 MB each, and uploads them immediately on selection to the authenticated
-`POST /uploads/property-images` endpoint. Uploaded photos have thumbnail previews
-and can be removed from the listing before submission. Pending or failed uploads
-block submission. Successfully uploaded URLs are reused if saving the listing
-fails and the user retries in the same form. The API needs
-`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in
-`apps/api/.env`; these credentials must never be browser environment variables.
-Public responses exclude `ownerContact`, `ownerId`,
-and any future fields not explicitly added to the serializer. Free-text fields
-and user-provided images/links still require moderation for personal details.
+## Status and limitations
 
-Users first seen through `/users/me` default to RENTER. Users first seen through
-listing submission default to OWNER. Existing roles are preserved. Any verified
-user may submit their own property; the single role column does not prevent a
-renter from also owning a listing. Role input is never accepted from clients.
+Usable end to end, but honest about what isn't done: refunds and owner payouts are recorded and tracked by hand rather than automated; there are no reviews or owner identity checks; rate limiting is per process; and the Sinhala and Tamil text needs a native speaker's review. The full list is in [ARCHITECTURE.md](docs/ARCHITECTURE.md#known-limitations).
 
-## Verification
-
-```powershell
-pnpm --filter api test --runInBand
-pnpm --filter api test:e2e --runInBand
-pnpm --filter api check:db
-pnpm --filter web lint
-pnpm --filter web build
-```
-
-HTTP tests use a fake Supabase verifier and in-memory Prisma adapter, while
-exercising the real guards, validation, routes, and services. They do not prove
-live database persistence or a real Supabase session. Unit tests cover unique
-constraint races and conflicting identities.
-
-For a live smoke test, log in through `/login` with an existing confirmed user,
-submit a property at `/owner/new`, and check `/owner/listings`. It should show
-Pending approval. Use a trusted database administrator to set up the initial
-admin: the matching `admin_permissions` row must have `canApproveListings=true`.
-Permission flags alone authorize admin operations; role is a display label.
-Only accounts with `canManageAdmins` can grant or revoke permissions through
-`POST /admin/permissions`. Then use `/admin/listings` to approve or reject listings.
-Visit `/listings` and `/property/<id>` and inspect the raw API response to confirm
-the contact field is absent. Repeat `/users/me` and verify its database ID stays
-the same. Do not paste tokens or passwords into shared logs.
-
-Retool and deployment are not configured by this milestone. A direct database
-admin tool bypasses API permission checks; limit its connection and users to
-trusted administrators.
-
-### API CORS
-
-Set `FRONTEND_URL` to the exact frontend origin (for example, `https://yourapp.vercel.app`). Only that origin receives CORS permission, with credentials enabled. `WEB_ORIGIN` remains a fallback for existing installations. In production (`NODE_ENV=production`), an explicit origin is required; development defaults to `http://localhost:3000`. Wildcards, multiple origins, URL credentials, paths, queries, and fragments are rejected at startup. Restart the API after changing environment variables. CORS controls browser access; endpoint authentication still applies to other clients.
-
-## Operations and configuration
-
-### Database migrations
-Three migrations add reminders, list-query indexes and the admin work queue. Apply them to each
-environment before deploying the matching API version:
-
-```powershell
-pnpm --filter db exec prisma migrate deploy   # production and staging
-pnpm db:migrate                               # local development
-```
-
-Then regenerate the client (`pnpm db:generate`) with the API stopped (see the Windows note above).
-
-### API environment (`apps/api/.env`)
-| Variable | Purpose |
-| --- | --- |
-| `LISTING_STALE_DAYS` | Days without owner confirmation before a listing is hidden from public browsing (default 60). |
-| `LISTING_REMINDER_DAYS` | Days before an owner is reminded to confirm availability (default 45; always shorter than the stale limit). |
-| `DISABLE_SCHEDULER` | `true` switches off background jobs (availability reminders). Reminders are claimed in the database, so running several API instances is safe. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Optional. Lets "delete my account" also remove the sign-in identity. Server-side only, never in the browser. |
-
-### Web environment (`apps/web/.env.local`)
-`NEXT_PUBLIC_SITE_URL` (public origin, used for the sitemap, canonical links and social previews)
-and `NEXT_PUBLIC_CONTACT_EMAIL` (shown on the legal pages).
-
-### Health checks
-`GET /health` reports that the process is up. `GET /health/ready` also checks the database and
-returns 503 when it is unreachable. Point load balancers and uptime monitors at `/health/ready`.
-In production (`NODE_ENV=production`) the API writes one JSON object per log line, and every response
-carries an `X-Request-Id` header that also appears in the access log.
-
-### Security notes
-The API sends security headers (helmet) and marks responses `Cache-Control: no-store` unless a route
-opts in; public listing reads are cacheable for 30 seconds. Uploads are checked by their real file
-contents, and embedded metadata such as GPS location is stripped on storage. Write routes are rate
-limited per client. The web app sends a Content-Security-Policy; `script-src` still allows inline scripts
-because Next.js emits them, so moving to nonces is a worthwhile later hardening.
-
-### Languages
-Interface text lives in `apps/web/lib/i18n/messages.ts` (English, Sinhala, Tamil). English is the source;
-add keys there first. The header, footer, home page, Explore homes and sign-in are translated; other
-screens fall back to English until translated. Have a native speaker review the Sinhala and Tamil text.
-
-### Tests
-```powershell
-pnpm --filter api test           # unit tests
-pnpm --filter api test:e2e       # HTTP tests with an in-memory database
-pnpm --filter web test           # unit tests
-pnpm --filter web test:e2e       # browser tests (Playwright, uses the installed Microsoft Edge)
-```
-Browser tests build the site into `.next-e2e` and replace Supabase and the API inside each test, so no
-accounts or services are needed.
+No open-source licence has been chosen yet, so all rights are reserved by default.

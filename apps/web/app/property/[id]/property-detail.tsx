@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { PropertyImage } from "@/components/property-image";
 import Link from "next/link";
 import { ApiError, apiRequest } from "@/lib/api-client";
-import { money, readable, type PublicListing } from "@/lib/listings";
+import { money, rateUnit, readable, type PublicListing } from "@/lib/listings";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { ActionLink, PrivacyNote, SkeletonCards } from "@/components/ui/primitives";
 
@@ -37,7 +37,7 @@ export function PropertyDetail({ id }: { id: string }) {
       </div>
       <aside className="property-side">
         <div className="panel property-identity"><div className="identity-top"><span className="ui-badge">{readable(listing.propertyType)}</span>{listing.reference && <span className="record-reference">{listing.reference}</span>}</div>
-          <h1>{listing.areaText}</h1><p className="rent">{money(listing.monthlyRent)} <span>/ month</span></p></div>
+          <h1>{listing.areaText}</h1><p className="rent">{money(listing.monthlyRent)} <span>/ {rateUnit(listing.ratePeriod)}</span></p></div>
         <div className="panel"><h2 className="side-title">At a glance</h2><dl className="glance">{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
           {listing.mapLink && <a className="map-link" href={listing.mapLink} target="_blank" rel="noopener noreferrer">View approximate location on map ↗</a>}
           {listing.lastAvailabilityConfirmedAt && <p className="small-copy"><span className="live-dot" />Availability confirmed {new Date(listing.lastAvailabilityConfirmedAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</p>}</div>

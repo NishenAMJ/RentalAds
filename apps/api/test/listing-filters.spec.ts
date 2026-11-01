@@ -10,7 +10,7 @@ import {
 
 describe('listingFilterWhere', () => {
   it('adds nothing when no filters are given', () => {
-    expect(listingFilterWhere({})).toEqual({});
+    expect(listingFilterWhere({})).toEqual({ category: 'PROPERTY' });
   });
 
   it('maps each filter to the matching column', () => {
@@ -25,6 +25,7 @@ describe('listingFilterWhere', () => {
         parking: true,
       }),
     ).toEqual({
+      category: 'PROPERTY',
       areaText: { contains: 'nugegoda', mode: 'insensitive' },
       propertyType: 'APARTMENT',
       furnishing: 'FURNISHED',
@@ -36,15 +37,42 @@ describe('listingFilterWhere', () => {
 
   it('supports open-ended rent ranges and a zero minimum', () => {
     expect(listingFilterWhere({ maxRent: 90000 })).toEqual({
+      category: 'PROPERTY',
       monthlyRent: { lte: 90000 },
     });
     expect(listingFilterWhere({ minBedrooms: 0 })).toEqual({
+      category: 'PROPERTY',
       bedrooms: { gte: 0 },
     });
   });
 
   it('treats parking=false as no preference rather than excluding parking', () => {
-    expect(listingFilterWhere({ parking: false })).toEqual({});
+    expect(listingFilterWhere({ parking: false })).toEqual({
+      category: 'PROPERTY',
+    });
+  });
+
+  it('browses homes unless another category is asked for', () => {
+    expect(listingFilterWhere({}).category).toBe('PROPERTY');
+    expect(listingFilterWhere({ category: 'VEHICLE' }).category).toBe(
+      'VEHICLE',
+    );
+  });
+
+  it('filters an item category by its type and title words', () => {
+    expect(
+      listingFilterWhere({ category: 'VEHICLE', subtype: 'CAR', q: 'aqua' }),
+    ).toEqual({
+      category: 'VEHICLE',
+      attributes: { path: ['vehicleType'], equals: 'CAR' },
+      title: { contains: 'aqua', mode: 'insensitive' },
+    });
+  });
+
+  it('rejects a type filter for a category without types', () => {
+    expect(() => listingFilterWhere({ subtype: 'CAR' })).toThrow(
+      BadRequestException,
+    );
   });
 
   it('rejects an inverted rent range', () => {

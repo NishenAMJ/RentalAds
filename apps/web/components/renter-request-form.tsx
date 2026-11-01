@@ -9,7 +9,7 @@ import { SearchAreaPicker } from "./search-area-picker";
 import { SavedSearchAreaView } from "./saved-search-area";
 
 const steps = ["Your area", "Your budget", "Your home", "Your introduction"];
-const stepHints = ["Colombo zones & radius", "LKR range & terms", "Layout & furnishing", "Contact via WhatsApp"];
+const stepHints = ["Areas & radius", "LKR range & terms", "Layout & furnishing", "Contact via WhatsApp"];
 const titles = ["Where would you feel at home?", "A budget that works for you.", "The details make the difference.", "Let’s make it personal."];
 export function RenterRequestForm() {
   const [form, setForm] = useState<RentalRequestForm>(initialRequest);

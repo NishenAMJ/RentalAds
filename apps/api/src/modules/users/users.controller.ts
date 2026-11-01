@@ -6,6 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { IsIn } from 'class-validator';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
@@ -20,6 +21,7 @@ class DeleteAccountDto {
   confirm!: string;
 }
 
+@ApiTags('users')
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {

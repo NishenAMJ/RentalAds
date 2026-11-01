@@ -12,14 +12,14 @@ import "./screens.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: { default: "Sewana Lanka | Home Rentals", template: "%s | Sewana Lanka" },
-  description: "A personal approach to Colombo rentals. Submit a private rental request and let our local team coordinate thoughtful introductions.",
-  openGraph: { siteName: "Sewana Lanka", type: "website", locale: "en_LK" },
+  title: { default: "RentalHub Sri Lanka | Home Rentals", template: "%s | RentalHub Sri Lanka" },
+  description: "A personal approach to rentals in Sri Lanka. Submit a private rental request and let our local team coordinate thoughtful introductions.",
+  openGraph: { siteName: "RentalHub Sri Lanka", type: "website", locale: "en_LK" },
   twitter: { card: "summary" },
 };
 
 // Applies the saved theme before first paint to avoid a flash; falls back to the system preference via CSS.
-const THEME_SCRIPT = `try{var t=localStorage.getItem("sewana-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+const THEME_SCRIPT = `try{var t=localStorage.getItem("rentalhub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head><body>

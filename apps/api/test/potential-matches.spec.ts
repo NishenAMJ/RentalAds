@@ -1,4 +1,5 @@
-import type { Listing, RentalRequest } from '@prisma/client';
+import type { RentalRequest } from '@prisma/client';
+import type { PropertyListing } from '../src/modules/matching/property-listing';
 import {
   assessMatch,
   areaTextMatches,
@@ -33,7 +34,7 @@ const listing = {
   minDurationMonths: 6,
   latitude: 6.9,
   longitude: 79.9,
-} as unknown as Listing;
+} as unknown as PropertyListing;
 
 describe('potential match explanations and ranking', () => {
   it('explains an in-area house despite apartment and budget differences', () => {

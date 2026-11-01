@@ -180,6 +180,7 @@ describe('ListingsService availability rules', () => {
       prisma as never,
       { findOrCreate: jest.fn() } as never,
       config(),
+      { send: jest.fn() } as never,
     );
 
   it('hides listings whose availability has lapsed from public browsing', async () => {
@@ -211,6 +212,7 @@ describe('ListingsService availability rules', () => {
       { listing: { findMany } } as never,
       users as never,
       config(),
+      { send: jest.fn() } as never,
     );
     const result = await service.mine({ authUserId: 'a' } as never, {
       page: 1,

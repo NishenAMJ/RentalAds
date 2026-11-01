@@ -1,4 +1,5 @@
 import type { Listing, RentalRequest } from '@prisma/client';
+import type { PropertyListing } from './property-listing';
 import { distanceKm } from '../../common/geography';
 
 import { assessMatch } from './match-assessment';
@@ -26,7 +27,7 @@ export function locationFit(listing: Listing, request: RentalRequest) {
 }
 
 export function passesHardFilters(
-  listing: Listing,
+  listing: PropertyListing,
   request: RentalRequest,
 ): boolean {
   if (listing.status !== 'ACTIVE') return false;
@@ -41,11 +42,14 @@ export function passesHardFilters(
 }
 
 // Compatibility exports for existing callers; assessment is the single scoring source.
-export function scoreMatch(listing: Listing, request: RentalRequest): number {
+export function scoreMatch(
+  listing: PropertyListing,
+  request: RentalRequest,
+): number {
   return assessMatch(listing, request).score;
 }
 export function getMatchReasons(
-  listing: Listing,
+  listing: PropertyListing,
   request: RentalRequest,
 ): string[] {
   return assessMatch(listing, request).reasons;

@@ -1,4 +1,5 @@
 import { Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { PaginationQuery } from '../../common/pagination';
 import {
   Body,
@@ -26,6 +27,7 @@ class DeleteDto {
 }
 import { PrismaService } from '../../common/prisma.service';
 
+@ApiTags('requests')
 @Controller('requests')
 @UseGuards(AuthGuard)
 export class RequestsController {

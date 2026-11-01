@@ -7,6 +7,11 @@ export function toPublicListing(listing: Listing) {
   return {
     id: listing.id,
     reference: listing.reference,
+    category: listing.category,
+    title: listing.title,
+    description: listing.description,
+    attributes: listing.attributes,
+    depositAmount: listing.depositAmount,
     propertyType: listing.propertyType,
     size: listing.size,
     bedrooms: listing.bedrooms,
@@ -19,6 +24,7 @@ export function toPublicListing(listing: Listing) {
       ? `https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=15/${location.latitude}/${location.longitude}`
       : null,
     monthlyRent: listing.monthlyRent,
+    ratePeriod: listing.ratePeriod,
     minDurationMonths: listing.minDurationMonths,
     keyMoney: listing.keyMoney,
     keyMoneyAmount: listing.keyMoneyAmount,

@@ -1,5 +1,6 @@
 import type { MatchStatus } from '@prisma/client';
-import type { Listing, RentalRequest } from '@prisma/client';
+import type { RentalRequest } from '@prisma/client';
+import { isPropertyListing, type PropertyListing } from './property-listing';
 import {
   PaginationQuery,
   pageWindow,
@@ -31,13 +32,16 @@ export class MatchingService {
   private async *activeListingBatches() {
     let cursor: string | undefined;
     for (;;) {
-      const batch: Listing[] = await this.prisma.listing.findMany({
-        where: { status: 'ACTIVE', deletedAt: null },
+      const batch = await this.prisma.listing.findMany({
+        where: { status: 'ACTIVE', category: 'PROPERTY', deletedAt: null },
         orderBy: { id: 'asc' },
         take: 250,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       });
-      yield batch.filter((listing) => listing.status === 'ACTIVE');
+      yield batch.filter(
+        (listing): listing is PropertyListing =>
+          listing.status === 'ACTIVE' && isPropertyListing(listing),
+      );
       if (batch.length < 250) break;
       cursor = batch[batch.length - 1].id;
     }
@@ -49,7 +53,7 @@ export class MatchingService {
       id: string;
       requestId: string;
       requestArea: string;
-      listing: Listing;
+      listing: PropertyListing;
       assessment: MatchAssessment;
     };
     const best = new TopResults<Ranked>(skip + take, comparePotentialMatches);
@@ -106,7 +110,7 @@ export class MatchingService {
     const { skip, take } = pageWindow(query);
     const best = new TopResults<{
       id: string;
-      listing: Listing;
+      listing: PropertyListing;
       assessment: MatchAssessment;
     }>(skip + take, comparePotentialMatches);
     for await (const batch of this.activeListingBatches())
@@ -172,7 +176,12 @@ export class MatchingService {
     const listing = await this.prisma.listing.findUnique({
       where: listingIdentifierWhere(listingId),
     });
-    if (!listing || listing.status !== 'ACTIVE' || listing.deletedAt)
+    if (
+      !listing ||
+      listing.status !== 'ACTIVE' ||
+      listing.deletedAt ||
+      !isPropertyListing(listing)
+    )
       throw new NotFoundException('Active listing not found');
     const fit = locationFit(listing, request);
     return {
@@ -217,6 +226,10 @@ export class MatchingService {
       throw new NotFoundException('Listing not found');
     if (listing.status !== 'ACTIVE')
       throw new BadRequestException('Only active listings can be recommended');
+    if (!isPropertyListing(listing))
+      throw new BadRequestException(
+        'Only property listings can be matched to rental requests',
+      );
     const assessment = assessMatch(listing, request);
     const fit = locationFit(listing, request);
     const reason =

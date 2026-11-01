@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from "react";
 
 type Theme = "dark" | "light";
-const KEY = "sewana-theme";
+const KEY = "rentalhub-theme";
 const listeners = new Set<() => void>();
 
 function currentTheme(): Theme {

@@ -7,7 +7,7 @@ test('every template mentions the area and the team, and has a unique id', () =>
   for (const template of MESSAGE_TEMPLATES) {
     const text = template.render({ area: 'Colombo 5' });
     assert.match(text, /Colombo 5/);
-    assert.match(text, /Sewana Lanka team/);
+    assert.match(text, /RentalHub Sri Lanka team/);
   }
 });
 

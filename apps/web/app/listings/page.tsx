@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { usePaginated } from "@/lib/use-paginated";
 import { Pagination } from "@/components/pagination";
 
@@ -17,7 +17,9 @@ export default function ListingsPage() {
 
 function ListingsContent() {
   const t = useT();
-  const applied = cleanFilters(useSearchParams());
+  const searchParams = useSearchParams();
+  const applied = cleanFilters(searchParams);
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
   return (
     <section>
       <div className="page-heading"><div><p className="eyebrow">{t("listings.eyebrow")}</p>
@@ -27,14 +29,15 @@ function ListingsContent() {
       </p></div></div>
       <ListingFilters applied={applied} />
       {/* Remounting on filter change resets the page number and loading state. */}
-      <ListingResults key={applied.toString()} filters={applied.toString()} />
+      <ListingResults key={`${applied.toString()}-${page}`} filters={applied.toString()} initialPage={page} />
     </section>
   );
 }
 
-function ListingResults({ filters }: { filters: string }) {
+function ListingResults({ filters, initialPage }: { filters: string; initialPage: number }) {
   const t = useT();
-  const pager = usePaginated<PublicListing>("/listings", false, filters);
+  const router = useRouter();
+  const pager = usePaginated<PublicListing>("/listings", false, filters, initialPage);
   const { items: listings, error, loading } = pager;
   const filtered = filters !== "";
   return (
@@ -51,7 +54,7 @@ function ListingResults({ filters }: { filters: string }) {
         <EmptyState
           title={pager.page > 1 ? t("listings.empty.more") : filtered ? t("listings.empty.filtered") : t("listings.empty.title")}
           description={filtered ? t("listings.empty.filteredHelp") : t("listings.empty.help")}
-          action={<ActionLink href="/renter/new">{t("listings.empty.cta")}</ActionLink>} />
+          action={filtered ? <button type="button" className="ui-button ui-button-ghost" onClick={() => router.replace("/listings", { scroll: false })}>Clear filters</button> : <ActionLink href="/renter/new">{t("listings.empty.cta")}</ActionLink>} />
       ) : (
         <div className="listing-grid">
           {listings.map((listing) => (
@@ -60,7 +63,11 @@ function ListingResults({ filters }: { filters: string }) {
         </div>
       )}
       {error && <button onClick={pager.retry}>Retry</button>}
-      <Pagination {...pager} onPageChange={pager.setPage} />
+      <Pagination {...pager} onPageChange={(nextPage) => {
+        const params = new URLSearchParams(filters);
+        if (nextPage > 1) params.set("page", String(nextPage));
+        router.replace(params.size ? `/listings?${params}` : "/listings", { scroll: false });
+      }} />
     </>
   );
 }

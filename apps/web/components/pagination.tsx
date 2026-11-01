@@ -20,7 +20,7 @@ export function Pagination({
       >
         Previous
       </button>
-      <span role="status">Page {page}</span>
+      <span role="status" aria-current="page" aria-label={`Current page, ${page}`}>Page {page}</span>
       <button
         type="button"
         className="secondary"

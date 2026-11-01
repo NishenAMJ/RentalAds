@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 
-export const metadata: Metadata = { title: "Cookie notice | Sewana Lanka", description: "The few cookies and browser storage items Sewana Lanka uses." };
+export const metadata: Metadata = { title: "Cookie notice | RentalHub Sri Lanka", description: "The few cookies and browser storage items RentalHub Sri Lanka uses." };
 
 export default function CookiesPage() {
   return (
@@ -11,8 +11,8 @@ export default function CookiesPage() {
         <thead><tr><th scope="col">Item</th><th scope="col">Purpose</th><th scope="col">Needed?</th></tr></thead>
         <tbody>
           <tr><td>Sign-in session (set by Supabase)</td><td>Keeps you signed in</td><td>Yes, when you sign in</td></tr>
-          <tr><td><code>sewana-theme</code></td><td>Remembers light or dark mode</td><td>Convenience only</td></tr>
-          <tr><td><code>sewana-lang</code></td><td>Remembers your language</td><td>Convenience only</td></tr>
+          <tr><td><code>rentalhub-theme</code></td><td>Remembers light or dark mode</td><td>Convenience only</td></tr>
+          <tr><td><code>rentalhub-lang</code></td><td>Remembers your language</td><td>Convenience only</td></tr>
         </tbody>
       </table>
       <h2>Third-party content</h2>

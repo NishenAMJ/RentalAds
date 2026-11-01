@@ -1,4 +1,4 @@
-# Sewana Lanka: concierge design system
+# RentalHub Sri Lanka: concierge design system
 
 ## Visual language
 

@@ -225,12 +225,12 @@ export function AdminLocationOverride({
               <p>
                 LKR {candidate.listing.monthlyRent.toLocaleString("en-LK")} /
                 month · {candidate.listing.bedrooms} beds ·{" "}
-                {candidate.listing.propertyType.toLowerCase()}
+                {candidate.listing.propertyType?.toLowerCase()}
               </p>
               <p>
                 {candidate.listing.parking ? "Parking" : "No parking"} ·{" "}
                 {candidate.listing.minDurationMonths} month minimum stay ·{" "}
-                {candidate.listing.size.replaceAll("_", " ")}
+                {candidate.listing.size?.replaceAll("_", " ")}
               </p>
               <a
                 href={`/property/${candidate.listing.id}`}

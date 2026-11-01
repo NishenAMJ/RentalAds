@@ -1,4 +1,5 @@
 import { SaveSuggestionDto, UpdateMatchStatusDto } from './matching.dto';
+import { ApiTags } from '@nestjs/swagger';
 import { Query } from '@nestjs/common';
 import { PaginationQuery } from '../../common/pagination';
 import {
@@ -18,6 +19,7 @@ import { RequirePermission } from '../../common/decorators/require-permission.de
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 
+@ApiTags('matching')
 @Controller('matching')
 @UseGuards(AuthGuard, AdminPermissionGuard)
 @RequirePermission('canApproveListings')

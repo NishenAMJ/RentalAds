@@ -1,11 +1,12 @@
 /// <reference types="jest" />
-import type { Listing, RentalRequest } from '@prisma/client';
+import type { RentalRequest } from '@prisma/client';
+import type { PropertyListing } from '../src/modules/matching/property-listing';
 import {
   passesHardFilters,
   scoreMatch,
 } from '../src/modules/matching/matching.logic';
 
-const baseListing: Listing = {
+const baseListing: PropertyListing = {
   reference: 'SL-000001',
   id: 'listing-1',
   ownerId: 'owner-1',
@@ -23,6 +24,12 @@ const baseListing: Listing = {
   status: 'ACTIVE',
   propertyType: 'APARTMENT',
   monthlyRent: 90000,
+  ratePeriod: 'MONTH' as const,
+  category: 'PROPERTY' as const,
+  attributes: null,
+  title: null,
+  description: null,
+  depositAmount: null,
   bedrooms: 2,
   bathrooms: 1,
   furnishing: 'UNFURNISHED',
@@ -108,12 +115,12 @@ describe('passesHardFilters', () => {
   });
 
   it('excludes a listing with fewer bedrooms than required', () => {
-    const listing: Listing = { ...baseListing, bedrooms: 1 };
+    const listing: PropertyListing = { ...baseListing, bedrooms: 1 };
     expect(passesHardFilters(listing, baseRequest)).toBe(false);
   });
 
   it('excludes an inactive listing', () => {
-    const listing: Listing = { ...baseListing, status: 'INACTIVE' };
+    const listing: PropertyListing = { ...baseListing, status: 'INACTIVE' };
     expect(passesHardFilters(listing, baseRequest)).toBe(false);
   });
 
@@ -133,7 +140,7 @@ describe('scoreMatch', () => {
   });
   it('scores an exact match higher than a partial one', () => {
     const exactScore = scoreMatch(baseListing, baseRequest);
-    const partialListing: Listing = {
+    const partialListing: PropertyListing = {
       ...baseListing,
       bedrooms: 3,
       furnishing: 'FURNISHED',

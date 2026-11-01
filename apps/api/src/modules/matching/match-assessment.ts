@@ -1,4 +1,5 @@
-import type { Listing, RentalRequest } from '@prisma/client';
+import type { RentalRequest } from '@prisma/client';
+import type { PropertyListing } from './property-listing';
 import { distanceKm } from '../../common/geography';
 
 export type CriterionStatus =
@@ -43,7 +44,7 @@ export function areaTextMatches(left: string, right: string): boolean {
   );
 }
 
-export function assessMatch(listing: Listing, request: RentalRequest) {
+export function assessMatch(listing: PropertyListing, request: RentalRequest) {
   const criteria: MatchCriterion[] = [];
   const add = (
     key: CriterionKey,

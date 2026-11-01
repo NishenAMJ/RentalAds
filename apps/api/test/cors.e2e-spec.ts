@@ -50,6 +50,10 @@ describe('CORS configuration', () => {
     );
     expect(response.headers['access-control-allow-credentials']).toBe('true');
     expect(response.headers['access-control-allow-methods']).toContain('PATCH');
+    // The owner calendar removes blocked dates with DELETE; without this the browser blocks the request.
+    expect(response.headers['access-control-allow-methods']).toContain(
+      'DELETE',
+    );
     expect(response.headers['access-control-allow-headers']).toContain(
       'Authorization',
     );

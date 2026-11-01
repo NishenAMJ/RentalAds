@@ -16,8 +16,8 @@ test('titles and descriptions are readable and never include owner contact detai
 });
 
 test('structured data describes the offer in LKR with an absolute URL', () => {
-  const data = listingJsonLd(listing, 'https://sewana.test');
-  assert.equal(data.url, 'https://sewana.test/property/abc');
+  const data = listingJsonLd(listing, 'https://rentalhub.test');
+  assert.equal(data.url, 'https://rentalhub.test/property/abc');
   assert.equal(data.offers.priceCurrency, 'LKR');
   assert.equal(data.offers.price, 85000);
   assert.equal(data.image, 'https://img.example/a.jpg');
@@ -32,7 +32,7 @@ test('JSON-LD cannot break out of its script tag', () => {
 });
 
 test('siteUrl normalises the origin and falls back safely', () => {
-  assert.equal(siteUrl('https://sewana.lk/some/path/'), 'https://sewana.lk');
+  assert.equal(siteUrl('https://rentalhub.lk/some/path/'), 'https://rentalhub.lk');
   assert.equal(siteUrl('not a url'), 'http://localhost:3000');
   assert.equal(siteUrl(undefined), 'http://localhost:3000');
 });

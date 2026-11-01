@@ -51,6 +51,9 @@ type Suggestion = MatchAssessment & {
 };
 
 /** The queue for one filter combination. Remounted (via `key`) when filters change so paging restarts. */
+/** Badge colour per request status: open needs work, matched is progress, closed is finished. */
+const REQUEST_TONE: Record<string, string> = { OPEN: "badge-warning", MATCHED: "badge-success", CLOSED: "badge-neutral" };
+
 function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNode }) {
   const pager = usePaginated<RentalRequest>("/requests", true, filters);
   const { items: requests, loading, error } = pager;
@@ -239,7 +242,7 @@ function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNod
                   Contact: {r.renterContact}
                 </p>
               </div>
-              <span className="ui-badge badge-success">
+              <span className={`ui-badge ${REQUEST_TONE[r.status] ?? "badge-neutral"}`}>
                 {r.status}
               </span>
             </div>

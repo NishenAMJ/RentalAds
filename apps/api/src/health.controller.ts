@@ -4,8 +4,10 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from './common/prisma.service';
 
+@ApiTags('health')
 @Controller('health')
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);

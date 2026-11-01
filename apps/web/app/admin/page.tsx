@@ -1,64 +1,53 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { usePaginated } from "@/lib/use-paginated";
-import { AdminMatches } from "@/components/admin-matches";
 import { AdminPermissionsForm } from "@/components/admin-permissions-form";
+import { apiRequest } from "@/lib/api-client";
+import type { AdminSummary } from "@/lib/admin-listings";
 
-type Entry = { id: string; areaText?: string; reason?: string; status: string };
-function QueueCard({ path, href, title, description, empty }: {
-  path: string; href: string; title: string; description: string; empty: string;
-}) {
-  const queue = usePaginated<Entry>(path, true);
-  return <article className="panel admin-queue">
-    <div className="admin-card-heading"><h2>{title}</h2>
-      <button className="text-button" onClick={queue.retry} disabled={queue.loading}
-        aria-label={`Refresh ${title.toLowerCase()}`}>Refresh</button></div>
-    <p className="admin-description">{description}</p>
-    {queue.loading ? <p role="status">Loading latest entries...</p> : queue.error ? (
-      <p role="alert" className="notice error">{queue.error}</p>
-    ) : <>
-      <p className="admin-queue-count">{queue.items.length}{queue.hasNextPage ? "+" : ""}
-        <span>{queue.hasNextPage ? "entries · latest 20 loaded" : "entries"}</span></p>
-      {queue.items.length ? <ul className="admin-preview">
-        {queue.items.slice(0, 3).map(item => <li key={item.id}>
-          <span>{item.areaText || item.reason || "Review entry"}</span>
-          <span className="admin-status">{item.status.replaceAll("_", " ").toLowerCase()}</span>
-        </li>)}
-      </ul> : <p className="notice">{empty}</p>}
-    </>}
-    <Link className="button" href={href}>Open {title.toLowerCase()} →</Link>
+function SummaryCard({ title, href, cta, rows }: { title: string; href: string; cta: string; rows: [label: string, value: number][] }) {
+  return <article className="panel summary-card">
+    <h2>{title}</h2>
+    <dl>{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    <Link className="button" href={href}>{cta} →</Link>
   </article>;
 }
+
+/** Overview only counts and links; the work itself happens on the listings, requests and complaints pages. */
 export default function AdminDashboard() {
   const { permissions, user } = useAuth();
+  const [summary, setSummary] = useState<AdminSummary | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    apiRequest<AdminSummary>("/admin/summary", { authenticated: true, signal: controller.signal })
+      .then(setSummary)
+      .catch((cause: unknown) => {
+        if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Unable to load the overview.");
+      });
+    return () => controller.abort();
+  }, []);
+  const { listings, requests, bookings, complaints } = summary ?? {};
+  let counts: ReactNode = <p role="status">Loading overview...</p>;
+  if (error) counts = <p role="alert" className="notice error">{error}</p>;
+  else if (summary) counts = <div className="admin-summary">
+    {listings && <SummaryCard title="Listings" href="/admin/listings" cta="Review listings"
+      rows={[["Waiting for review", listings.pending], ["Live", listings.active], ["Switched off", listings.inactive]]} />}
+    {requests && <SummaryCard title="Rental requests" href="/admin/requests" cta="Manage requests"
+      rows={[["Open", requests.open], ["Not yet assigned", requests.unassigned]]} />}
+    {bookings && <SummaryCard title="Bookings" href="/admin/bookings" cta="Review bookings"
+      rows={[["Upcoming and paid", bookings.upcoming], ["Refunds to make", bookings.refundDue]]} />}
+    {complaints && <SummaryCard title="Complaints" href="/admin/complaints" cta="Review complaints"
+      rows={[["Open", complaints.open]]} />}
+  </div>;
   return <section className="admin-dashboard">
     <div className="admin-heading"><div>
-      <p className="eyebrow">Sewana Lanka / Administration</p>
+      <p className="eyebrow">RentalHub Sri Lanka / Administration</p>
       <h1>Your platform at a glance.</h1>
-      <p>Review properties, connect renters with homes, and keep reports moving.</p>
+      <p>See what needs attention, then open the right area to act on it.</p>
     </div><span className="admin-account">Signed in as <strong>{user?.email ?? "Administrator"}</strong></span></div>
-    {permissions.canApproveListings && <AdminMatches />}
-    <div className="admin-section-heading"><h2>Your work queues</h2><p>Latest entries from the areas you manage.</p></div>
-    <div className="admin-queues">
-      {permissions.canApproveListings && <>
-        <QueueCard path="/listings/pending" href="/admin/listings" title="Pending listings"
-          description="Check property details and photos before approving publication."
-          empty="All caught up. No properties are waiting for review." />
-        <QueueCard path="/requests" href="/admin/requests" title="Rental requests"
-          description="Review renter requirements, find suggestions, and track introductions."
-          empty="No rental requests have been submitted yet." />
-      </>}
-      {permissions.canManageComplaints && <QueueCard path="/complaints" href="/admin/complaints" title="Complaints"
-        description="Review submitted reports, update their status, and record your findings."
-        empty="No complaints have been submitted." />}
-    </div>
+    {counts}
     {permissions.canManageAdmins && <AdminPermissionsForm />}
-    <aside className="panel admin-access-summary"><h2>Your access</h2>
-      <p>Available tools follow the permissions assigned to your account.</p><ul>
-        {permissions.canApproveListings && <li>Listing approvals and rental matching</li>}
-        {permissions.canManageComplaints && <li>Complaint review and resolution</li>}
-        {permissions.canManageAdmins && <li>Admin access management</li>}
-      </ul></aside>
   </section>;
 }

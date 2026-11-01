@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
 import { PasswordField } from "@/components/ui/password-field";
+import { AuthTopbar } from "@/components/auth-topbar";
 
 const MIN_LENGTH = 8;
 
@@ -40,6 +41,7 @@ export default function ResetPasswordPage() {
 
   return (
     <section className="auth-wrap">
+      <AuthTopbar />
       <div className="auth-card panel">
         <p className="eyebrow">Your rental account</p>
         <h1>Choose a new password.</h1>
@@ -50,6 +52,7 @@ export default function ResetPasswordPage() {
           </>
           : done ? <p role="status" className="notice">Your password has been updated. Redirecting…</p>
           : <form className="auth-form" onSubmit={submit} aria-busy={busy}>
+            <p className="small-copy">Use at least {MIN_LENGTH} characters and avoid reusing an important password.</p>
             <PasswordField id="new-password" name="password" label="New password" minLength={MIN_LENGTH} autoComplete="new-password" disabled={busy} required />
             <PasswordField id="confirm-password" name="confirm" label="Confirm new password" minLength={MIN_LENGTH} autoComplete="new-password" disabled={busy} required />
             {error && <p className="notice error" role="alert">{error}</p>}

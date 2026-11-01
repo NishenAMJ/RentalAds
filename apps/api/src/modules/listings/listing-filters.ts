@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
+import { CATEGORY_DEFINITIONS } from '../categories/category-registry';
 import type {
   ListingFilterQuery,
   ListingSort,
@@ -8,6 +9,9 @@ import type {
 type FilterInput = Pick<
   ListingFilterQuery,
   | 'area'
+  | 'category'
+  | 'subtype'
+  | 'q'
   | 'propertyType'
   | 'furnishing'
   | 'minRent'
@@ -26,6 +30,10 @@ export function listingFilterWhere(
     throw new BadRequestException(
       'Minimum rent cannot be higher than maximum rent',
     );
+  const category = filters.category ?? 'PROPERTY';
+  const typeField = CATEGORY_DEFINITIONS[category].typeField;
+  if (filters.subtype && !typeField)
+    throw new BadRequestException('This category has no types to filter by');
   const rent: Prisma.IntFilter | undefined =
     minRent !== undefined || maxRent !== undefined
       ? {
@@ -34,6 +42,13 @@ export function listingFilterWhere(
         }
       : undefined;
   return {
+    category,
+    ...(filters.subtype && typeField
+      ? { attributes: { path: [typeField], equals: filters.subtype } }
+      : {}),
+    ...(filters.q
+      ? { title: { contains: filters.q, mode: 'insensitive' } }
+      : {}),
     ...(area ? { areaText: { contains: area, mode: 'insensitive' } } : {}),
     ...(propertyType ? { propertyType } : {}),
     ...(furnishing ? { furnishing } : {}),

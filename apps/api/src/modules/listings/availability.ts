@@ -69,3 +69,16 @@ export function isStale(
   const confirmed = listing.lastAvailabilityConfirmedAt ?? listing.createdAt;
   return confirmed < cutoff;
 }
+
+/**
+ * Which listings the public may see and book: approved, not deleted, and recently confirmed by their owner.
+ * Browsing and booking share this so a hidden listing can never be booked.
+ */
+export function publicVisibility(config: ConfigService, now = new Date()) {
+  const { staleDays } = availabilityPolicy(config);
+  return {
+    status: 'ACTIVE' as const,
+    deletedAt: null,
+    AND: [freshSince(cutoffDate(now, staleDays))],
+  };
+}
