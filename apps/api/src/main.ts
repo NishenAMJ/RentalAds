@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { configureApp } from './configure-app';
+import { configureApiDocs } from './api-docs';
 import { JsonLogger } from './common/json-logger';
 
 async function bootstrap() {
@@ -11,6 +12,7 @@ async function bootstrap() {
       : {}),
   });
   configureApp(app);
+  configureApiDocs(app);
   await app.listen(process.env.PORT ?? 3001);
 }
 void bootstrap();

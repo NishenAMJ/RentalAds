@@ -6,6 +6,7 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import {
   AuthGuard,
   type AuthenticatedUser,
@@ -13,6 +14,7 @@ import {
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../common/prisma.service';
 
+@ApiTags('notifications')
 @Controller('notifications')
 @UseGuards(AuthGuard)
 export class NotificationsController {

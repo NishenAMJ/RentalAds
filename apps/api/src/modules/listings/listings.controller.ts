@@ -1,4 +1,5 @@
 import { Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { SearchListingsQuery } from '../../common/search-area.dto';
 import { RadiusThrottleGuard } from '../../common/guards/radius-throttle.guard';
 import { PaginationQuery } from '../../common/pagination';
@@ -33,6 +34,7 @@ class DeleteDto {
   @IsString() @MaxLength(1000) @Matches(/\S/) reason!: string;
 }
 
+@ApiTags('listings')
 @Controller('listings')
 export class ListingsController {
   constructor(private readonly listings: ListingsService) {}

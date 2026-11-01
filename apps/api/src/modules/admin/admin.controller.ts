@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
@@ -8,6 +9,7 @@ import { AdminService } from './admin.service';
 import { WriteThrottle } from '../../common/decorators/write-throttle.decorator';
 import { GrantPermissionDto } from './dto/grant-permission.dto';
 
+@ApiTags('admin')
 @Controller('admin')
 @UseGuards(AuthGuard)
 export class AdminController {

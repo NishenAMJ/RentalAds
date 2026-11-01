@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { PaginationQuery } from '../../common/pagination';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
@@ -25,6 +26,7 @@ import {
 } from './booking.dto';
 import { BookingsService } from './bookings.service';
 
+@ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
   constructor(private readonly bookings: BookingsService) {}
