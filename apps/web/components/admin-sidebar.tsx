@@ -11,10 +11,11 @@ export function AdminSidebar() {
   const [expanded, setExpanded] = useState(false);
   const links = [
     { href: "/admin", label: "Overview", visible: true },
-    { href: "/admin/listings", label: "Pending listings", visible: permissions.canApproveListings },
+    { href: "/admin/listings", label: "Listings", visible: permissions.canApproveListings },
     { href: "/admin/requests", label: "Rental requests", visible: permissions.canApproveListings },
+    { href: "/admin/bookings", label: "Bookings", visible: permissions.canApproveListings },
     { href: "/admin/complaints", label: "Complaints", visible: permissions.canManageComplaints },
-    { href: "/listings", label: "View public site ↗", visible: true },
+    { href: "/", label: "View public site ↗", visible: true },
   ];
 
   return (

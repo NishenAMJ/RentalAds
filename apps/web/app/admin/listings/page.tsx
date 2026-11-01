@@ -2,118 +2,70 @@
 import { useState } from "react";
 import { RequireSession } from "@/components/require-session";
 import { Pagination } from "@/components/pagination";
+import { AdminListingCard } from "@/components/admin-listing-card";
+import { AdminListingLookup } from "@/components/admin-listing-lookup";
 import { usePaginated } from "@/lib/use-paginated";
 import { apiRequest } from "@/lib/api-client";
-import { money, readable, type OwnerListing } from "@/lib/listings";
-import { AdminListingLookup } from "@/components/admin-listing-lookup";
-import { AdminDeleteButton } from "@/components/admin-delete-button";
+import { ACTION_MESSAGES, STATUS_TABS, type ListingAction, type ListingStatus } from "@/lib/admin-listings";
+import type { OwnerListing } from "@/lib/listings";
 
-function PendingListings() {
-  const pager = usePaginated<OwnerListing>("/listings/pending", true);
-  const [busy, setBusy] = useState<string | null>(null);
+function ListingList({ status, empty }: { status: ListingStatus; empty: string }) {
+  const pager = usePaginated<OwnerListing>("/listings/admin", true, `status=${status}`);
+  const [saving, setSaving] = useState<{ id: string; action: ListingAction } | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  async function moderate(id: string, action: "approve" | "reject") {
-    if (busy) return;
-    setBusy(id);
+
+  /** Reloads the list, stepping back a page when the current one has just been emptied. */
+  function refresh() {
+    if (pager.items.length === 1 && pager.page > 1) pager.setPage(pager.page - 1);
+    else pager.retry();
+  }
+  async function act(id: string, action: ListingAction) {
+    if (saving) return;
+    setSaving({ id, action });
     setError("");
     setMessage("");
     try {
-      const listing = await apiRequest<OwnerListing>(
-        `/listings/${encodeURIComponent(id)}/${action}`,
-        {
-          method: "PATCH",
-          authenticated: true,
-        },
-      );
-      setMessage(
-        action === "approve"
-          ? `Listing approved${listing.reference ? `: ${listing.reference}` : ""}.`
-          : "Listing rejected.",
-      );
-      if (pager.items.length === 1 && pager.page > 1)
-        pager.setPage(pager.page - 1);
-      else pager.retry();
+      const listing = await apiRequest<OwnerListing>(`/listings/${encodeURIComponent(id)}/${action}`, { method: "PATCH", authenticated: true });
+      setMessage(`${ACTION_MESSAGES[action]}${listing.reference ? `: ${listing.reference}` : ""}.`);
+      refresh();
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Unable to review listing.",
-      );
+      setError(cause instanceof Error ? cause.message : "Unable to update the listing.");
     } finally {
-      setBusy(null);
+      setSaving(null);
     }
   }
-  return (
-    <section className="admin-workspace">
-      <div className="page-heading"><div><p className="eyebrow">Property curation</p>
-        <h1>Pending listings{!pager.loading && !pager.error && <span className="count-chip inline" role="status">{pager.items.length}{pager.hasNextPage ? "+" : ""} on this page</span>}</h1>
-        <p className="intro">Review each submission before it becomes public. Owner contact details are for your team only.</p></div></div>
-      <AdminListingLookup />
-      {(pager.error || error) && (
-        <p role="alert" className="notice error">
-          {pager.error || error}{" "}
-          <button onClick={pager.retry}>Refresh queue</button>
-        </p>
-      )}
-      {message && (
-        <p role="status" className="notice">
-          {message}
-        </p>
-      )}
-      {pager.loading && <p role="status">Loading listings...</p>}
-      {!pager.loading && !pager.error && !pager.items.length && (
-        <p>No pending listings on this page.</p>
-      )}
-      <div className="stack">
-        {pager.items.map((listing) => (
-          <article key={listing.id} className="panel pending-card">
-            <div className="pending-photo">{listing.photoUrls[0]
-              /* eslint-disable-next-line @next/next/no-img-element */
-              ? <img src={listing.photoUrls[0]} alt={`${readable(listing.propertyType)} in ${listing.areaText}`} loading="lazy" />
-              : <div className="photo-placeholder">No photo</div>}
-              <span className="photo-tag">{listing.photoUrls.length} {listing.photoUrls.length === 1 ? "photo" : "photos"}</span></div>
-            <div className="pending-main">
-              <div className="pending-title"><h2>{listing.areaText}</h2><span className="ui-badge">{readable(listing.propertyType)}</span>
-                <span className="pending-rent">{money(listing.monthlyRent)} <small>/ month</small></span></div>
-              <dl className="spec-grid">
-                <div><dt>Configuration</dt><dd>{listing.bedrooms} bed · {listing.bathrooms} bath · {readable(listing.furnishing)}</dd></div>
-                <div><dt>Parking &amp; lease</dt><dd>{listing.parking ? "Parking" : "No parking"} · {listing.minDurationMonths} mo min</dd></div>
-                <div><dt>Key money</dt><dd>{listing.keyMoney ? money(listing.keyMoneyAmount ?? 0) : "Not required"}</dd></div>
-                <div><dt>Owner contact (admin only)</dt><dd>{listing.ownerContact}</dd></div>
-              </dl>
-              {(listing.latitude == null || listing.longitude == null)
-                ? <p className="pin-warning">Missing map pin: excluded from automatic perimeter results.</p>
-                : <p className="pin-ok">Map pin set</p>}
-              <div className="pending-links">
-                {listing.mapLink && <a href={listing.mapLink} target="_blank" rel="noopener noreferrer">View map ↗</a>}
-                {listing.photoUrls.map((url, index) => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer">View photo {index + 1}</a>
-                ))}
-              </div>
-            </div>
-            <div className="pending-actions">
-              <button disabled={!!busy || pager.loading} onClick={() => void moderate(listing.id, "approve")}>
-                {busy === listing.id ? "Saving..." : "Approve listing"}
-              </button>
-              <button className="danger-button" disabled={!!busy || pager.loading} onClick={() => void moderate(listing.id, "reject")}>
-                Reject submission
-              </button>
-              <AdminDeleteButton path={`/listings/${listing.id}/admin-delete`} subject="listing" disabled={!!busy || pager.loading} onDeleted={pager.retry} />
-            </div>
-          </article>
-        ))}
-      </div>
-      <Pagination
-        {...pager}
-        loading={pager.loading || !!busy}
-        onPageChange={pager.setPage}
-      />
-    </section>
-  );
+  const failure = pager.error || error;
+  return <>
+    {failure && <p role="alert" className="notice error">{failure} <button onClick={pager.retry}>Refresh list</button></p>}
+    {message && <p role="status" className="notice">{message}</p>}
+    {pager.loading && <p role="status">Loading listings...</p>}
+    {!pager.loading && !pager.error && !pager.items.length && <p>{empty}</p>}
+    <div className="stack">{pager.items.map((listing) =>
+      <AdminListingCard key={listing.id} listing={listing} disabled={!!saving || pager.loading}
+        savingAction={saving?.id === listing.id ? saving.action : null}
+        onAction={(action) => void act(listing.id, action)}
+        onDeleted={() => { setMessage("Listing deleted. The owner has been notified."); refresh(); }} />)}
+    </div>
+    <Pagination {...pager} loading={pager.loading || !!saving} onPageChange={pager.setPage} />
+  </>;
 }
+
+function ListingsWorkspace() {
+  const [status, setStatus] = useState<ListingStatus>("PENDING_APPROVAL");
+  const tab = STATUS_TABS.find((candidate) => candidate.status === status)!;
+  return <section className="admin-workspace">
+    <div className="page-heading"><div><p className="eyebrow">Property curation</p><h1>Listings</h1>
+      <p className="intro">Review submissions, switch live listings off, or remove them. Owner contact details are for your team only.</p></div></div>
+    <AdminListingLookup />
+    <div className="segmented" role="group" aria-label="Listing status">{STATUS_TABS.map(({ status: value, label }) =>
+      <button key={value} type="button" aria-pressed={value === status} onClick={() => setStatus(value)}>{label}</button>)}
+    </div>
+    {/* Remounting restarts paging at page 1 whenever the status changes. */}
+    <ListingList key={status} status={status} empty={tab.empty} />
+  </section>;
+}
+
 export default function AdminListingsPage() {
-  return (
-    <RequireSession>
-      <PendingListings />
-    </RequireSession>
-  );
+  return <RequireSession><ListingsWorkspace /></RequireSession>;
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { fetchPublicListing } from "@/lib/server-api";
 import { listingDescription, listingJsonLd, listingTitle, serializeJsonLd, siteUrl } from "@/lib/seo";
 import { PropertyDetail } from "./property-detail";
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PropertyPage({ params }: Props) {
   const { id } = await params;
   const listing = await fetchPublicListing(id);
+  if (listing?.category && listing.category !== "PROPERTY") redirect(`/item/${id}`);
   return <>
     {listing && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(listingJsonLd(listing, siteUrl())) }} />}
     <PropertyDetail key={id} id={id} />

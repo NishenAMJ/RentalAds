@@ -4,8 +4,9 @@ import { useId, useRef, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "@/lib/api-client";
 import {
+  listingKind,
   money,
-  readable,
+  rateUnit,
   statusLabel,
   type OwnerListing,
 } from "@/lib/listings";
@@ -89,8 +90,8 @@ export function AdminListingLookup() {
             {listing.reference ?? "Awaiting approval"}: {listing.areaText}
           </h3>
           <p>
-            {statusLabel[listing.status]} · {readable(listing.propertyType)} ·{" "}
-            {money(listing.monthlyRent)} / month
+            {statusLabel[listing.status]} · {listingKind(listing)} ·{" "}
+            {money(listing.monthlyRent)} / {rateUnit(listing.ratePeriod)}
           </p>
           <p>
             {listing.bedrooms} bedrooms · {listing.bathrooms} bathrooms

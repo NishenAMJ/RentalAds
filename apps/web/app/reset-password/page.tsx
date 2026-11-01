@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
 import { PasswordField } from "@/components/ui/password-field";
+import { AuthTopbar } from "@/components/auth-topbar";
 
 const MIN_LENGTH = 8;
 
@@ -40,6 +41,7 @@ export default function ResetPasswordPage() {
 
   return (
     <section className="auth-wrap">
+      <AuthTopbar />
       <div className="auth-card panel">
         <p className="eyebrow">Your rental account</p>
         <h1>Choose a new password.</h1>

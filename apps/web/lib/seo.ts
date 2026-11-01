@@ -9,6 +9,7 @@ export interface SeoListing {
   furnishing: string;
   areaText: string;
   monthlyRent: number;
+  ratePeriod?: "DAY" | "WEEK" | "MONTH";
   photoUrls: string[];
 }
 
@@ -29,7 +30,7 @@ export function listingTitle(listing: SeoListing): string {
 }
 
 export function listingDescription(listing: SeoListing): string {
-  const rent = `LKR ${listing.monthlyRent.toLocaleString("en-LK")} per month`;
+  const rent = `LKR ${listing.monthlyRent.toLocaleString("en-LK")} per ${(listing.ratePeriod ?? "MONTH").toLowerCase()}`;
   return `${listing.bedrooms} bed, ${listing.bathrooms} bath, ${readable(listing.furnishing)} ${readable(listing.propertyType)} in ${listing.areaText}. ${rent}. Reviewed by RentalHub Sri Lanka; owner contact details stay private.`;
 }
 
@@ -52,7 +53,7 @@ export function listingJsonLd(listing: SeoListing, origin: string): Record<strin
       "@type": "Offer",
       price: listing.monthlyRent,
       priceCurrency: "LKR",
-      priceSpecification: { "@type": "UnitPriceSpecification", price: listing.monthlyRent, priceCurrency: "LKR", unitText: "MONTH" },
+      priceSpecification: { "@type": "UnitPriceSpecification", price: listing.monthlyRent, priceCurrency: "LKR", unitText: listing.ratePeriod ?? "MONTH" },
     },
   };
 }

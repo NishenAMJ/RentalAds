@@ -11,7 +11,7 @@ function AdminAccess({ children }: { children: ReactNode }) {
   if (permissionsLoading) return <p role="status">Checking admin access...</p>;
   const permitted = isAdmin && (path === "/admin" ||
     (path === "/admin/complaints" && permissions.canManageComplaints) ||
-    (["/admin/listings", "/admin/requests"].includes(path) && permissions.canApproveListings));
+    (["/admin/listings", "/admin/requests", "/admin/bookings"].includes(path) && permissions.canApproveListings));
   if (!permitted) return <AccessRedirect href={`/login?next=${encodeURIComponent(path)}`}
     message="Your account does not have permission to view this admin page." />;
   return children;

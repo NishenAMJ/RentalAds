@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
@@ -9,8 +9,16 @@ import { useAuth } from "@/components/auth-provider";
 import { loginDestination } from "@/lib/login-destination";
 import { PasswordField } from "@/components/ui/password-field";
 import { useT } from "@/components/i18n-provider";
+import { AuthTopbar } from "@/components/auth-topbar";
 
 type Mode = "login" | "signup" | "forgot";
+
+const ASIDE_POINTS = ["home.pillar2", "home.pillar3"] as const;
+
+/** The centred card used for loading and error states, so none of them appear unstyled. */
+function AuthShell({ children }: { children: ReactNode }) {
+  return <section className="auth-wrap"><AuthTopbar /><div className="auth-card panel">{children}</div></section>;
+}
 
 function authErrorMessage(cause: unknown): string {
   const message = cause instanceof Error ? cause.message.toLowerCase() : "";
@@ -82,31 +90,35 @@ function LoginForm() {
     }
   }
 
-  if (profileError) return <section className="panel"><p role="alert">{profileError}</p>
-    <button onClick={() => void signOut().catch(() => setError("Unable to sign out. Refresh the page to try again."))}>Sign in again</button>
+  if (profileError) return <AuthShell><p role="alert">{profileError}</p>
+    <button className="ui-button ui-button-primary auth-submit" onClick={() => void signOut().catch(() => setError("Unable to sign out. Refresh the page to try again."))}>Sign in again</button>
     {error && <p role="alert">{error}</p>}
-  </section>;
+  </AuthShell>;
   if (loading || permissionsLoading || (user && !authError))
-    return (
-      <p role="status">
-        {loading ? "Checking your session..." : "Redirecting..."}
-      </p>
-    );
-  if (authError)
-    return (
-      <p role="alert" className="notice error">
-        {authError}
-      </p>
-    );
+    return <AuthShell><p role="status">{loading ? "Checking your session..." : "Redirecting..."}</p></AuthShell>;
+  if (authError) return <AuthShell><p role="alert" className="notice error">{authError}</p></AuthShell>;
 
   const heading = t(`login.title.${mode}`);
   const intro = t(`login.intro.${mode}`);
   const submitLabel = t(`login.submit.${mode}`);
 
   return (
-    <section className="auth-wrap">
+    <section className="auth-layout">
+      <AuthTopbar />
+      <aside className="auth-aside">
+        <p className="eyebrow">RentalHub Sri Lanka</p>
+        <h2>{t("home.title1")} <em>{t("home.title2")}</em></h2>
+        <ul className="auth-points">{ASIDE_POINTS.map((key) =>
+          <li key={key}><h3>{t(`${key}.title`)}</h3><p>{t(`${key}.body`)}</p></li>)}</ul>
+      </aside>
       <div className="auth-card panel">
-        <div className="auth-heading"><p className="eyebrow">{t("login.eyebrow")}</p></div>
+        {mode !== "forgot" && (
+          <div className="segmented auth-tabs" role="tablist" aria-label={t("login.eyebrow")}>
+            <button type="button" role="tab" aria-selected={mode === "login"} disabled={busy} onClick={() => switchMode("login")}>{t("nav.signIn")}</button>
+            <button type="button" role="tab" aria-selected={mode === "signup"} disabled={busy} onClick={() => switchMode("signup")}>{t("login.create")}</button>
+          </div>
+        )}
+        <p className="eyebrow">{t("login.eyebrow")}</p>
         <h1>{heading}</h1>
         <p className="intro">{intro}</p>
         <form className="auth-form" onSubmit={submit} aria-busy={busy}>
@@ -135,27 +147,15 @@ function LoginForm() {
               {t("login.forgot")}
             </button>
           )}
-          {error && (
-            <p className="notice error" role="alert">
-              {error}
-            </p>
-          )}
-          {message && (
-            <p className="notice" role="status">
-              {message}
-            </p>
-          )}
+          {error && <p className="notice error" role="alert">{error}</p>}
+          {message && <p className="notice" role="status">{message}</p>}
           <button className="ui-button ui-button-primary auth-submit" disabled={busy}>
             {busy ? "Please wait…" : submitLabel}
           </button>
         </form>
         <p className="privacy-line"><svg aria-hidden="true" width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>{t("login.privacy")}</p>
         <div className="auth-links">
-          {mode === "login" ? (
-            <button className="text-button" type="button" disabled={busy} onClick={() => switchMode("signup")}>{t("login.create")}</button>
-          ) : (
-            <button className="text-button" type="button" disabled={busy} onClick={() => switchMode("login")}>{mode === "signup" ? t("login.have") : t("login.back")}</button>
-          )}
+          {mode === "forgot" ? <button className="text-button" type="button" disabled={busy} onClick={() => switchMode("login")}>{t("login.back")}</button> : <span />}
           <Link href="/listings">{t("login.browse")}</Link>
         </div>
       </div>

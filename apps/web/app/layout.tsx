@@ -13,7 +13,7 @@ import "./screens.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: "RentalHub Sri Lanka | Home Rentals", template: "%s | RentalHub Sri Lanka" },
-  description: "A personal approach to Colombo rentals. Submit a private rental request and let our local team coordinate thoughtful introductions.",
+  description: "A personal approach to rentals in Sri Lanka. Submit a private rental request and let our local team coordinate thoughtful introductions.",
   openGraph: { siteName: "RentalHub Sri Lanka", type: "website", locale: "en_LK" },
   twitter: { card: "summary" },
 };

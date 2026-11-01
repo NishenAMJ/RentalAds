@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockBackend, signIn } from "./support/mock-backend";
+import { BOOKING_ID, CONFIRMED_ID, ITEM_ID, mockBackend, signIn } from "./support/mock-backend";
 
 test.describe("public visitors", () => {
   test("can browse homes and filters are sent to the API", async ({ page }) => {
@@ -43,7 +43,7 @@ test.describe("public visitors", () => {
 });
 
 test.describe("home page hero", () => {
-  const HEADLINE = /A place to live\.\s*A little help finding it\./;
+  const HEADLINE = /Rent what you need\.\s*From people nearby\./;
 
   test("has no illustration and types the headline, then shows the buttons", async ({ page }) => {
     await mockBackend(page, "RENTER");
@@ -55,7 +55,7 @@ test.describe("home page hero", () => {
     const buttons = page.locator(".hero-reveal");
     await expect(buttons).toHaveAttribute("data-pending", "true");
     await expect(page.locator("h1 .tw-live")).toHaveText(HEADLINE, { timeout: 15000 });
-    await expect(page.locator(".intro .tw-live")).toContainText("Our local team brings together your needs", { timeout: 15000 });
+    await expect(page.locator(".intro .tw-live")).toContainText("Find a home with our team", { timeout: 15000 });
     await expect(buttons).toHaveAttribute("data-pending", "false");
     await expect(page.getByRole("link", { name: /Find a property for me/ }).first()).toBeVisible();
     await expect(page.locator(".tw-cursor")).toHaveCount(0);
@@ -67,8 +67,8 @@ test.describe("home page hero", () => {
     await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false", { timeout: 15000 });
 
     // Leaving and coming back inside the app shows the finished text straight away.
-    await page.getByRole("link", { name: "Explore homes" }).first().click();
-    await expect(page).toHaveURL(/\/listings/);
+    await page.getByRole("link", { name: /Browse categories/ }).first().click();
+    await expect(page).toHaveURL(/\/categories/);
     await page.locator(".brand").first().click();
     await expect(page.locator("h1 .tw-live")).toHaveText(HEADLINE);
     await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false");
@@ -85,7 +85,7 @@ test.describe("home page hero", () => {
     await page.goto("/");
     await expect(page.locator(".hero-reveal")).toHaveAttribute("data-pending", "false", { timeout: 15000 });
     await page.getByLabel("Language").selectOption("si");
-    await expect(page.locator("h1 .tw-live")).toContainText("ජීවත් වීමට තැනක්");
+    await expect(page.locator("h1 .tw-live")).toContainText("කුලියට ගන්න");
     await expect(page.locator(".tw-cursor")).toHaveCount(0);
   });
 
@@ -106,10 +106,10 @@ test.describe("language and account", () => {
     await mockBackend(page, "RENTER");
     await page.goto("/");
     await page.getByLabel("Language").selectOption("si");
-    await expect(page.getByRole("link", { name: "නිවාස බලන්න" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "ඇතුළු වන්න" }).first()).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", "si");
     await page.reload();
-    await expect(page.getByRole("link", { name: "නිවාස බලන්න" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "ඇතුළු වන්න" }).first()).toBeVisible();
   });
 
   test("a forgotten password can be recovered by email", async ({ page }) => {
@@ -182,6 +182,7 @@ test.describe("owners", () => {
     const backend = await mockBackend(page, "OWNER");
     await signIn(page);
     await page.getByRole("link", { name: "For owners" }).click();
+    await page.getByRole("link", { name: /Homes & apartments/ }).click();
 
     await expect(page.getByRole("heading", { name: "Physical specifications" })).toBeVisible();
     await page.getByLabel(/^Area/).fill("Nugegoda");
@@ -204,6 +205,7 @@ test.describe("owners", () => {
     const backend = await mockBackend(page, "OWNER");
     await signIn(page);
     await page.getByRole("link", { name: "For owners" }).click();
+    await page.getByRole("link", { name: /Homes & apartments/ }).click();
     await page.getByRole("button", { name: /Continue to rent/ }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Please check your listing" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Physical specifications" })).toBeVisible();
@@ -218,8 +220,8 @@ test.describe("administrators", () => {
     await expect(page).toHaveURL(/\/admin$/);
     await expect(page.getByRole("heading", { name: "Your platform at a glance." })).toBeVisible();
 
-    await page.getByRole("link", { name: "Pending listings" }).first().click();
-    await expect(page.getByRole("heading", { name: /Pending listings/ })).toBeVisible();
+    await page.getByRole("link", { name: "Listings", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Listings", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Approve listing" }).click();
     await expect.poll(() => backend.called("PATCH", "/listings/22222222-2222-4222-8222-222222222222/approve").length).toBe(1);
   });
@@ -268,5 +270,179 @@ test.describe("administrators", () => {
     await mockBackend(page, "RENTER");
     await signIn(page);
     await expect(page.getByRole("link", { name: "Admin dashboard" })).toHaveCount(0);
+  });
+});
+
+test.describe("item rentals", () => {
+  const colombo = (daysAhead: number) => {
+    const date = new Date(Date.now() + daysAhead * 86_400_000);
+    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
+  };
+
+  test("the home page offers every category and each tile leads somewhere", async ({ page }) => {
+    await mockBackend(page, "RENTER");
+    await page.goto("/categories");
+    for (const name of ["Homes & apartments", "Vehicles", "Tools & equipment", "Event gear"])
+      await expect(page.getByRole("link", { name: new RegExp(name) })).toBeVisible();
+    await page.getByRole("link", { name: /Vehicles/ }).click();
+    await expect(page).toHaveURL(/\/c\/vehicles$/);
+    await expect(page.getByRole("link", { name: /Toyota Aqua/ })).toBeVisible();
+  });
+
+  test("filters are sent to the API when browsing a category", async ({ page }) => {
+    const backend = await mockBackend(page, "RENTER");
+    await page.goto("/c/vehicles");
+    await page.getByLabel("Type").selectOption("CAR");
+    await page.getByLabel("Max price (LKR)").fill("8000");
+    await page.getByRole("button", { name: "Apply filters" }).click();
+    await expect.poll(() => backend.calls.filter((call) => call.path === "/listings").at(-1)?.query.get("subtype")).toBe("CAR");
+    const last = backend.calls.filter((call) => call.path === "/listings").at(-1);
+    expect(last?.query.get("category")).toBe("VEHICLE");
+    expect(last?.query.get("maxRent")).toBe("8000");
+  });
+
+  test("a renter picks dates, sees the price and is sent to PayHere to pay", async ({ page }) => {
+    const backend = await mockBackend(page, "RENTER");
+    await page.route("https://sandbox.payhere.lk/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>PayHere</h1>" }));
+    await signIn(page);
+    await page.getByRole("link", { name: "Categories" }).click();
+    await page.getByRole("link", { name: /Vehicles/ }).click();
+    await page.getByRole("link", { name: /Toyota Aqua/ }).click();
+
+    await expect(page.getByRole("heading", { name: "Toyota Aqua" })).toBeVisible();
+    await expect(page.getByText("Automatic")).toBeVisible();
+    await page.getByLabel("From").fill(colombo(7));
+    await page.getByLabel("Until (return date)").fill(colombo(10));
+    await expect(page.getByText("LKR 26,500")).toBeVisible();
+    await page.getByLabel("Your mobile number").fill("71 234 5678");
+
+    const payhere = page.waitForRequest((request) => request.url().includes("sandbox.payhere.lk") && request.method() === "POST");
+    await page.getByRole("button", { name: "Book and pay" }).click();
+    expect((await payhere).postData()).toContain(`order_id=${BOOKING_ID}`);
+
+    const [booking] = backend.called("POST", "/bookings");
+    expect(booking.body).toMatchObject({ listingId: "66666666-6666-4666-8666-666666666666", startDate: colombo(7), endDate: colombo(10), renterContact: "+94712345678" });
+    expect(backend.called("POST", `/bookings/${BOOKING_ID}/checkout`)).toHaveLength(1);
+  });
+
+  test("an owner lists a vehicle from fields the API defines", async ({ page }) => {
+    const backend = await mockBackend(page, "OWNER");
+    await signIn(page);
+    await page.getByRole("link", { name: "For owners" }).click();
+    await page.getByRole("link", { name: /Vehicles/ }).click();
+
+    await page.getByLabel("Title").fill("Toyota Aqua");
+    await page.getByLabel("Vehicle type").selectOption("CAR");
+    await page.getByLabel("Transmission").selectOption("AUTOMATIC");
+    await page.getByLabel("Fuel").selectOption("HYBRID");
+    await page.getByLabel("Seats").fill("5");
+    await page.getByLabel("Pickup area").fill("Galle");
+    await page.getByLabel("Price (LKR)").fill("5000");
+    await page.getByLabel("Your mobile number").fill("71 234 5678");
+    await page.getByRole("button", { name: /Submit for approval/ }).click();
+
+    await expect(page.getByText("Your listing has been submitted.")).toBeVisible();
+    const [created] = backend.called("POST", "/listings/items");
+    expect(created.body).toMatchObject({
+      category: "VEHICLE", title: "Toyota Aqua", areaText: "Galle", rate: 5000, ratePeriod: "DAY", ownerContact: "+94712345678",
+      attributes: { vehicleType: "CAR", transmission: "AUTOMATIC", fuel: "HYBRID", seats: 5, withDriver: false },
+    });
+  });
+
+  test("a renter sees their bookings and can pay one that is still held", async ({ page }) => {
+    await mockBackend(page, "RENTER");
+    await signIn(page);
+    await page.getByText("My activity").click();
+    await page.getByRole("link", { name: "My bookings" }).click();
+    await expect(page.getByRole("heading", { name: "My bookings" })).toBeVisible();
+    await expect(page.getByText("Waiting for payment")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pay now" })).toBeVisible();
+  });
+
+  test("a renter sees what a cancellation refunds before confirming it", async ({ page }) => {
+    const backend = await mockBackend(page, "RENTER");
+    await signIn(page);
+    await page.getByText("My activity").click();
+    await page.getByRole("link", { name: "My bookings" }).click();
+    const card = page.locator(".booking-card", { hasText: "Confirmed" });
+    await expect(card.getByRole("link", { name: "Message on WhatsApp" })).toHaveAttribute("href", "https://wa.me/94770000000");
+    await card.getByRole("button", { name: "Cancel booking" }).click();
+    await expect(card.getByText("You are cancelling well ahead, so you get everything back.")).toBeVisible();
+    await expect(card.getByText("You will be refunded LKR 26,500.")).toBeVisible();
+    expect(backend.called("PATCH", `/bookings/${CONFIRMED_ID}/cancel`)).toHaveLength(0);
+
+    await card.getByRole("button", { name: "Keep booking" }).click();
+    await card.getByRole("button", { name: "Cancel booking" }).click();
+    await card.getByRole("button", { name: "Yes, cancel booking" }).click();
+    await expect.poll(() => backend.called("PATCH", `/bookings/${CONFIRMED_ID}/cancel`).length).toBe(1);
+  });
+
+  test("an owner cancels a paid booking only with a reason", async ({ page }) => {
+    const backend = await mockBackend(page, "OWNER");
+    await signIn(page);
+    await page.getByText("My activity").click();
+    await page.getByRole("link", { name: "Bookings of my items" }).click();
+    await expect(page.getByText("+94771234567")).toBeVisible();
+    await page.getByRole("button", { name: "Cancel booking" }).click();
+    const confirm = page.getByRole("button", { name: "Cancel and refund the renter" });
+    await expect(confirm).toBeDisabled();
+    await page.getByLabel("Reason shown to the renter").fill("The car broke down");
+    await confirm.click();
+    await expect.poll(() => backend.called("PATCH", `/bookings/${CONFIRMED_ID}/owner-cancel`).length).toBe(1);
+    expect(backend.called("PATCH", `/bookings/${CONFIRMED_ID}/owner-cancel`)[0].body).toEqual({ reason: "The car broke down" });
+  });
+
+  test("an owner edits a listing and only the changed fields are sent", async ({ page }) => {
+    const backend = await mockBackend(page, "OWNER");
+    await signIn(page);
+    await page.getByText("My activity").click();
+    await page.getByRole("link", { name: "My listings" }).click();
+    await page.locator(".owner-property-card", { hasText: "Toyota Aqua" }).getByRole("link", { name: "Edit" }).click();
+    await expect(page.getByRole("heading", { name: /Edit listing/ })).toBeVisible();
+
+    // Price only: applies at once, so the listing is not sent back for review.
+    await page.getByLabel("Price (LKR)").fill("6500");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
+    const [priceEdit] = backend.called("PATCH", `/listings/${ITEM_ID}`);
+    expect(priceEdit.body).toEqual({ rate: 6500 });
+
+    // A description change is reviewed again.
+    await page.getByLabel("Description (optional)").fill("Newly serviced, with child seat.");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByText("Saved. Your listing will be checked again before it is shown.")).toBeVisible();
+    expect(backend.called("PATCH", `/listings/${ITEM_ID}`)[1].body).toMatchObject({ description: "Newly serviced, with child seat." });
+  });
+
+  test("an owner blocks and unblocks dates on their calendar", async ({ page }) => {
+    const backend = await mockBackend(page, "OWNER");
+    await signIn(page);
+    await page.getByText("My activity").click();
+    await page.getByRole("link", { name: "My listings" }).click();
+    await page.locator(".owner-property-card", { hasText: "Toyota Aqua" }).getByRole("link", { name: "Edit" }).click();
+    await expect(page.getByText("Family trip", { exact: false })).toBeVisible();
+
+    const start = new Date(Date.now() + 50 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
+    const end = new Date(Date.now() + 52 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
+    await page.getByLabel("From").fill(start);
+    await page.getByLabel("Until (return date)").fill(end);
+    await page.getByRole("button", { name: "Block these dates" }).click();
+    await expect.poll(() => backend.called("POST", `/listings/${ITEM_ID}/blocks`).length).toBe(1);
+    expect(backend.called("POST", `/listings/${ITEM_ID}/blocks`)[0].body).toMatchObject({ startDate: start, endDate: end });
+
+    await page.getByRole("button", { name: "Remove" }).click();
+    await expect.poll(() => backend.calls.filter((call) => call.method === "DELETE").length).toBe(1);
+  });
+
+  test("the team records a refund once it has been sent", async ({ page }) => {
+    const backend = await mockBackend(page, "ADMIN");
+    await signIn(page);
+    await page.getByRole("link", { name: "Bookings", exact: true }).click();
+    await page.getByRole("button", { name: "Refunds due" }).click();
+    await expect(page.getByText(/Refund LKR 26,500 to the renter/)).toBeVisible();
+    await page.getByLabel(/PayHere refund reference/).fill("RF-77");
+    await page.getByRole("button", { name: "I have sent this refund" }).click();
+    await expect.poll(() => backend.called("PATCH", `/bookings/${CONFIRMED_ID}/refund-done`).length).toBe(1);
+    expect(backend.called("PATCH", `/bookings/${CONFIRMED_ID}/refund-done`)[0].body).toEqual({ reference: "RF-77" });
   });
 });

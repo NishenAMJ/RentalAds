@@ -31,6 +31,19 @@ export default function TermsPage() {
         <li>Check the property, the owner and the agreement yourself before paying anyone. Never send money before you have met the owner and seen the property.</li>
       </ul>
 
+      <h2>Renting items: vehicles, equipment and event gear</h2>
+      <p>Items are booked by date and paid for through our payment partner, PayHere. This is different from homes, where our team introduces you personally. For items the owner and renter agree the rental when the booking is paid, and {OPERATOR_NAME} is not the owner or the renter.</p>
+      <ul>
+        <li><strong>What you pay:</strong> the rental, a service fee shown before you pay, and a refundable deposit if the owner asks for one. The total is shown before you confirm.</li>
+        <li><strong>Holding your dates:</strong> dates are held for 30 minutes while you pay. If you do not pay in that time they are released.</li>
+        <li><strong>Contact details:</strong> the owner&rsquo;s and the renter&rsquo;s phone numbers are shared with each other only after the booking is paid.</li>
+        <li><strong>If you cancel:</strong> cancel at least 7 days before the start for a full refund. Cancel 2 to 6 days before and you get your deposit and half of the rental back; the service fee is not refunded. Cancel later than that and only your deposit is returned. A rental that has started cannot be cancelled online.</li>
+        <li><strong>If the owner cancels, or we cannot confirm your booking:</strong> you are refunded in full.</li>
+        <li><strong>Refunds:</strong> we send refunds by hand to the card or account you paid with and email you when it is sent. It can take a few days to show.</li>
+        <li><strong>Deposits:</strong> the deposit is returned after the rental unless the owner reports damage or missing items. Tell us within 48 hours of the return and we will look at both sides.</li>
+        <li><strong>Owners:</strong> you may block dates you cannot offer. Cancelling a paid booking refunds the renter in full, so please do it only when you really cannot provide the item. Repeated cancellations can lead to your listing being removed.</li>
+      </ul>
+
       <h2>Not allowed</h2>
       <ul>
         <li>False, misleading or duplicate listings, or fake requests.</li>

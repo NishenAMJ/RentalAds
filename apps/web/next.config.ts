@@ -26,7 +26,8 @@ const contentSecurityPolicy = [
   `connect-src ${connectSources.join(" ")}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  // Booking payments are a form post to PayHere's hosted checkout; nothing else may receive a form.
+  "form-action 'self' https://www.payhere.lk https://sandbox.payhere.lk",
   "object-src 'none'",
 ].join("; ");
 
