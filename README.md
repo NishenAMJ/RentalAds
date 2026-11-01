@@ -96,12 +96,12 @@ Adds eight sample vehicles, tools and event-gear listings under one fake owner, 
 
 | Suite | Count | What it covers |
 | --- | --- | --- |
-| API unit | 188 | Pricing, dates, refund policy, category validation, PayHere signing and webhook edge cases, edits, blocked dates, alerts, seed data |
+| API unit | 189 | Pricing, dates, refund policy, category validation, PayHere signing and webhook edge cases, edits, blocked dates, alerts, seed data |
 | API HTTP | 126 | Real guards, validation and routes against an in-memory database |
 | Web unit | 63 | Sign-in redirects, translations (all three languages must cover every text), helpers |
-| Browser (Playwright) | 28 | Booking and payment hand-off, cancellation, owner edits and calendar, admin refunds, sign-in, landing page |
+| Browser (Playwright) | 46 | Booking and payment hand-off, cancellation, owner edits, photos and calendar, admin refunds, sign-in, landing page, plus automated accessibility scans (axe) of 17 page and mode combinations in light and dark |
 
-CI also applies every migration to an empty Postgres and fails if the result differs from `schema.prisma`, and builds both Docker images.
+CI also applies every migration to an empty Postgres and fails if the result differs from `schema.prisma`, and builds both Docker images. `pnpm audit --prod` reports no known vulnerabilities; the few remaining moderate findings are inside build tools (Nest CLI, ESLint) and do not ship.
 
 Browser tests run against a mocked backend, and the Docker files are verified by CI, not by hand. PayHere's real sandbox has not been exercised yet; [DEPLOYMENT.md](docs/DEPLOYMENT.md) lists the steps before going live.
 

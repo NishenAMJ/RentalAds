@@ -468,6 +468,21 @@ describe('booking contact privacy', () => {
     expect(view('CONFIRMED', 'renter')).not.toHaveProperty('renterContact');
   });
 
+  it('shows an unpaid booking whose hold has run out as expired, and a live one as waiting', () => {
+    const unpaid = (expiresAt: string) =>
+      toBookingView(
+        {
+          ...base,
+          status: 'PENDING_PAYMENT',
+          expiresAt: new Date(expiresAt),
+        } as never,
+        'renter',
+        new Date('2026-11-01T10:00:00Z'),
+      ).status;
+    expect(unpaid('2026-11-01T09:59:00Z')).toBe('EXPIRED');
+    expect(unpaid('2026-11-01T10:20:00Z')).toBe('PENDING_PAYMENT');
+  });
+
   it('shows a finished confirmed booking as completed', () => {
     expect(
       toBookingView(
