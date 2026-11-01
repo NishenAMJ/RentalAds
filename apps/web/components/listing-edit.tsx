@@ -26,6 +26,8 @@ export function ListingEdit({ id }: { id: string }) {
   const [listing, setListing] = useState<OwnerListing | null>(null);
   const [missing, setMissing] = useState(false);
   const [photos, setPhotos] = useState<PhotoUploadState>({ urls: [], uploading: false, failed: false });
+  // Photos already on the listing that the owner has not removed; new uploads are added after them.
+  const [kept, setKept] = useState<string[] | null>(null);
   const [phone, setPhone] = useState("");
   const [keyMoney, setKeyMoney] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,6 +40,7 @@ export function ListingEdit({ id }: { id: string }) {
     apiRequest<OwnerListing>(`/listings/mine/${encodeURIComponent(id)}`, { authenticated: true }).then((data) => {
       if (!active) return;
       setListing(data);
+      setKept(data.photoUrls);
       setPhone(nationalNumber(data.ownerContact));
       setKeyMoney(Boolean(data.keyMoney));
     }).catch((cause: unknown) => { if (active) { setMissing(cause instanceof ApiError && cause.status === 404); setError(cause instanceof Error ? cause.message : ""); } });
@@ -51,6 +54,7 @@ export function ListingEdit({ id }: { id: string }) {
   const definition: CategoryDefinition | undefined = definitions?.find((candidate) => candidate.id === listing.category);
   if (!home && !definition) return <p role="status">…</p>;
   const current = listing;
+  const keptPhotos = kept ?? current.photoUrls;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,7 +71,9 @@ export function ListingEdit({ id }: { id: string }) {
     const immediate = (key: string, value: unknown, before: unknown) => { if (!sameJson(value, before)) changes[key] = value; };
 
     material("areaText", text("areaText"), current.areaText);
-    if (photos.urls.length) material("photoUrls", photos.urls, current.photoUrls);
+    const nextPhotos = [...keptPhotos, ...photos.urls];
+    if (nextPhotos.length > 10) { setError(t("owner.edit.tooManyPhotos")); return; }
+    material("photoUrls", nextPhotos, current.photoUrls);
     immediate("ownerContact", contact, current.ownerContact);
     if (home) {
       immediate("monthlyRent", Number(text("monthlyRent")), current.monthlyRent);
@@ -130,9 +136,11 @@ export function ListingEdit({ id }: { id: string }) {
       </fieldset>
       <div className="panel">
         <h2 className="side-title">{t("owner.edit.photos")}</h2>
-        {current.photoUrls.length > 0 && <ul className="thumb-row">{current.photoUrls.map((url) => <li key={url}><PropertyImage src={url} alt="" width={160} height={100} sizes="120px" /></li>)}</ul>}
+        {keptPhotos.length > 0 && <ul className="thumb-row photo-edit-row">{keptPhotos.map((url) =>
+          <li key={url}><PropertyImage src={url} alt="" width={160} height={100} sizes="120px" />
+            <button type="button" className="text-button" disabled={busy} onClick={() => setKept(keptPhotos.filter((photo) => photo !== url))}>{t("owner.edit.photoRemove")}</button></li>)}</ul>}
         <p className="small-copy">{t("owner.edit.photosHint")}</p>
-        <PropertyPhotoPicker onChange={setPhotos} disabled={busy} />
+        <PropertyPhotoPicker key={`${current.id}-${current.photoUrls.length}`} onChange={setPhotos} disabled={busy} />
       </div>
       <div className="wizard-actions"><span /><button className="ui-button ui-button-primary" disabled={busy || photos.uploading}>{busy ? t("rent.book.busy") : t("owner.edit.save")}</button></div>
     </form>

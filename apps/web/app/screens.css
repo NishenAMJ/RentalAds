@@ -132,7 +132,7 @@
 .pending-card { display: grid; grid-template-columns: 180px minmax(0, 1fr) 190px; gap: 20px; align-items: start; padding: 16px; }
 .pending-photo { position: relative; border-radius: 10px; overflow: hidden; }
 .pending-photo img, .pending-photo .photo-placeholder { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; margin: 0; }
-.photo-tag { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 6px; background: var(--scrim); color: #fff; font-family: var(--font-mono); font-size: 11px; }
+.photo-tag { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, .78); color: #fff; font-family: var(--font-mono); font-size: 11px; }
 .pending-title { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .pending-title h2 { margin: 0; font-size: 20px; }
 .pending-rent { margin-left: auto; font-weight: 600; color: var(--accent); }

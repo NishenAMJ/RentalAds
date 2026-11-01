@@ -44,7 +44,7 @@ export const sampleBooking = {
   listing: { id: ITEM_ID, reference: null, category: "VEHICLE", title: "Toyota Aqua", areaText: "Galle", photoUrl: null },
 };
 export const confirmedBooking = { ...sampleBooking, id: CONFIRMED_ID, status: "CONFIRMED", startDate: inDays(12), endDate: inDays(15), expiresAt: null, paidAt: NOW, ownerContact: "+94770000000", refundAmount: 0, refundStatus: "NONE" };
-export const ownerItem = { ...sampleItem, status: "ACTIVE", ownerContact: "+94712345678", ratePeriod: "DAY", keyMoney: false, keyMoneyAmount: null, latitude: null, longitude: null, minDurationMonths: null, bedrooms: null, bathrooms: null, furnishing: null, propertyType: null, size: null, parking: false };
+export const ownerItem = { ...sampleItem, photoUrls: ["https://images.example.org/aqua-1.jpg", "https://images.example.org/aqua-2.jpg"], status: "ACTIVE", ownerContact: "+94712345678", ratePeriod: "DAY", keyMoney: false, keyMoneyAmount: null, latitude: null, longitude: null, minDurationMonths: null, bedrooms: null, bathrooms: null, furnishing: null, propertyType: null, size: null, parking: false };
 
 const REQUEST_ID = "55555555-5555-4555-8555-555555555555";
 export const sampleRequest = {

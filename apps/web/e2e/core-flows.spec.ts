@@ -414,6 +414,21 @@ test.describe("item rentals", () => {
     expect(backend.called("PATCH", `/listings/${ITEM_ID}`)[1].body).toMatchObject({ description: "Newly serviced, with child seat." });
   });
 
+  test("an owner can remove a single photo and only the photo list is sent", async ({ page }) => {
+    const backend = await mockBackend(page, "OWNER");
+    await signIn(page);
+    await page.getByText("My activity").click();
+    await page.getByRole("link", { name: "My listings" }).click();
+    await page.locator(".owner-property-card", { hasText: "Toyota Aqua" }).getByRole("link", { name: "Edit" }).click();
+    const photos = page.locator(".photo-edit-row");
+    await expect(photos.getByRole("button", { name: "Remove" })).toHaveCount(2);
+    await photos.getByRole("button", { name: "Remove" }).first().click();
+    await expect(photos.getByRole("button", { name: "Remove" })).toHaveCount(1);
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect.poll(() => backend.called("PATCH", `/listings/${ITEM_ID}`).length).toBe(1);
+    expect(backend.called("PATCH", `/listings/${ITEM_ID}`)[0].body).toEqual({ photoUrls: ["https://images.example.org/aqua-2.jpg"] });
+  });
+
   test("an owner blocks and unblocks dates on their calendar", async ({ page }) => {
     const backend = await mockBackend(page, "OWNER");
     await signIn(page);
@@ -430,7 +445,7 @@ test.describe("item rentals", () => {
     await expect.poll(() => backend.called("POST", `/listings/${ITEM_ID}/blocks`).length).toBe(1);
     expect(backend.called("POST", `/listings/${ITEM_ID}/blocks`)[0].body).toMatchObject({ startDate: start, endDate: end });
 
-    await page.getByRole("button", { name: "Remove" }).click();
+    await page.locator(".block-list").getByRole("button", { name: "Remove" }).click();
     await expect.poll(() => backend.calls.filter((call) => call.method === "DELETE").length).toBe(1);
   });
 

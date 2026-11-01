@@ -265,3 +265,6 @@ a.category-tile:hover, a.category-tile:focus-visible { border-color: var(--prima
 .cancel-panel p { margin: 0; }
 .block-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .block-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; }
+.photo-edit-row { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; margin: 0 0 12px; padding: 0; }
+.photo-edit-row li { display: grid; gap: 4px; justify-items: start; }
+.photo-edit-row img { border-radius: 10px; object-fit: cover; }

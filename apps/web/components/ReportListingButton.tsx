@@ -58,7 +58,7 @@ export function ReportListingButton({ listingId }: { listingId: string }) {
       <button
         onClick={() => setOpen(true)}
         type="button"
-        className="text-sm underline text-gray-500 mt-2"
+        className="text-button mt-2"
       >
         Report this listing
       </button>

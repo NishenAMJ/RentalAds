@@ -15,7 +15,7 @@ const FILTERS: readonly { filter: string; label: string }[] = [
   { filter: "status=PENDING_PAYMENT", label: "Unpaid" },
   { filter: "status=CANCELLED", label: "Cancelled" },
 ];
-const TONE = { PENDING_PAYMENT: "badge-warning", CONFIRMED: "badge-success", COMPLETED: "badge-neutral", CANCELLED: "badge-neutral" } as const;
+const TONE = { PENDING_PAYMENT: "badge-warning", CONFIRMED: "badge-success", COMPLETED: "badge-neutral", CANCELLED: "badge-neutral", EXPIRED: "badge-neutral" } as const;
 
 /** A refund the team still has to send: shows the amount, and records it once it has been sent in PayHere. */
 function RefundDue({ booking, onDone }: { booking: BookingView; onDone: () => void }) {

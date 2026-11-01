@@ -9,7 +9,7 @@ import { OwnerCancel, RenterCancel } from "@/components/booking-cancel";
 import { lkr, todayInSriLanka, whatsappLink, type BookingView, type CheckoutRequest } from "@/lib/items";
 import { postToPayhere } from "@/lib/payhere-form";
 
-const TONE = { PENDING_PAYMENT: "badge-warning", CONFIRMED: "badge-success", COMPLETED: "badge-neutral", CANCELLED: "badge-neutral" } as const;
+const TONE = { PENDING_PAYMENT: "badge-warning", CONFIRMED: "badge-success", COMPLETED: "badge-neutral", CANCELLED: "badge-neutral", EXPIRED: "badge-neutral" } as const;
 
 /** A booking as the renter or the owner sees it. The other person's number appears only once it has been paid. */
 export function BookingCard({ booking, viewer, onChanged }: { booking: BookingView; viewer: "renter" | "owner"; onChanged: () => void }) {

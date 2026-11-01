@@ -41,7 +41,7 @@ export interface ItemListing {
   createdAt: string;
 }
 
-export type BookingStatus = "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+export type BookingStatus = "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "EXPIRED";
 
 export interface BookingView {
   id: string;
