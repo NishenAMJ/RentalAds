@@ -28,6 +28,7 @@ model User {
   adminPermission AdminPermission?
   complaints      Complaint[]
   notifications   Notification[]
+  bookings        Booking[]
 
   @@map("users")
 }
@@ -63,6 +64,21 @@ enum FurnishingStatus {
   UNFURNISHED
 }
 
+// What is being rented. Add values here (and a form + validation) when a category launches.
+enum ListingCategory {
+  PROPERTY
+  VEHICLE
+  EQUIPMENT
+  EVENT_GEAR
+}
+
+// The period `monthlyRent` is priced per. Property is always MONTH.
+enum RatePeriod {
+  DAY
+  WEEK
+  MONTH
+}
+
 enum ListingStatus {
   PENDING_APPROVAL
   ACTIVE
@@ -77,12 +93,21 @@ model Listing {
   ownerId      String
   owner        User         @relation(fields: [ownerId], references: [id])
 
-  propertyType PropertyType
-  size         PropertySize
-  bedrooms     Int
-  bathrooms    Int
+  category     ListingCategory @default(PROPERTY)
+  // Category-specific fields for non-property categories. Property keeps its own columns below.
+  attributes   Json?
+
+  // Item categories (vehicles, equipment, event gear) show a title and description instead of the property fields.
+  title        String?
+  description  String?
+
+  // Property-only fields: null for every other category.
+  propertyType PropertyType?
+  size         PropertySize?
+  bedrooms     Int?
+  bathrooms    Int?
   parking      Boolean      @default(false)
-  furnishing   FurnishingStatus
+  furnishing   FurnishingStatus?
 
   areaText     String
 
@@ -90,8 +115,12 @@ model Listing {
   longitude  Decimal? @db.Decimal(9, 6)
   mapLink      String?
 
+  // The column name predates ratePeriod: this is the rate per `ratePeriod`, in integer LKR.
   monthlyRent       Int
-  minDurationMonths Int
+  ratePeriod        RatePeriod @default(MONTH)
+  // Refundable amount an item renter pays up front; property uses key money instead.
+  depositAmount     Int?
+  minDurationMonths Int?
   keyMoney          Boolean @default(false)
   keyMoneyAmount    Int?
 
@@ -109,7 +138,10 @@ model Listing {
   reminderSentAt               DateTime?
 
   matches      Match[]
+  bookings     Booking[]
+  blocks       ListingBlock[]
 
+  @@index([status, category, createdAt])
   @@index([status, propertyType, areaText])
   @@index([status, monthlyRent])
   @@index([latitude, longitude])
@@ -229,6 +261,11 @@ model Complaint {
 enum NotificationType {
   ADMIN_DELETION
   AVAILABILITY_REMINDER
+  BOOKING_CONFIRMED
+  BOOKING_RECEIVED
+  BOOKING_CANCELLED
+  LISTING_APPROVED
+  LISTING_REJECTED
 }
 model Notification {
   id String @id @default(uuid())
@@ -241,4 +278,82 @@ model Notification {
   createdAt DateTime @default(now())
   @@index([userId, readAt, createdAt])
   @@map("notifications")
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+// A dated rental of an item. Unlike property, the renter pays through the platform and is not introduced by an admin.
+model Booking {
+  id        String  @id @default(uuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  renterId  String
+  renter    User    @relation(fields: [renterId], references: [id])
+
+  // Rented from startDate up to, but not including, endDate.
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  // Billing units of the listing's ratePeriod, and the rate they were priced at.
+  units     Int
+  rateAmount Int
+  rentalTotal Int
+  serviceFee  Int
+  depositAmount Int
+  // What the renter pays: rentalTotal + serviceFee + depositAmount, in whole LKR.
+  totalAmount Int
+
+  renterContact String
+  status        BookingStatus @default(PENDING_PAYMENT)
+  // An unpaid booking stops blocking the dates after this moment.
+  expiresAt     DateTime?
+  paidAt        DateTime?
+  paymentReference String?
+  cancelledAt   DateTime?
+  cancelledBy   CancelledBy?
+  cancelReason  String?
+  // Money owed back to the renter after a cancellation. Refunds are made by hand in PayHere, then marked done here.
+  refundAmount    Int          @default(0)
+  refundStatus    RefundStatus @default(NONE)
+  refundedAt      DateTime?
+  refundReference String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([listingId, status, startDate, endDate])
+  @@index([refundStatus])
+  @@index([renterId, createdAt])
+  @@map("bookings")
+}
+
+enum CancelledBy {
+  RENTER
+  OWNER
+  ADMIN
+  SYSTEM
+}
+
+enum RefundStatus {
+  NONE
+  DUE
+  DONE
+}
+
+// Dates an owner has taken off the calendar themselves (personal use, maintenance), so nobody can book them.
+model ListingBlock {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  // Blocked from startDate up to, but not including, endDate: the same convention as bookings.
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([listingId, startDate, endDate])
+  @@map("listing_blocks")
 }
