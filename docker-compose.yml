@@ -1,0 +1,77 @@
+# Runs the whole stack on one machine: a local Postgres, the API and the website.
+#
+#   cp .env.docker.example .env.docker      then fill in the Supabase values (sign-in is handled by Supabase)
+#   docker compose --env-file .env.docker up --build
+#
+# Website: http://localhost:3000   API: http://localhost:3001   API docs: http://localhost:3001/docs
+# The database starts empty and the API applies every migration when it starts.
+name: rentalhub
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rentalhub}
+      POSTGRES_DB: rentalhub
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rentalhub"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-rentalhub}@db:5432/rentalhub
+      DIRECT_URL: postgresql://postgres:${POSTGRES_PASSWORD:-rentalhub}@db:5432/rentalhub
+      FRONTEND_URL: http://localhost:3000
+      API_PUBLIC_URL: http://localhost:3001
+      ENABLE_API_DOCS: "true"
+      SUPABASE_URL: ${SUPABASE_URL:?Set SUPABASE_URL in .env.docker}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:?Set SUPABASE_PUBLISHABLE_KEY in .env.docker}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      PAYHERE_MERCHANT_ID: ${PAYHERE_MERCHANT_ID:-}
+      PAYHERE_MERCHANT_SECRET: ${PAYHERE_MERCHANT_SECRET:-}
+      PAYHERE_SANDBOX: ${PAYHERE_SANDBOX:-true}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL:?Set SUPABASE_URL in .env.docker}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:?Set SUPABASE_PUBLISHABLE_KEY in .env.docker}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${CONTACT_EMAIL:-hello@example.com}
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
+    ports:
+      - "3000:3000"
+
+volumes:
+  dbdata:

@@ -6,7 +6,13 @@
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api start:dev",
     "db:generate": "pnpm --filter db generate",
-    "db:migrate": "pnpm --filter db migrate"
+    "db:migrate": "pnpm --filter db migrate",
+    "typecheck": "pnpm --filter api run typecheck && pnpm --filter web run typecheck",
+    "lint": "pnpm --filter api run lint:check && pnpm --filter web lint",
+    "test": "pnpm --filter api test && pnpm --filter web test",
+    "test:e2e": "pnpm --filter api run test:e2e && pnpm --filter web run test:e2e",
+    "build": "pnpm --filter api build && pnpm --filter web build",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm test:e2e && pnpm build"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",

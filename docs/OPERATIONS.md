@@ -1,4 +1,8 @@
-# Rental Platform — v0 pilot
+# Operations reference
+
+Detailed notes on the original homes pilot: the API contract for listings, photo upload rules, configuration, health checks and security. For the overview start with the [README](../README.md); for design decisions see [ARCHITECTURE.md](ARCHITECTURE.md), and for going live see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+The item rentals added later (vehicles, equipment, event gear) are documented in ARCHITECTURE.md and in the interactive API docs at `/docs`.
 
 The pilot includes persistent users, photo uploads, listing submission and moderation,
 rental requests, admin matching, and complaint handling. Deployment remains a
@@ -6,7 +10,7 @@ separate step.
 
 ## Local setup
 
-Use pnpm from `D:\RentalAds\rental-platform`:
+Use pnpm from the repository root:
 
 ```powershell
 pnpm install

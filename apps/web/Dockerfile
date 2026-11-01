@@ -1,0 +1,29 @@
+# Web image. Build from the repository root:  docker build -f apps/web/Dockerfile -t rentalhub-web .
+# The NEXT_PUBLIC_* values are baked into the browser bundle, so they must be given at build time.
+FROM node:24-bookworm-slim AS base
+RUN corepack enable
+WORKDIR /repo
+
+FROM base AS build
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/db/package.json packages/db/
+RUN pnpm install --frozen-lockfile
+COPY apps/web apps/web
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_CONTACT_EMAIL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+    NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+    NEXT_PUBLIC_CONTACT_EMAIL=$NEXT_PUBLIC_CONTACT_EMAIL
+RUN pnpm --filter web build
+
+FROM build AS runtime
+ENV NODE_ENV=production PORT=3000
+EXPOSE 3000
+CMD ["pnpm", "--filter", "web", "start"]
