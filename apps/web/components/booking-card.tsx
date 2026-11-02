@@ -17,6 +17,7 @@ export function BookingCard({ booking, viewer, onChanged }: { booking: BookingVi
   const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [rating, setRating] = useState("");
   const name = booking.listing.title ?? booking.listing.areaText;
   const category = categoryById(booking.listing.category);
   const stillHeld = booking.status === "PENDING_PAYMENT" && booking.expiresAt && new Date(booking.expiresAt) > new Date();
@@ -30,6 +31,19 @@ export function BookingCard({ booking, viewer, onChanged }: { booking: BookingVi
   const pay = () => run(async () => {
     postToPayhere(await apiRequest<CheckoutRequest>(`/bookings/${booking.id}/checkout`, { method: "POST", authenticated: true }));
   });
+  async function submitRating() {
+    if (!rating || busy) return;
+    setBusy(true); setError("");
+    try {
+      await apiRequest(`/bookings/${booking.id}/review`, {
+        method: "POST", authenticated: true,
+        body: JSON.stringify({ rating: Number(rating) }),
+      });
+      onChanged();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to submit your rating.");
+    } finally { setBusy(false); }
+  }
 
   return <article className="panel booking-card">
     <div className="booking-photo">{booking.listing.photoUrl
@@ -47,6 +61,15 @@ export function BookingCard({ booking, viewer, onChanged }: { booking: BookingVi
       {booking.status === "CANCELLED" && booking.cancelledBy && <p className="muted">{t(`bookings.cancelledBy.${booking.cancelledBy}`)}{booking.cancelReason && booking.cancelledBy !== "RENTER" ? ` · ${t("bookings.reason", { reason: booking.cancelReason })}` : ""}</p>}
       {viewer === "renter" && booking.refundStatus === "DUE" && <p className="notice" role="status">{t("bookings.refund.DUE", { amount: lkr(booking.refundAmount ?? 0) })}</p>}
       {viewer === "renter" && booking.refundStatus === "DONE" && <p className="notice" role="status">{t("bookings.refund.DONE", { amount: lkr(booking.refundAmount ?? 0) })}</p>}
+      {viewer === "renter" && booking.status === "COMPLETED" && (booking.reviewRating != null
+        ? <p role="status">{t("bookings.review.saved", { rating: booking.reviewRating })}</p>
+        : <div className="rating-form"><label htmlFor={`rating-${booking.id}`}>{t("bookings.review.rating")}</label>
+          <select id={`rating-${booking.id}`} value={rating} onChange={event => setRating(event.target.value)} disabled={busy}>
+            <option value="">{t("bookings.review.choose")}</option>
+            {[5, 4, 3, 2, 1].map(value => <option key={value} value={value}>{value} / 5</option>)}
+          </select>
+          <button className="ui-button ui-button-primary" type="button" disabled={busy || !rating} onClick={() => void submitRating()}>{busy ? t("rent.book.busy") : t("bookings.review.submit")}</button>
+        </div>)}
       <BookingDispute bookingId={booking.id} paidAt={booking.paidAt} />
       {viewer === "renter" && stillHeld && booking.expiresAt && <p className="small-copy">{t("bookings.holdUntil", { time: new Date(booking.expiresAt).toLocaleTimeString("en-GB", { timeZone: "Asia/Colombo", hour: "2-digit", minute: "2-digit" }) })}</p>}
       {error && <p role="alert" className="notice error">{error}</p>}

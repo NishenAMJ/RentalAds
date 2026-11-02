@@ -1,12 +1,15 @@
 import { BookingStatus } from '@prisma/client';
 import {
   IsEnum,
+  IsInt,
   IsIn,
   IsOptional,
   IsString,
   IsUUID,
   Matches,
   MaxLength,
+  Max,
+  Min,
 } from 'class-validator';
 import { PaginationQuery } from '../../common/pagination';
 
@@ -27,6 +30,10 @@ export class CreateBookingDto extends BookingWindowDto {
       'Contact phone number must be a Sri Lankan mobile number in +947XXXXXXXX format',
   })
   renterContact!: string;
+}
+
+export class CreateBookingReviewDto {
+  @IsInt() @Min(1) @Max(5) rating!: number;
 }
 
 export class AdminBookingsQuery extends PaginationQuery {

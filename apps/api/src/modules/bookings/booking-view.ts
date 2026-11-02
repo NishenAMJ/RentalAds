@@ -1,7 +1,10 @@
 import type { Booking, Listing } from '@prisma/client';
 import { formatCalendarDate, todayInSriLanka } from './booking-rules';
 
-type BookingWithListing = Booking & { listing: Listing };
+type BookingWithListing = Booking & {
+  listing: Listing;
+  review?: { rating: number } | null;
+};
 
 /**
  * What to show for a booking. Two states are worked out from the clock so no background job is needed:
@@ -45,6 +48,9 @@ export function toBookingView(
     expiresAt: booking.expiresAt,
     paidAt: booking.paidAt,
     createdAt: booking.createdAt,
+    ...(viewer === 'renter'
+      ? { reviewRating: booking.review?.rating ?? null }
+      : {}),
     cancelledBy: booking.cancelledBy,
     cancelReason: booking.cancelReason,
     listing: {

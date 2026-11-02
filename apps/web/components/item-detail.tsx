@@ -11,6 +11,7 @@ import { ApiError, apiRequest } from "@/lib/api-client";
 import { categoryById, categoryNameKey } from "@/lib/categories";
 import { labelFor, lkr, type FieldDefinition, type ItemListing } from "@/lib/items";
 import { useCategoryDefinitions } from "@/lib/use-categories";
+import { ListingRatingSummary } from "@/components/listing-rating-summary";
 
 /** Display text for one attribute value, using the category's own option labels. */
 function attributeText(field: FieldDefinition, value: string | number | boolean, t: Parameters<typeof labelFor>[0]): string {
@@ -76,6 +77,7 @@ export function ItemDetail({ id }: { id: string }) {
           <div className="identity-top">{category && <span className="ui-badge">{t(categoryNameKey(category.id))}</span>}{listing.ownerVerified && <span className="ui-badge badge-success">{t("rent.new.ownerVerified")}</span>}{listing.reference && <span className="record-reference">{listing.reference}</span>}</div>
           <h1>{name}</h1>
           <p className="rent">{lkr(listing.monthlyRent)} <span>/ {t(`rent.per.${listing.ratePeriod}`)}</span></p>
+          <ListingRatingSummary listingId={listing.id} />
         </div>
         <div className="panel"><dl className="glance">{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
           {listing.mapLink && <a className="map-link" href={listing.mapLink} target="_blank" rel="noopener noreferrer">{t("rent.new.mapApproximate")} ↗</a>}</div>

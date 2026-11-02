@@ -100,6 +100,11 @@ export class ListingsController {
   lookup(@Param('identifier') identifier: string) {
     return this.listings.adminLookup(identifier);
   }
+  @Get(':id/ratings')
+  @UseInterceptors(PublicCacheInterceptor)
+  ratings(@Param('id', ParseUUIDPipe) id: string) {
+    return this.listings.ratings(id);
+  }
   @Get(':id')
   @UseInterceptors(PublicCacheInterceptor)
   detail(@Param('id', ParseUUIDPipe) id: string) {

@@ -49,6 +49,7 @@ model User {
   notifications   Notification[]
   bookings        Booking[]
   payouts         OwnerPayout[]
+  reviews         BookingReview[]
   resolvedComplaints Complaint[] @relation("ComplaintResolver")
   adminActivities AdminActivity[]
 
@@ -178,6 +179,7 @@ model Listing {
   matches      Match[]
   bookings     Booking[]
   blocks       ListingBlock[]
+  reviews      BookingReview[]
 
   @@index([status, category, createdAt])
   @@index([status, propertyType, areaText])
@@ -380,6 +382,7 @@ model Booking {
   refundReference String?
   ownerPayout     OwnerPayout?
   dispute         Complaint?
+  review          BookingReview?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -387,6 +390,22 @@ model Booking {
   @@index([refundStatus])
   @@index([renterId, createdAt])
   @@map("bookings")
+}
+
+model BookingReview {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  reviewerId String
+  reviewer   User    @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+  rating    Int
+  createdAt DateTime @default(now())
+
+  @@index([listingId, createdAt])
+  @@index([reviewerId])
+  @@map("booking_reviews")
 }
 
 enum OwnerPayoutStatus {

@@ -33,7 +33,7 @@ export class AccountService {
   /** Everything we hold about the caller, for download. Internal admin notes are excluded. */
   async exportData(authUser: AuthenticatedUser) {
     const user = await this.requireUser(authUser);
-    const [listings, rentalRequests, complaints, notifications] =
+    const [listings, rentalRequests, complaints, notifications, ratings] =
       await Promise.all([
         this.prisma.listing.findMany({
           where: { ownerId: user.id },
@@ -59,6 +59,11 @@ export class AccountService {
           where: { userId: user.id },
           orderBy: { createdAt: 'asc' },
         }),
+        this.prisma.bookingReview.findMany({
+          where: { reviewerId: user.id },
+          select: { bookingId: true, rating: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        }),
       ]);
     return {
       exportedAt: new Date().toISOString(),
@@ -78,6 +83,7 @@ export class AccountService {
       rentalRequests: rentalRequests.map(forRenter),
       complaints,
       notifications,
+      ratings,
     };
   }
 
@@ -126,6 +132,7 @@ export class AccountService {
         data: { reporterId: null },
       }),
       this.prisma.notification.deleteMany({ where: { userId: user.id } }),
+      this.prisma.bookingReview.deleteMany({ where: { reviewerId: user.id } }),
       this.prisma.user.update({
         where: { id: user.id },
         data: {

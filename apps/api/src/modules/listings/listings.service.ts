@@ -228,6 +228,25 @@ export class ListingsService {
     if (!listing) throw new NotFoundException('Listing not found');
     return toPublicListing(listing);
   }
+  async ratings(id: string) {
+    const listing = await this.prisma.listing.findFirst({
+      where: { id, ...this.publicWhere() },
+      select: { id: true },
+    });
+    if (!listing) throw new NotFoundException('Listing not found');
+    const result = await this.prisma.bookingReview.aggregate({
+      where: { listingId: id },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    return {
+      average:
+        result._avg.rating === null
+          ? null
+          : Number(result._avg.rating.toFixed(1)),
+      count: result._count._all,
+    };
+  }
   async adminLookup(identifier: string) {
     const listing = await this.prisma.listing.findFirst({
       where: { ...listingIdentifierWhere(identifier), deletedAt: null },

@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { CancelledBy, Listing } from '@prisma/client';
+import { Prisma, type CancelledBy, type Listing } from '@prisma/client';
 import { PrismaService } from '../../common/prisma.service';
 import {
   pageResult,
@@ -191,7 +191,7 @@ export class BookingsService {
     const renter = await this.users.findOrCreate(authUser);
     const rows = await this.prisma.booking.findMany({
       where: { renterId: renter.id },
-      include: { listing: true },
+      include: { listing: true, review: { select: { rating: true } } },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       ...pageWindow(query),
     });
@@ -222,10 +222,44 @@ export class BookingsService {
     const renter = await this.users.findOrCreate(authUser);
     const booking = await this.prisma.booking.findFirst({
       where: { id, renterId: renter.id },
-      include: { listing: true },
+      include: { listing: true, review: { select: { rating: true } } },
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return { booking, renter };
+  }
+
+  async review(authUser: AuthenticatedUser, id: string, rating: number) {
+    const { booking, renter } = await this.ownBooking(authUser, id);
+    const today = todayInSriLanka();
+    if (
+      booking.paidAt === null ||
+      booking.status !== 'CONFIRMED' ||
+      booking.endDate > today
+    )
+      throw new ConflictException(
+        'Only a completed, paid booking can be rated',
+      );
+    if (booking.review)
+      throw new ConflictException('You have already rated this booking');
+    try {
+      const review = await this.prisma.bookingReview.create({
+        data: {
+          bookingId: booking.id,
+          listingId: booking.listingId,
+          reviewerId: renter.id,
+          rating,
+        },
+        select: { rating: true, createdAt: true },
+      });
+      return review;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      )
+        throw new ConflictException('You have already rated this booking');
+      throw error;
+    }
   }
 
   async get(authUser: AuthenticatedUser, id: string) {

@@ -9,6 +9,7 @@ import { money, rateUnit, readable, type PublicListing } from "@/lib/listings";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { ActionLink, PrivacyNote, SkeletonCards } from "@/components/ui/primitives";
 import { useT } from "@/components/i18n-provider";
+import { ListingRatingSummary } from "@/components/listing-rating-summary";
 
 export function PropertyDetail({ id }: { id: string }) {
   const t = useT();
@@ -45,7 +46,7 @@ export function PropertyDetail({ id }: { id: string }) {
       </div>
       <aside className="property-side">
         <div className="panel property-identity"><div className="identity-top"><span className="ui-badge">{readable(listing.propertyType)}</span>{listing.ownerVerified && <span className="ui-badge badge-success">{t("rent.new.ownerVerified")}</span>}{listing.reference && <span className="record-reference">{listing.reference}</span>}</div>
-          <h1>{listing.areaText}</h1><p className="rent">{money(listing.monthlyRent)} <span>/ {rateUnit(listing.ratePeriod)}</span></p></div>
+          <h1>{listing.areaText}</h1><p className="rent">{money(listing.monthlyRent)} <span>/ {rateUnit(listing.ratePeriod)}</span></p><ListingRatingSummary listingId={listing.id} /></div>
         <div className="panel"><h2 className="side-title">At a glance</h2><dl className="glance">{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
           {listing.mapLink && <a className="map-link" href={listing.mapLink} target="_blank" rel="noopener noreferrer">View approximate location on map ↗</a>}
           {listing.lastAvailabilityConfirmedAt && <p className="small-copy"><span className="live-dot" />Availability confirmed {new Date(listing.lastAvailabilityConfirmedAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</p>}</div>

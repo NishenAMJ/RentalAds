@@ -22,6 +22,7 @@ import {
   BookingWindowDto,
   CancelBookingDto,
   CreateBookingDto,
+  CreateBookingReviewDto,
   RefundDoneDto,
 } from './booking.dto';
 import { BookingsService } from './bookings.service';
@@ -88,6 +89,17 @@ export class BookingsController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.bookings.get(user, id);
+  }
+
+  @Post(':id/review')
+  @WriteThrottle(5)
+  @UseGuards(AuthGuard)
+  review(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: CreateBookingReviewDto,
+  ) {
+    return this.bookings.review(user, id, body.rating);
   }
 
   @Post(':id/checkout')

@@ -59,6 +59,7 @@ export interface BookingView {
   expiresAt: string | null;
   paidAt: string | null;
   createdAt: string;
+  reviewRating?: number | null;
   listing: { id: string; reference: string | null; category: string; title: string | null; areaText: string; photoUrl: string | null };
   ownerContact?: string;
   renterContact?: string;
