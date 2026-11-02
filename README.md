@@ -113,10 +113,11 @@ Browser tests run against a mocked backend, and the Docker files are verified by
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosting, settings, going live with payments, backups |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Original homes pilot: API contract, upload rules, configuration |
 | [docs/LAUNCH-READINESS.md](docs/LAUNCH-READINESS.md) | Business, trust and support decisions before accepting real users |
+| [docs/REMAINING-WORK.md](docs/REMAINING-WORK.md) | Canonical product, business, and launch backlog |
 | `/docs` on the API | Interactive OpenAPI reference |
 
 ## Status and limitations
 
-The product includes paid booking ratings and an owner verification request/review workflow. Ratings are numeric and tied to completed paid bookings; owner verification is a staff-recorded manual check, with no identity documents collected by the app. Refunds, deposits and owner transfers still require manual operations. The PayHere sandbox has not yet been exercised, rate limiting is per API process, and Sinhala and Tamil text needs native-speaker review. See [ARCHITECTURE.md](docs/ARCHITECTURE.md#known-limitations) and [LAUNCH-READINESS.md](docs/LAUNCH-READINESS.md) for remaining limits and decisions.
+The product includes paid booking ratings and an owner verification request/review workflow. Ratings are numeric and tied to completed paid bookings; owner verification is a staff-recorded manual check, with no identity documents collected by the app. Refunds, deposits and owner transfers still require manual operations. The PayHere sandbox has not yet been exercised, rate limiting is per API process, and Sinhala and Tamil text needs native-speaker review. See the canonical [remaining-work backlog](docs/REMAINING-WORK.md) and [architecture limitations](docs/ARCHITECTURE.md#known-limitations).
 
 No open-source licence has been chosen yet, so all rights are reserved by default.
