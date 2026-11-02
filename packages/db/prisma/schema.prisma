@@ -29,6 +29,7 @@ model User {
   complaints      Complaint[]
   notifications   Notification[]
   bookings        Booking[]
+  payouts         OwnerPayout[]
 
   @@map("users")
 }
@@ -40,6 +41,7 @@ model AdminPermission {
   canApproveListings  Boolean @default(false)
   canManageAdmins     Boolean @default(false)
   canManageComplaints Boolean @default(false)
+  canManagePayouts    Boolean @default(false)
 
  
   @@map("admin_permissions")
@@ -321,6 +323,7 @@ model Booking {
   refundStatus    RefundStatus @default(NONE)
   refundedAt      DateTime?
   refundReference String?
+  ownerPayout     OwnerPayout?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -328,6 +331,34 @@ model Booking {
   @@index([refundStatus])
   @@index([renterId, createdAt])
   @@map("bookings")
+}
+
+enum OwnerPayoutStatus {
+  DUE
+  PAID
+  CANCELLED
+}
+
+// A manually reviewed amount owed to an owner for a completed item booking.
+// This records an obligation and transfer reference; it never initiates a transfer.
+model OwnerPayout {
+  id           String           @id @default(uuid())
+  bookingId    String           @unique
+  booking      Booking          @relation(fields: [bookingId], references: [id])
+  ownerId      String
+  owner        User             @relation(fields: [ownerId], references: [id])
+  amount       Int
+  status       OwnerPayoutStatus @default(DUE)
+  note         String?
+  transferReference String?
+  paidAt       DateTime?
+  createdById  String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([ownerId, status])
+  @@map("owner_payouts")
 }
 
 enum CancelledBy {

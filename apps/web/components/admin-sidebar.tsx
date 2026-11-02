@@ -14,6 +14,7 @@ export function AdminSidebar() {
     { href: "/admin/listings", label: "Listings", visible: permissions.canApproveListings },
     { href: "/admin/requests", label: "Rental requests", visible: permissions.canApproveListings },
     { href: "/admin/bookings", label: "Bookings", visible: permissions.canApproveListings },
+    { href: "/admin/payouts", label: "Owner payouts", visible: permissions.canManagePayouts },
     { href: "/admin/complaints", label: "Complaints", visible: permissions.canManageComplaints },
     { href: "/", label: "View public site ↗", visible: true },
   ];

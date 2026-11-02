@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/api-client";
 const flags = [
   ["canApproveListings", "Listings and rental matching"],
   ["canManageComplaints", "Complaint review"],
+  ["canManagePayouts", "Owner payouts"],
   ["canManageAdmins", "Manage admin access"],
 ] as const;
 type Flag = (typeof flags)[number][0];
@@ -23,6 +24,7 @@ export function AdminPermissionsForm() {
       email: String(form.get("email") ?? "").trim(),
       canApproveListings: form.has("canApproveListings"),
       canManageComplaints: form.has("canManageComplaints"),
+      canManagePayouts: form.has("canManagePayouts"),
       canManageAdmins: form.has("canManageAdmins"),
     };
     setBusy(true); setError(""); setMessage("");

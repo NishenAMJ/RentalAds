@@ -1,7 +1,10 @@
 import { SetMetadata } from '@nestjs/common';
 
 export type AdminPermissionName =
-  'canApproveListings' | 'canManageAdmins' | 'canManageComplaints';
+  | 'canApproveListings'
+  | 'canManageAdmins'
+  | 'canManageComplaints'
+  | 'canManagePayouts';
 export const PERMISSION_KEY = 'adminPermission';
 export const RequirePermission = (permission: AdminPermissionName) =>
   SetMetadata(PERMISSION_KEY, permission);

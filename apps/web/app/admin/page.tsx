@@ -28,7 +28,7 @@ export default function AdminDashboard() {
       });
     return () => controller.abort();
   }, []);
-  const { listings, requests, bookings, complaints } = summary ?? {};
+  const { listings, requests, bookings, complaints, payouts } = summary ?? {};
   let counts: ReactNode = <p role="status">Loading overview...</p>;
   if (error) counts = <p role="alert" className="notice error">{error}</p>;
   else if (summary) counts = <div className="admin-summary">
@@ -38,6 +38,8 @@ export default function AdminDashboard() {
       rows={[["Open", requests.open], ["Not yet assigned", requests.unassigned]]} />}
     {bookings && <SummaryCard title="Bookings" href="/admin/bookings" cta="Review bookings"
       rows={[["Upcoming and paid", bookings.upcoming], ["Refunds to make", bookings.refundDue]]} />}
+    {payouts && <SummaryCard title="Owner payouts" href="/admin/payouts" cta="Manage payouts"
+      rows={[["Due for transfer", payouts.dueCount], ["Amount due (LKR)", payouts.dueAmount]]} />}
     {complaints && <SummaryCard title="Complaints" href="/admin/complaints" cta="Review complaints"
       rows={[["Open", complaints.open]]} />}
   </div>;

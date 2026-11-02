@@ -30,6 +30,7 @@ export class AdminService {
         canApproveListings: flags.canApproveListings ?? false,
         canManageAdmins: flags.canManageAdmins ?? false,
         canManageComplaints: flags.canManageComplaints ?? false,
+        canManagePayouts: flags.canManagePayouts ?? false,
       },
       update: {
         ...(flags.canApproveListings !== undefined
@@ -40,6 +41,9 @@ export class AdminService {
           : {}),
         ...(flags.canManageComplaints !== undefined
           ? { canManageComplaints: flags.canManageComplaints }
+          : {}),
+        ...(flags.canManagePayouts !== undefined
+          ? { canManagePayouts: flags.canManagePayouts }
           : {}),
       },
     });
@@ -53,18 +57,34 @@ export class AdminService {
     });
     const permission = user?.adminPermission;
     if (!permission) throw new ForbiddenException('Admin permission required');
-    const [listings, requests, complaints, bookings] = await Promise.all([
-      permission.canApproveListings ? this.listingCounts() : undefined,
-      permission.canApproveListings ? this.requestCounts() : undefined,
-      permission.canManageComplaints
-        ? this.prisma.complaint.count({ where: { status: 'OPEN' } })
-        : undefined,
-      permission.canApproveListings ? this.bookings.counts() : undefined,
-    ]);
+    const [listings, requests, complaints, bookings, payouts] =
+      await Promise.all([
+        permission.canApproveListings ? this.listingCounts() : undefined,
+        permission.canApproveListings ? this.requestCounts() : undefined,
+        permission.canManageComplaints
+          ? this.prisma.complaint.count({ where: { status: 'OPEN' } })
+          : undefined,
+        permission.canApproveListings ? this.bookings.counts() : undefined,
+        permission.canManagePayouts
+          ? this.prisma.ownerPayout.aggregate({
+              where: { status: 'DUE' },
+              _count: { _all: true },
+              _sum: { amount: true },
+            })
+          : undefined,
+      ]);
     return {
       ...(listings ? { listings } : {}),
       ...(requests ? { requests } : {}),
       ...(bookings ? { bookings } : {}),
+      ...(payouts
+        ? {
+            payouts: {
+              dueCount: payouts._count._all,
+              dueAmount: payouts._sum.amount ?? 0,
+            },
+          }
+        : {}),
       ...(complaints !== undefined ? { complaints: { open: complaints } } : {}),
     };
   }
