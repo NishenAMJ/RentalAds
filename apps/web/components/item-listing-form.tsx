@@ -10,6 +10,8 @@ import type { ListingStatus } from "@/lib/admin-listings";
 import type { RatePeriod } from "@/lib/items";
 import { normalizeContactPhone, type PhotoUploadState } from "@/lib/listing-form";
 import { useCategoryDefinitions } from "@/lib/use-categories";
+import { ListingLocationPicker } from "@/components/listing-location-picker";
+import type { LatLng } from "@/components/LocationPicker";
 
 /** Owner form for a vehicle, piece of equipment or event gear. Fields come from the API's category registry. */
 export function ItemListingForm({ slug }: { slug: string }) {
@@ -18,6 +20,7 @@ export function ItemListingForm({ slug }: { slug: string }) {
   const definitions = useCategoryDefinitions();
   const [photos, setPhotos] = useState<PhotoUploadState>({ urls: [], uploading: false, failed: false });
   const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState<LatLng | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<{ id: string; status: ListingStatus } | null>(null);
@@ -51,6 +54,7 @@ export function ItemListingForm({ slug }: { slug: string }) {
           title: text("title"),
           ...(text("description") ? { description: text("description") } : {}),
           areaText: text("areaText"),
+          ...(location ? { latitude: location.lat, longitude: location.lng } : {}),
           rate: Number(text("rate")),
           ratePeriod: text("ratePeriod"),
           ...(text("depositAmount") ? { depositAmount: Number(text("depositAmount")) } : {}),
@@ -85,6 +89,7 @@ export function ItemListingForm({ slug }: { slug: string }) {
         <DynamicFields category={definition} disabled={busy} />
         <label className="full-width">{t("rent.new.description")}<textarea name="description" rows={4} maxLength={2000} /></label>
         <label className="full-width">{t("rent.new.area")}<input name="areaText" maxLength={300} required /></label>
+        <div className="full-width"><h2 className="side-title">{t("rent.new.locationTitle")}</h2><ListingLocationPicker value={location} onChange={setLocation} disabled={busy} /></div>
         <label>{t("rent.new.rate")}<input name="rate" type="number" inputMode="numeric" min={1} max={2147483647} step={1} required /></label>
         <label>{t("rent.new.period")}
           <select name="ratePeriod" required defaultValue={definition.ratePeriods[0]}>

@@ -326,6 +326,31 @@ export class ListingsService {
 
     const data: Prisma.ListingUpdateInput = {};
     let material = false;
+    if (input.latitude !== undefined || input.longitude !== undefined) {
+      const latitude =
+        input.latitude === undefined
+          ? listing.latitude == null
+            ? null
+            : Number(listing.latitude)
+          : input.latitude;
+      const longitude =
+        input.longitude === undefined
+          ? listing.longitude == null
+            ? null
+            : Number(listing.longitude)
+          : input.longitude;
+      if ((latitude == null) !== (longitude == null))
+        throw new BadRequestException(
+          'Set or clear both map coordinates together',
+        );
+      data.latitude = latitude;
+      data.longitude = longitude;
+      data.mapLink =
+        latitude != null && longitude != null
+          ? (mapLinkFor({ latitude, longitude }) ?? null)
+          : null;
+      material = true;
+    }
     if (input.rate !== undefined) data.monthlyRent = input.rate;
     if (input.monthlyRent !== undefined) data.monthlyRent = input.monthlyRent;
     if (input.ratePeriod !== undefined) {

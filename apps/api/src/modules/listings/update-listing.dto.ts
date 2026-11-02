@@ -15,6 +15,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  IsNumber,
 } from 'class-validator';
 
 const MAX_INT = 2147483647;
@@ -40,6 +41,8 @@ export class UpdateListingDto {
 
   // --- every category
   @IsOptional() @IsString() @IsNotEmpty() @MaxLength(300) areaText?: string;
+  @IsOptional() @IsNumber() @Min(-90) @Max(90) latitude?: number | null;
+  @IsOptional() @IsNumber() @Min(-180) @Max(180) longitude?: number | null;
   @IsOptional()
   @IsString()
   @Matches(/^\+947[0-9]{8}$/, {

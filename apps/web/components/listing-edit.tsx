@@ -11,6 +11,8 @@ import { type CategoryDefinition } from "@/lib/items";
 import { normalizeContactPhone, type PhotoUploadState } from "@/lib/listing-form";
 import { isProperty, type OwnerListing } from "@/lib/listings";
 import { useCategoryDefinitions } from "@/lib/use-categories";
+import { ListingLocationPicker } from "@/components/listing-location-picker";
+import type { LatLng } from "@/components/LocationPicker";
 
 /** Local part of a stored +94 number, for the input that shows the prefix separately. */
 const nationalNumber = (contact: string) => contact.replace(/^\+94/, "");
@@ -29,6 +31,7 @@ export function ListingEdit({ id }: { id: string }) {
   // Photos already on the listing that the owner has not removed; new uploads are added after them.
   const [kept, setKept] = useState<string[] | null>(null);
   const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState<LatLng | null>(null);
   const [keyMoney, setKeyMoney] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +45,9 @@ export function ListingEdit({ id }: { id: string }) {
       setListing(data);
       setKept(data.photoUrls);
       setPhone(nationalNumber(data.ownerContact));
+      setLocation(data.latitude != null && data.longitude != null
+        ? { lat: Number(data.latitude), lng: Number(data.longitude) }
+        : null);
       setKeyMoney(Boolean(data.keyMoney));
     }).catch((cause: unknown) => { if (active) { setMissing(cause instanceof ApiError && cause.status === 404); setError(cause instanceof Error ? cause.message : ""); } });
     return () => { active = false; };
@@ -71,6 +77,14 @@ export function ListingEdit({ id }: { id: string }) {
     const immediate = (key: string, value: unknown, before: unknown) => { if (!sameJson(value, before)) changes[key] = value; };
 
     material("areaText", text("areaText"), current.areaText);
+    const oldLocation = current.latitude != null && current.longitude != null
+      ? { lat: Number(current.latitude), lng: Number(current.longitude) }
+      : null;
+    if (!sameJson(location, oldLocation)) {
+      changes.latitude = location?.lat ?? null;
+      changes.longitude = location?.lng ?? null;
+      reviewed = true;
+    }
     const nextPhotos = [...keptPhotos, ...photos.urls];
     if (nextPhotos.length > 10) { setError(t("owner.edit.tooManyPhotos")); return; }
     material("photoUrls", nextPhotos, current.photoUrls);
@@ -134,6 +148,7 @@ export function ListingEdit({ id }: { id: string }) {
           <span className="phone-input"><span aria-hidden="true">+94</span><input type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} required /></span>
           <small>{t("rent.book.phoneHelp")}</small></label>
       </fieldset>
+      <div className="panel"><h2 className="side-title">{t("rent.new.locationTitle")}</h2><ListingLocationPicker value={location} onChange={setLocation} disabled={busy} /></div>
       <div className="panel">
         <h2 className="side-title">{t("owner.edit.photos")}</h2>
         {keptPhotos.length > 0 && <ul className="thumb-row photo-edit-row">{keptPhotos.map((url) =>

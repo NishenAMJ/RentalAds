@@ -78,7 +78,7 @@ export function ItemDetail({ id }: { id: string }) {
           <p className="rent">{lkr(listing.monthlyRent)} <span>/ {t(`rent.per.${listing.ratePeriod}`)}</span></p>
         </div>
         <div className="panel"><dl className="glance">{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-          {listing.mapLink && <a className="map-link" href={listing.mapLink} target="_blank" rel="noopener noreferrer">↗</a>}</div>
+          {listing.mapLink && <a className="map-link" href={listing.mapLink} target="_blank" rel="noopener noreferrer">{t("rent.new.mapApproximate")} ↗</a>}</div>
         <BookingPanel listing={listing} />
         <div className="panel"><ReportListingButton key={listing.id} listingId={listing.id} /></div>
       </aside>
