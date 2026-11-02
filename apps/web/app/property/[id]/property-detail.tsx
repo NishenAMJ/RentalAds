@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { PropertyImage } from "@/components/property-image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ApiError, apiRequest } from "@/lib/api-client";
 import { money, rateUnit, readable, type PublicListing } from "@/lib/listings";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { ActionLink, PrivacyNote, SkeletonCards } from "@/components/ui/primitives";
 
 export function PropertyDetail({ id }: { id: string }) {
+  const router = useRouter();
   const [listing, setListing] = useState<PublicListing | null>(null);
   const [error, setError] = useState("");
   const [active, setActive] = useState(0);
@@ -19,8 +21,12 @@ export function PropertyDetail({ id }: { id: string }) {
     });
     return () => { active = false; };
   }, [id]);
+  useEffect(() => {
+    if (listing?.category && listing.category !== "PROPERTY") router.replace(`/item/${id}`);
+  }, [id, listing, router]);
   if (error) return <section><p role="alert" className="notice error">{error}</p><Link href="/listings">Back to homes</Link></section>;
   if (!listing) return <SkeletonCards label="Loading property details" />;
+  if (listing.category && listing.category !== "PROPERTY") return <SkeletonCards label="Opening item details" />;
   const photos = listing.photoUrls;
   const shown = photos[Math.min(active, Math.max(photos.length - 1, 0))];
   const facts: [string, string][] = [

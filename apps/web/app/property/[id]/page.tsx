@@ -9,7 +9,7 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const listing = await fetchPublicListing(id);
-  if (!listing) return { title: "Property not available", robots: { index: false } };
+  if (!listing || (listing.category && listing.category !== "PROPERTY")) return { title: "Property not available", robots: { index: false } };
   const title = listingTitle(listing);
   const description = listingDescription(listing);
   return {
