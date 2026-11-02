@@ -299,9 +299,16 @@
 .hero-reveal { transition: opacity .6s ease; }
 .hero-reveal[data-pending="true"] { opacity: 0; visibility: hidden; }
 
-/* Sign-in pages: a slim top bar instead of the site header. */
+/* Landing and sign-in pages use a compact top bar; the landing bar includes primary links. */
 .auth-topbar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding-bottom: 8px; }
 .auth-topbar-controls { display: flex; align-items: center; gap: 8px; }
+.landing-nav { display: flex; align-items: center; gap: 2px; }
+.landing-nav .topbar-link { white-space: nowrap; }
+@media (max-width: 760px) {
+  .landing-auth-topbar { flex-wrap: wrap; row-gap: 8px; }
+  .landing-nav { order: 3; width: 100%; flex-wrap: wrap; }
+  .landing-auth-topbar .auth-topbar-controls { order: 2; margin-left: auto; }
+}
 .auth-wrap { align-content: start; gap: 16px; }
 .auth-wrap > .auth-topbar { max-width: 1040px; }
 
@@ -324,6 +331,7 @@
 /* Narrow phones: the bar wraps instead of pushing the page sideways. */
 @media (max-width: 480px) {
   .auth-topbar { flex-wrap: wrap; row-gap: 8px; }
+  .landing-nav .topbar-link { padding: 7px 8px; }
   .auth-topbar .brand { font-size: 22px; }
   .auth-topbar-controls { flex-wrap: wrap; gap: 6px; margin-left: auto; }
   .auth-topbar .language-switcher { max-width: 112px; }

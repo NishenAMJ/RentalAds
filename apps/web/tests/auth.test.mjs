@@ -7,7 +7,7 @@ import ts from 'typescript';
 import * as React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { loginDestination } from '../lib/login-destination.ts';
+import { landingDestination, loginDestination } from '../lib/login-destination.ts';
 
 test('password control toggles visibility without submitting or replacing the input', () => {
   let visible = false;
@@ -76,12 +76,22 @@ test('renter pages retain renter navigation even when the account has admin perm
   for (const path of ['/renter/dashboard', '/renter/new']) {
     const html = renderGuard('components/site-header', state, path);
     assert.doesNotMatch(html, /admin-sidebar|admin-topbar/);
-    assert.match(html, /My requests/);
+    assert.match(html, /Home search requests/);
   }
   assert.match(renderGuard('components/site-header', state, '/admin'), /admin-sidebar/);
 });
 
-test('the landing and sign-in pages have no site navigation, only their own slim top bar', () => {
+test('main navigation distinguishes browsing, home search and listing a rental', () => {
+  const html = renderGuard('components/site-header', { ...verified, role: 'RENTER' }, '/listings');
+  assert.match(html, /href="\/categories"[^>]*>Browse rentals/);
+  assert.match(html, /href="\/renter\/new"[^>]*>Find a home/);
+  assert.match(html, /href="\/owner\/start"[^>]*>List a rental/);
+  assert.match(html, /Home search requests/);
+  assert.match(html, /Item bookings/);
+  assert.doesNotMatch(html, /href="\/categories"[^>]*>Categories/);
+});
+
+test('the full site header stays hidden on landing and sign-in pages', () => {
   for (const path of ['/', '/login', '/reset-password'])
     assert.equal(renderGuard('components/site-header', verified, path), '');
 });
@@ -94,6 +104,13 @@ test('login defaults follow the verified account role, including renters with ad
   assert.equal(loginDestination(null, 'OWNER', admin), '/owner/listings');
   assert.equal(loginDestination(null, 'ADMIN', admin), '/admin');
   assert.equal(loginDestination(null, 'ADMIN', none), '/listings');
+});
+
+test('the landing page returns owners to their owner workspace', () => {
+  assert.equal(landingDestination('OWNER', verified.permissions), '/owner/listings');
+  assert.equal(landingDestination('RENTER', verified.permissions), '/renter/dashboard');
+  assert.equal(landingDestination('ADMIN', { ...verified.permissions, canApproveListings: true }), '/admin');
+  assert.equal(landingDestination(null, verified.permissions), '/login');
 });
 
 test('login preserves renter destinations instead of overriding them with the admin dashboard', () => {

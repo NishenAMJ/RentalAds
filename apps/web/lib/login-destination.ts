@@ -5,6 +5,15 @@ type Permissions = {
   canManageComplaints: boolean;
 };
 
+/** The signed-in user's workspace used by the public landing page. */
+export function landingDestination(role: AccountRole | null, permissions: Permissions): string {
+  const isAdmin = permissions.canApproveListings === true || permissions.canManageAdmins === true || permissions.canManageComplaints === true;
+  if (role === "ADMIN" && isAdmin) return "/admin";
+  if (role === "OWNER") return "/owner/listings";
+  if (role === "RENTER") return "/renter/dashboard";
+  return "/login";
+}
+
 /** An item's own page, so signing in to book returns there. Only a UUID is accepted, never an arbitrary path. */
 const ITEM_PAGE = /^\/item\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

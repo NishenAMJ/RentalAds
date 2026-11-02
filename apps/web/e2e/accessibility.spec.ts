@@ -65,7 +65,7 @@ test.describe("accessibility, signed-in pages", () => {
   test("owner form for a new item", async ({ page }) => {
     await mockBackend(page, "OWNER");
     await signIn(page);
-    await page.getByRole("link", { name: "For owners" }).click();
+    await page.getByRole("link", { name: "List a rental" }).click();
     await expectNoViolations(page, "list with us");
     await page.getByRole("link", { name: /Vehicles/ }).click();
     await expect(page.getByLabel("Vehicle type")).toBeVisible();

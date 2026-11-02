@@ -7,7 +7,7 @@
  */
 export const rentalEn = {
   "nav.categories": "Categories",
-  "nav.bookings": "My bookings",
+  "nav.bookings": "Item bookings",
   "nav.activity": "My activity",
   "home.browse": "Browse by category",
   "home.allCategories": "All categories →",
@@ -137,7 +137,7 @@ export const rentalEn = {
   "bookings.payNow": "Pay now",
   "bookings.cancel": "Cancel booking",
   "bookings.holdUntil": "Dates held until {time}",
-  "bookings.received.title": "Bookings of my items",
+  "bookings.received.title": "Bookings for my items",
   "bookings.received.intro": "Paid bookings of your items appear here with the renter's phone number.",
   "bookings.received.empty": "No paid bookings yet.",
   "bookings.return.checking": "Confirming your payment…",
@@ -191,7 +191,7 @@ export const rentalEn = {
 
 export const rentalSi: Partial<Record<keyof typeof rentalEn, string>> = {
   "nav.categories": "වර්ග",
-  "nav.bookings": "මගේ වෙන්කිරීම්",
+  "nav.bookings": "අයිතම වෙන්කිරීම්",
   "nav.activity": "මගේ ක්‍රියාකාරකම්",
   "home.browse": "වර්ග අනුව බලන්න",
   "home.allCategories": "සියලු වර්ග →",
@@ -375,7 +375,7 @@ export const rentalSi: Partial<Record<keyof typeof rentalEn, string>> = {
 
 export const rentalTa: Partial<Record<keyof typeof rentalEn, string>> = {
   "nav.categories": "வகைகள்",
-  "nav.bookings": "எனது முன்பதிவுகள்",
+  "nav.bookings": "பொருள் முன்பதிவுகள்",
   "nav.activity": "எனது செயல்பாடுகள்",
   "home.browse": "வகை வாரியாகப் பார்க்க",
   "home.allCategories": "அனைத்து வகைகளும் →",
