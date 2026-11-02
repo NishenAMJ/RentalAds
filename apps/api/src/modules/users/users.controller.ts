@@ -35,6 +35,12 @@ export class UsersController {
     return this.users.profile(user);
   }
 
+  @Post('me/verification')
+  @WriteThrottle(5)
+  requestOwnerVerification(@CurrentUser() user: AuthenticatedUser) {
+    return this.users.requestOwnerVerification(user);
+  }
+
   @Get('me/export')
   @WriteThrottle(5)
   export(@CurrentUser() user: AuthenticatedUser) {

@@ -68,6 +68,10 @@ export class AccountService {
         role: user.role,
         phone: user.phone,
         createdAt: user.createdAt,
+        ownerVerificationStatus: user.ownerVerificationStatus,
+        ownerVerificationRequestedAt: user.ownerVerificationRequestedAt,
+        ownerVerificationReviewedAt: user.ownerVerificationReviewedAt,
+        ownerVerificationNote: user.ownerVerificationNote,
       },
       listings,
       // Internal admin notes and assignments are not the renter's data.
@@ -128,6 +132,10 @@ export class AccountService {
           email: `deleted+${user.id}@deleted.invalid`,
           authUserId: `deleted:${user.id}`,
           phone: null,
+          ownerVerificationStatus: 'NOT_REQUESTED',
+          ownerVerificationRequestedAt: null,
+          ownerVerificationReviewedAt: null,
+          ownerVerificationNote: null,
         },
       }),
     ]);

@@ -11,6 +11,7 @@ import type { AdminUsersQuery } from './dto/admin-users.query';
 import type { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { pageResult, pageWindow } from '../../common/pagination';
 import { ConflictException } from '@nestjs/common';
+import type { UpdateOwnerVerificationDto } from './dto/update-owner-verification.dto';
 
 @Injectable()
 export class AdminService {
@@ -68,6 +69,9 @@ export class AdminService {
     const users = await this.prisma.user.findMany({
       where: {
         ...(query.status ? { accountStatus: query.status } : {}),
+        ...(query.verificationStatus
+          ? { ownerVerificationStatus: query.verificationStatus }
+          : {}),
         ...(search
           ? {
               OR: [
@@ -85,6 +89,10 @@ export class AdminService {
         accountStatus: true,
         suspendedAt: true,
         suspensionReason: true,
+        ownerVerificationStatus: true,
+        ownerVerificationRequestedAt: true,
+        ownerVerificationReviewedAt: true,
+        ownerVerificationNote: true,
         createdAt: true,
         adminPermission: {
           select: {
@@ -163,6 +171,52 @@ export class AdminService {
       dto.status === 'SUSPENDED'
         ? 'User account suspended'
         : 'User account restored',
+    );
+    return updated;
+  }
+
+  async updateOwnerVerification(
+    authUserId: string,
+    id: string,
+    dto: UpdateOwnerVerificationDto,
+  ) {
+    const target = await this.prisma.user.findUnique({ where: { id } });
+    if (!target) throw new NotFoundException('User not found');
+    if (dto.status === 'NOT_REQUESTED')
+      throw new ConflictException(
+        'Verification cannot be reset to NOT_REQUESTED',
+      );
+    if (target.ownerVerificationStatus !== 'REQUESTED')
+      throw new ConflictException(
+        'The user must request verification before review',
+      );
+    if (target.ownerVerificationStatus === dto.status)
+      throw new ConflictException(
+        `This account is already ${dto.status.toLowerCase()}`,
+      );
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ownerVerificationStatus: dto.status,
+        ownerVerificationReviewedAt: new Date(),
+        ownerVerificationNote: dto.note.trim(),
+      },
+      select: {
+        id: true,
+        email: true,
+        ownerVerificationStatus: true,
+        ownerVerificationRequestedAt: true,
+        ownerVerificationReviewedAt: true,
+        ownerVerificationNote: true,
+      },
+    });
+    await this.activity.record(
+      authUserId,
+      `OWNER_VERIFICATION_${dto.status}`,
+      'USER',
+      id,
+      `Owner verification marked ${dto.status.toLowerCase()}`,
     );
     return updated;
   }

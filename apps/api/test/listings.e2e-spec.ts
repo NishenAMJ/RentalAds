@@ -227,6 +227,10 @@ describe('Users and listings HTTP flow', () => {
       accountStatus: 'ACTIVE',
       suspendedAt: null,
       suspensionReason: null,
+      ownerVerificationStatus: 'NOT_REQUESTED',
+      ownerVerificationRequestedAt: null,
+      ownerVerificationReviewedAt: null,
+      ownerVerificationNote: null,
     }));
   });
   afterAll(async () => {

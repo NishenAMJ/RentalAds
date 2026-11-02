@@ -147,6 +147,7 @@ export class ListingsService {
     if (query.searchLatitude !== undefined) return this.browseRadius(query);
     const listings = await this.prisma.listing.findMany({
       where: { ...this.publicWhere(), ...listingFilterWhere(query) },
+      include: { owner: { select: { ownerVerificationStatus: true } } },
       orderBy: listingOrderBy(query.sort),
       ...pageWindow(query),
     });
@@ -170,6 +171,7 @@ export class ListingsService {
           ...listingFilterWhere(query),
           ...boundingBox(lat!, lng!, radius!, true),
         },
+        include: { owner: { select: { ownerVerificationStatus: true } } },
         orderBy: { id: 'asc' },
         take: 250,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -221,6 +223,7 @@ export class ListingsService {
   async detail(id: string) {
     const listing = await this.prisma.listing.findFirst({
       where: { id, ...this.publicWhere() },
+      include: { owner: { select: { ownerVerificationStatus: true } } },
     });
     if (!listing) throw new NotFoundException('Listing not found');
     return toPublicListing(listing);

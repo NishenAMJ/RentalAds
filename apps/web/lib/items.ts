@@ -27,6 +27,7 @@ export interface ItemListing {
   id: string;
   reference?: string | null;
   category: string;
+  ownerVerified?: boolean;
   title: string | null;
   description: string | null;
   attributes: Record<string, string | number | boolean> | null;

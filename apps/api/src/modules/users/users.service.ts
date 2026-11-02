@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -22,6 +23,35 @@ export class UsersService {
       },
     });
     return { ...user, adminPermission: permissions };
+  }
+
+  async requestOwnerVerification(authUser: AuthenticatedUser) {
+    const user = await this.findOrCreate(authUser);
+    if (user.ownerVerificationStatus === 'REQUESTED')
+      throw new ConflictException(
+        'Your verification request is already pending',
+      );
+    if (user.ownerVerificationStatus === 'VERIFIED')
+      throw new ConflictException('Your account is already verified');
+    if (user.accountStatus === 'SUSPENDED')
+      throw new BadRequestException(
+        'Suspended accounts cannot request verification',
+      );
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ownerVerificationStatus: 'REQUESTED',
+        ownerVerificationRequestedAt: new Date(),
+        ownerVerificationReviewedAt: null,
+        ownerVerificationNote: null,
+      },
+      select: {
+        ownerVerificationStatus: true,
+        ownerVerificationRequestedAt: true,
+        ownerVerificationReviewedAt: true,
+        ownerVerificationNote: true,
+      },
+    });
   }
   async findOrCreate(
     authUser: AuthenticatedUser,

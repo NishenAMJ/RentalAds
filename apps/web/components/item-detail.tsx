@@ -73,7 +73,7 @@ export function ItemDetail({ id }: { id: string }) {
       </div>
       <aside className="property-side">
         <div className="panel property-identity">
-          <div className="identity-top">{category && <span className="ui-badge">{t(categoryNameKey(category.id))}</span>}{listing.reference && <span className="record-reference">{listing.reference}</span>}</div>
+          <div className="identity-top">{category && <span className="ui-badge">{t(categoryNameKey(category.id))}</span>}{listing.ownerVerified && <span className="ui-badge badge-success">{t("rent.new.ownerVerified")}</span>}{listing.reference && <span className="record-reference">{listing.reference}</span>}</div>
           <h1>{name}</h1>
           <p className="rent">{lkr(listing.monthlyRent)} <span>/ {t(`rent.per.${listing.ratePeriod}`)}</span></p>
         </div>

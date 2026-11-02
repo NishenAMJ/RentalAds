@@ -2,6 +2,7 @@ import { categoryLabel } from "@/lib/categories";
 export interface PublicListing {
   id: string;
   reference?: string | null;
+  ownerVerified?: boolean;
   propertyType: "APARTMENT" | "HOUSE";
   size: "STUDIO" | "ONE_BR" | "TWO_BR" | "THREE_BR_PLUS" | "N_A";
   bedrooms: number;

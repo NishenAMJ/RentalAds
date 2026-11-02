@@ -27,6 +27,7 @@ import { AdminActivityService } from './admin-activity.service';
 import { PaginationQuery } from '../../common/pagination';
 import { AdminUsersQuery } from './dto/admin-users.query';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
+import { UpdateOwnerVerificationDto } from './dto/update-owner-verification.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -66,6 +67,18 @@ export class AdminController {
     @Body() dto: UpdateUserStatusDto,
   ) {
     return this.adminService.updateUserStatus(user.authUserId, id, dto);
+  }
+
+  @Patch('users/:id/verification')
+  @UseGuards(AdminPermissionGuard)
+  @WriteThrottle(10)
+  @RequirePermission('canManageAdmins')
+  updateOwnerVerification(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateOwnerVerificationDto,
+  ) {
+    return this.adminService.updateOwnerVerification(user.authUserId, id, dto);
   }
   @Post('permissions')
   @UseGuards(AdminPermissionGuard)

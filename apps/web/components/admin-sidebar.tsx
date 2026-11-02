@@ -14,6 +14,7 @@ export function AdminSidebar() {
     { href: "/admin/activity", label: "Activity history", visible: true },
     { href: "/admin/listings", label: "Listings", visible: permissions.canApproveListings },
     { href: "/admin/users", label: "Users", visible: permissions.canManageAdmins },
+    { href: "/admin/verifications", label: "Owner verification", visible: permissions.canManageAdmins },
     { href: "/admin/requests", label: "Rental requests", visible: permissions.canApproveListings },
     { href: "/admin/bookings", label: "Bookings", visible: permissions.canApproveListings },
     { href: "/admin/payouts", label: "Owner payouts", visible: permissions.canManagePayouts },

@@ -13,6 +13,7 @@ function AdminAccess({ children }: { children: ReactNode }) {
     path === "/admin/activity" ||
     (path === "/admin/complaints" && permissions.canManageComplaints) ||
     (path === "/admin/users" && permissions.canManageAdmins) ||
+    (path === "/admin/verifications" && permissions.canManageAdmins) ||
     (path === "/admin/payouts" && permissions.canManagePayouts) ||
     (["/admin/listings", "/admin/requests", "/admin/bookings"].includes(path) && permissions.canApproveListings));
   if (!permitted) return <AccessRedirect href={`/login?next=${encodeURIComponent(path)}`}
