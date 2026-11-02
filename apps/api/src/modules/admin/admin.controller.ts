@@ -25,6 +25,8 @@ import {
 } from './dto/owner-payout.dto';
 import { AdminActivityService } from './admin-activity.service';
 import { PaginationQuery } from '../../common/pagination';
+import { AdminUsersQuery } from './dto/admin-users.query';
+import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -46,6 +48,24 @@ export class AdminController {
     @Query() query: PaginationQuery,
   ) {
     return this.activity.list(user.authUserId, query);
+  }
+  @Get('users')
+  @UseGuards(AdminPermissionGuard)
+  @RequirePermission('canManageAdmins')
+  usersList(@Query() query: AdminUsersQuery) {
+    return this.adminService.listUsers(query);
+  }
+
+  @Patch('users/:id/status')
+  @UseGuards(AdminPermissionGuard)
+  @WriteThrottle(10)
+  @RequirePermission('canManageAdmins')
+  updateUserStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserStatusDto,
+  ) {
+    return this.adminService.updateUserStatus(user.authUserId, id, dto);
   }
   @Post('permissions')
   @UseGuards(AdminPermissionGuard)

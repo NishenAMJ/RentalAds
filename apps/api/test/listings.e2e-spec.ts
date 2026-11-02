@@ -92,6 +92,9 @@ describe('Users and listings HTTP flow', () => {
             phone: null,
             createdAt: new Date(),
             ...create,
+            accountStatus: create.accountStatus ?? 'ACTIVE',
+            suspendedAt: create.suspendedAt ?? null,
+            suspensionReason: create.suspensionReason ?? null,
           };
           users.push(user);
           return Promise.resolve(user);
@@ -221,6 +224,9 @@ describe('Users and listings HTTP flow', () => {
       role: 'ADMIN',
       phone: null,
       createdAt: new Date(),
+      accountStatus: 'ACTIVE',
+      suspendedAt: null,
+      suspensionReason: null,
     }));
   });
   afterAll(async () => {
