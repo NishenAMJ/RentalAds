@@ -261,6 +261,12 @@ a.category-tile:hover, a.category-tile:focus-visible { border-color: var(--prima
 .admin-attention-copy h3 { margin: 0; font-size: 15px; }
 .admin-attention-copy p, .admin-attention-empty { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
 .admin-attention-empty { padding: 16px; border-radius: 10px; background: var(--surface-soft); }
+.complaint-admin-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.complaint-admin-fields label { display: grid; gap: 6px; font-weight: 600; }
+.complaint-admin-fields textarea { width: 100%; min-height: 80px; resize: vertical; }
+.complaint-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.booking-dispute { grid-column: 1 / -1; display: grid; gap: 8px; }
+.booking-dispute .notice p + p { margin-top: 8px; }
 @media (max-width: 600px) { .admin-attention-list li { grid-template-columns: 38px minmax(0, 1fr); } .admin-attention-list li .button { grid-column: 2; justify-self: start; } }
 .booking-panel { display: grid; gap: 14px; }
 .booking-panel label { display: grid; gap: 6px; font-size: 14px; }

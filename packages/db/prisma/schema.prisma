@@ -30,6 +30,7 @@ model User {
   notifications   Notification[]
   bookings        Booking[]
   payouts         OwnerPayout[]
+  resolvedComplaints Complaint[] @relation("ComplaintResolver")
 
   @@map("users")
 }
@@ -248,16 +249,33 @@ model Complaint {
   id         String              @id @default(uuid())
   reporterId String?
   reporter   User?               @relation(fields: [reporterId], references: [id])
+  resolvedById String?
+  resolvedBy User?               @relation("ComplaintResolver", fields: [resolvedById], references: [id])
+  bookingId  String?             @unique
+  booking    Booking?            @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  disputeType DisputeType?
   targetType ComplaintTargetType
   targetId   String
   reason     String
   status     ComplaintStatus     @default(OPEN)
   adminNotes String?
+  resolution String?
+  resolvedAt DateTime?
   createdAt  DateTime            @default(now())
 
   @@index([status, createdAt])
   @@index([reporterId])
+  @@index([bookingId, status, createdAt])
   @@map("complaints")
+}
+
+enum DisputeType {
+  DEPOSIT
+  DAMAGE
+  NO_SHOW
+  PAYMENT
+  ITEM_CONDITION
+  OTHER
 }
 
 enum NotificationType {
@@ -268,6 +286,8 @@ enum NotificationType {
   BOOKING_CANCELLED
   LISTING_APPROVED
   LISTING_REJECTED
+  DISPUTE_OPENED
+  DISPUTE_UPDATED
 }
 model Notification {
   id String @id @default(uuid())
@@ -324,6 +344,7 @@ model Booking {
   refundedAt      DateTime?
   refundReference String?
   ownerPayout     OwnerPayout?
+  dispute         Complaint?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

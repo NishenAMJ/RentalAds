@@ -8,6 +8,7 @@ import { categoryById } from "@/lib/categories";
 import { OwnerCancel, RenterCancel } from "@/components/booking-cancel";
 import { lkr, todayInSriLanka, whatsappLink, type BookingView, type CheckoutRequest } from "@/lib/items";
 import { postToPayhere } from "@/lib/payhere-form";
+import { BookingDispute } from "@/components/booking-dispute";
 
 const TONE = { PENDING_PAYMENT: "badge-warning", CONFIRMED: "badge-success", COMPLETED: "badge-neutral", CANCELLED: "badge-neutral", EXPIRED: "badge-neutral" } as const;
 
@@ -46,6 +47,7 @@ export function BookingCard({ booking, viewer, onChanged }: { booking: BookingVi
       {booking.status === "CANCELLED" && booking.cancelledBy && <p className="muted">{t(`bookings.cancelledBy.${booking.cancelledBy}`)}{booking.cancelReason && booking.cancelledBy !== "RENTER" ? ` · ${t("bookings.reason", { reason: booking.cancelReason })}` : ""}</p>}
       {viewer === "renter" && booking.refundStatus === "DUE" && <p className="notice" role="status">{t("bookings.refund.DUE", { amount: lkr(booking.refundAmount ?? 0) })}</p>}
       {viewer === "renter" && booking.refundStatus === "DONE" && <p className="notice" role="status">{t("bookings.refund.DONE", { amount: lkr(booking.refundAmount ?? 0) })}</p>}
+      <BookingDispute bookingId={booking.id} paidAt={booking.paidAt} />
       {viewer === "renter" && stillHeld && booking.expiresAt && <p className="small-copy">{t("bookings.holdUntil", { time: new Date(booking.expiresAt).toLocaleTimeString("en-GB", { timeZone: "Asia/Colombo", hour: "2-digit", minute: "2-digit" }) })}</p>}
       {error && <p role="alert" className="notice error">{error}</p>}
       {viewer === "renter" && stillHeld && <button className="ui-button ui-button-primary" disabled={busy} onClick={() => void pay()}>{t("bookings.payNow")}</button>}
