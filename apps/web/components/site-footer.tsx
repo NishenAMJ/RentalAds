@@ -8,6 +8,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div><strong>RentalHub Sri Lanka</strong><br />{t("footer.tagline")}</div>
       <nav className="footer-links" aria-label="Legal">
+        <Link href="/help">Help &amp; safety</Link>
         <Link href="/privacy">{t("footer.privacy")}</Link>
         <Link href="/terms">{t("footer.terms")}</Link>
         <Link href="/cookies">{t("footer.cookies")}</Link>

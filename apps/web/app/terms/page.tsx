@@ -8,7 +8,7 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of service" intro="Plain rules for using RentalHub Sri Lanka as a renter or a property owner.">
       <h2>What the service is</h2>
-      <p>{OPERATOR_NAME} helps renters and property owners in Sri Lanka find each other. Our team reviews submissions and arranges introductions personally. We are an introduction service. We are not a party to any tenancy agreement, we do not collect rent or deposits, and we do not guarantee that a request will be matched or that a property is suitable or available.</p>
+      <p>{OPERATOR_NAME} offers two rental flows in Sri Lanka. For homes, our team reviews requests and listing submissions and helps arrange introductions; we do not collect home rent or guarantee a match. For vehicles, equipment and event gear, renters can book dates and pay through our payment partner. In both flows, the owner provides the rental and remains responsible for the accuracy and condition of the listing.</p>
 
       <h2>Your account</h2>
       <ul>

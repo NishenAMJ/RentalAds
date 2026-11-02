@@ -112,6 +112,7 @@ Browser tests run against a mocked backend, and the Docker files are verified by
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design decisions, data model, security, known limitations |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosting, settings, going live with payments, backups |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Original homes pilot: API contract, upload rules, configuration |
+| [docs/LAUNCH-READINESS.md](docs/LAUNCH-READINESS.md) | Business, trust and support decisions before accepting real users |
 | `/docs` on the API | Interactive OpenAPI reference |
 
 ## Status and limitations
