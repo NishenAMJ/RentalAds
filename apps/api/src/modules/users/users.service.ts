@@ -18,6 +18,7 @@ export class UsersService {
         canApproveListings: true,
         canManageAdmins: true,
         canManageComplaints: true,
+        canManagePayouts: true,
       },
     });
     return { ...user, adminPermission: permissions };
