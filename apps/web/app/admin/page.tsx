@@ -6,7 +6,7 @@ import { AdminPermissionsForm } from "@/components/admin-permissions-form";
 import { apiRequest } from "@/lib/api-client";
 import type { AdminSummary } from "@/lib/admin-listings";
 
-function SummaryCard({ title, href, cta, rows }: { title: string; href: string; cta: string; rows: [label: string, value: number][] }) {
+function SummaryCard({ title, href, cta, rows }: { title: string; href: string; cta: string; rows: [label: string, value: number | string][] }) {
   return <article className="panel summary-card">
     <h2>{title}</h2>
     <dl>{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
     {bookings && <SummaryCard title="Bookings" href="/admin/bookings" cta="Review bookings"
       rows={[["Upcoming and paid", bookings.upcoming], ["Refunds to make", bookings.refundDue]]} />}
     {payouts && <SummaryCard title="Owner payouts" href="/admin/payouts" cta="Manage payouts"
-      rows={[["Due for transfer", payouts.dueCount], ["Amount due (LKR)", payouts.dueAmount]]} />}
+      rows={[["Due for transfer", payouts.dueCount], ["Total amount due", `LKR ${payouts.dueAmount.toLocaleString("en-LK")}`]]} />}
     {complaints && <SummaryCard title="Complaints" href="/admin/complaints" cta="Review complaints"
       rows={[["Open", complaints.open]]} />}
   </div>;

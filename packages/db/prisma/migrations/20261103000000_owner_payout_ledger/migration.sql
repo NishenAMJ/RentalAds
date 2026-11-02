@@ -1,3 +1,6 @@
+ALTER TABLE "admin_permissions"
+    ADD COLUMN "canManagePayouts" BOOLEAN NOT NULL DEFAULT false;
+
 CREATE TYPE "OwnerPayoutStatus" AS ENUM ('DUE', 'PAID', 'CANCELLED');
 
 CREATE TABLE "owner_payouts" (
@@ -13,8 +16,8 @@ CREATE TABLE "owner_payouts" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "owner_payouts_pkey" PRIMARY KEY ("id")
-    ,CONSTRAINT "owner_payouts_amount_positive" CHECK ("amount" > 0)
+    CONSTRAINT "owner_payouts_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "owner_payouts_amount_positive" CHECK ("amount" > 0)
 );
 
 CREATE UNIQUE INDEX "owner_payouts_bookingId_key" ON "owner_payouts"("bookingId");

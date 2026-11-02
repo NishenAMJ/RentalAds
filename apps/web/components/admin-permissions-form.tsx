@@ -30,7 +30,7 @@ export function AdminPermissionsForm() {
     setBusy(true); setError(""); setMessage("");
     try {
       await apiRequest("/admin/permissions", { method: "POST", authenticated: true, body: JSON.stringify(body) });
-      setMessage(`Permissions saved for ${body.email}.`);
+      setMessage(`Permissions saved for ${body.email}. Changes take effect when their session refreshes.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save permissions.");
     } finally {
@@ -41,7 +41,7 @@ export function AdminPermissionsForm() {
   return (
     <section className="panel admin-permissions" aria-labelledby="admin-permissions-title">
       <h2 id="admin-permissions-title">Admin access</h2>
-      <p className="admin-description">Set exactly which tools an existing user can use. Unchecked tools are removed.</p>
+      <p className="admin-description">Set exactly which tools an existing user can use. Unchecked tools are removed. Give payout access only to staff responsible for recording owner transfers.</p>
       <form onSubmit={submit} aria-busy={busy} className="permissions-form">
         <div className="ui-field">
           <label htmlFor="permission-email">User email</label>

@@ -33,18 +33,20 @@ function CreatePayout({ onCreated }: { onCreated: () => void }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { const c = new AbortController(); apiRequest<{ items: Booking[] }>("/bookings/admin?status=COMPLETED&page=1&limit=100", { authenticated: true, signal: c.signal }).then(result => setBookings(result.items.filter(b => b.paidAt))).catch(cause => { if (!c.signal.aborted) setError(cause instanceof Error ? cause.message : "Unable to load completed bookings."); }); return () => c.abort(); }, []);
+  useEffect(() => { const c = new AbortController(); apiRequest<{ items: Booking[] }>("/bookings/admin?status=COMPLETED&page=1&limit=100", { authenticated: true, signal: c.signal }).then(result => setBookings(result.items.filter(b => b.paidAt))).catch(cause => { if (!c.signal.aborted) setLoadError(cause instanceof Error ? cause.message : "Unable to load completed bookings."); }); return () => c.abort(); }, []);
   const selected = bookings.find(b => b.id === bookingId);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (busy) return;
     setBusy(true); setError("");
-    try { await apiRequest("/admin/payouts", { method: "POST", authenticated: true, body: JSON.stringify({ bookingId, amount: Number(amount), note }) }); onCreated(); }
+    try { await apiRequest("/admin/payouts", { method: "POST", authenticated: true, body: JSON.stringify({ bookingId, amount: Number(amount), note }) }); setBookings(current => current.filter(booking => booking.id !== bookingId)); setBookingId(""); setAmount(""); setNote(""); onCreated(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create payout record."); setBusy(false); }
   }
   return <details className="panel"><summary><strong>Create payout obligation</strong></summary><p>Only add an amount after your team has confirmed it is owed. This does not send money.</p>
+    {loadError && <p role="alert" className="notice error">{loadError}</p>}
     {error && !bookings.length && <p role="alert" className="notice error">{error}</p>}
-    {!bookings.length && !error && <p>No completed, paid bookings are available for payout review.</p>}
+    {!bookings.length && !error && !loadError && <p>No completed, paid bookings are available for payout review.</p>}
     {bookings.length > 0 && <form className="stack" onSubmit={submit}><label>Completed booking<select required value={bookingId} onChange={e => setBookingId(e.target.value)}><option value="">Choose a booking</option>{bookings.map(b => <option key={b.id} value={b.id}>{b.listing.title ?? b.listing.areaText} · {b.startDate} · {b.id.slice(0, 8)}</option>)}</select></label>{selected && <p>Booking total was {lkr(selected.totalAmount)}. Confirm the owner amount from your agreed payout terms before entering it.</p>}<label>Owner amount due (LKR)<input type="number" min={1} max={2147483647} step={1} required value={amount} onChange={e => setAmount(e.target.value)} /></label><label>Internal note (optional)<textarea maxLength={1000} value={note} onChange={e => setNote(e.target.value)} /></label>{error && <p role="alert" className="notice error">{error}</p>}<button className="ui-button ui-button-primary" disabled={busy}>{busy ? "Saving…" : "Create due payout"}</button></form>}
   </details>;
 }
@@ -54,7 +56,7 @@ function Workspace() {
   const [status, setStatus] = useState("DUE");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const refresh = useCallback(() => { void apiRequest<Payout[]>(`/admin/payouts?status=${status}`, { authenticated: true }).then(setPayouts).catch(cause => setError(cause instanceof Error ? cause.message : "Unable to load payouts.")); }, [status]);
+  const refresh = useCallback(() => { setError(""); void apiRequest<Payout[]>(`/admin/payouts?status=${status}`, { authenticated: true }).then(setPayouts).catch(cause => setError(cause instanceof Error ? cause.message : "Unable to load payouts.")); }, [status]);
   useEffect(() => { const controller = new AbortController(); apiRequest<Payout[]>(`/admin/payouts?status=${status}`, { authenticated: true, signal: controller.signal }).then(setPayouts).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Unable to load payouts."); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [status]);
   return <section className="admin-workspace"><div className="page-heading"><div><p className="eyebrow">Payments · Manual ledger</p><h1>Owner payouts</h1><p className="intro">Track amounts your team has confirmed are owed and record transfers completed outside RentalHub. This page does not initiate payments.</p></div></div>
     <CreatePayout onCreated={refresh} />

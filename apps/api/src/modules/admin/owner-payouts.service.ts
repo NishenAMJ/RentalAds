@@ -49,13 +49,15 @@ export class OwnerPayoutsService {
                 areaText: true,
               },
             },
+            ownerPayout: { select: { id: true } },
           },
         },
       },
     });
-    return rows.map(({ owner, ...row }) => ({
+    return rows.map(({ owner, booking, ...row }) => ({
       ...row,
       owner: { ...owner, phone: null },
+      booking: { ...booking, payoutExists: Boolean(booking.ownerPayout) },
     }));
   }
 
