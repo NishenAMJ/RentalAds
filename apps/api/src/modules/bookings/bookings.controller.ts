@@ -25,11 +25,15 @@ import {
   RefundDoneDto,
 } from './booking.dto';
 import { BookingsService } from './bookings.service';
+import { AdminActivityService } from '../admin/admin-activity.service';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookings: BookingsService) {}
+  constructor(
+    private readonly bookings: BookingsService,
+    private readonly activity: AdminActivityService,
+  ) {}
 
   // Static routes come before ':id' so they are not mistaken for a booking id.
   @Get('quote')
@@ -129,20 +133,38 @@ export class BookingsController {
   @Patch(':id/refund-done')
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  refundDone(
+  async refundDone(
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: RefundDoneDto,
   ) {
-    return this.bookings.markRefunded(id, body.reference);
+    const result = await this.bookings.markRefunded(id, body.reference);
+    await this.activity.record(
+      user.authUserId,
+      'BOOKING_REFUND_RECORDED',
+      'BOOKING',
+      id,
+      'Booking refund recorded as sent',
+    );
+    return result;
   }
 
   @Patch(':id/admin-cancel')
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  adminCancel(
+  async adminCancel(
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CancelBookingDto,
   ) {
-    return this.bookings.adminCancel(id, body.reason);
+    const result = await this.bookings.adminCancel(id, body.reason);
+    await this.activity.record(
+      user.authUserId,
+      'BOOKING_CANCELLED_BY_ADMIN',
+      'BOOKING',
+      id,
+      'Booking cancelled by admin',
+    );
+    return result;
   }
 }

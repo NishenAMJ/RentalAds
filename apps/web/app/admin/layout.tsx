@@ -10,6 +10,7 @@ function AdminAccess({ children }: { children: ReactNode }) {
   const path = usePathname();
   if (permissionsLoading) return <p role="status">Checking admin access...</p>;
   const permitted = isAdmin && (path === "/admin" ||
+    path === "/admin/activity" ||
     (path === "/admin/complaints" && permissions.canManageComplaints) ||
     (path === "/admin/payouts" && permissions.canManagePayouts) ||
     (["/admin/listings", "/admin/requests", "/admin/bookings"].includes(path) && permissions.canApproveListings));

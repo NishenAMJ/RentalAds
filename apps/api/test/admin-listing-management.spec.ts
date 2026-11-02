@@ -92,6 +92,7 @@ describe('admin summary', () => {
       {
         counts: jest.fn().mockResolvedValue({ upcoming: 2, refundDue: 1 }),
       } as never,
+      { record: jest.fn() } as never,
     );
 
   it('rejects callers without any admin permission', async () => {

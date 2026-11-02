@@ -23,6 +23,8 @@ import {
   CreateOwnerPayoutDto,
   RecordOwnerPayoutDto,
 } from './dto/owner-payout.dto';
+import { AdminActivityService } from './admin-activity.service';
+import { PaginationQuery } from '../../common/pagination';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -31,18 +33,29 @@ export class AdminController {
   constructor(
     private adminService: AdminService,
     private payouts: OwnerPayoutsService,
+    private activity: AdminActivityService,
   ) {}
   /** Checks permissions itself, so any admin can load the overview. */
   @Get('summary')
   summary(@CurrentUser() user: AuthenticatedUser) {
     return this.adminService.summary(user.authUserId);
   }
+  @Get('activity')
+  activityList(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: PaginationQuery,
+  ) {
+    return this.activity.list(user.authUserId, query);
+  }
   @Post('permissions')
   @UseGuards(AdminPermissionGuard)
   @WriteThrottle(10)
   @RequirePermission('canManageAdmins')
-  grant(@Body() dto: GrantPermissionDto) {
-    return this.adminService.grantPermission(dto);
+  grant(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: GrantPermissionDto,
+  ) {
+    return this.adminService.grantPermission(user.authUserId, dto);
   }
 
   @Get('payouts')
@@ -68,9 +81,10 @@ export class AdminController {
   @WriteThrottle(10)
   @RequirePermission('canManagePayouts')
   markPayoutPaid(
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: RecordOwnerPayoutDto,
   ) {
-    return this.payouts.markPaid(id, dto);
+    return this.payouts.markPaid(user.authUserId, id, dto);
   }
 }

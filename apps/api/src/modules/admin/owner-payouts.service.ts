@@ -9,6 +9,7 @@ import type {
   CreateOwnerPayoutDto,
   RecordOwnerPayoutDto,
 } from './dto/owner-payout.dto';
+import { AdminActivityService } from './admin-activity.service';
 
 function isUniqueConstraintError(error: unknown): boolean {
   return (
@@ -21,7 +22,10 @@ function isUniqueConstraintError(error: unknown): boolean {
 
 @Injectable()
 export class OwnerPayoutsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activity: AdminActivityService,
+  ) {}
 
   async list(status?: string) {
     if (status && !['DUE', 'PAID', 'CANCELLED'].includes(status))
@@ -94,7 +98,7 @@ export class OwnerPayoutsService {
         'A payout record already exists for this booking',
       );
     try {
-      return await this.prisma.ownerPayout.create({
+      const payout = await this.prisma.ownerPayout.create({
         data: {
           bookingId: booking.id,
           ownerId: booking.listing.ownerId,
@@ -103,6 +107,14 @@ export class OwnerPayoutsService {
           createdById: admin.id,
         },
       });
+      await this.activity.record(
+        authUserId,
+        'OWNER_PAYOUT_CREATED',
+        'PAYOUT',
+        payout.id,
+        'Owner payout created',
+      );
+      return payout;
     } catch (error) {
       if (isUniqueConstraintError(error))
         throw new ConflictException(
@@ -112,7 +124,7 @@ export class OwnerPayoutsService {
     }
   }
 
-  async markPaid(id: string, dto: RecordOwnerPayoutDto) {
+  async markPaid(authUserId: string, id: string, dto: RecordOwnerPayoutDto) {
     const payout = await this.prisma.ownerPayout.findUnique({
       where: { id },
       select: { id: true, status: true },
@@ -133,6 +145,14 @@ export class OwnerPayoutsService {
       throw new ConflictException(
         'Payout status changed; refresh and try again',
       );
-    return this.prisma.ownerPayout.findUnique({ where: { id } });
+    const result = await this.prisma.ownerPayout.findUnique({ where: { id } });
+    await this.activity.record(
+      authUserId,
+      'OWNER_PAYOUT_PAID',
+      'PAYOUT',
+      id,
+      'Owner payout marked paid',
+    );
+    return result;
   }
 }

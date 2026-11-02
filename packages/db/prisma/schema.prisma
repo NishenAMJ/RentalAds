@@ -31,6 +31,7 @@ model User {
   bookings        Booking[]
   payouts         OwnerPayout[]
   resolvedComplaints Complaint[] @relation("ComplaintResolver")
+  adminActivities AdminActivity[]
 
   @@map("users")
 }
@@ -46,6 +47,21 @@ model AdminPermission {
 
  
   @@map("admin_permissions")
+}
+
+model AdminActivity {
+  id        String   @id @default(uuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action    String
+  entityType String
+  entityId  String
+  summary   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt, id])
+  @@index([entityType, entityId, createdAt])
+  @@map("admin_activity")
 }
 
 enum PropertyType {

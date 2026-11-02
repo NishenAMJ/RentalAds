@@ -27,6 +27,7 @@ import { AdminListingsQuery } from './admin-listings.query';
 import { IsString, Matches, MaxLength } from 'class-validator';
 import { ListingsService } from './listings.service';
 import { PublicCacheInterceptor } from '../../common/public-cache.interceptor';
+import { AdminActivityService } from '../admin/admin-activity.service';
 
 import { WriteThrottle } from '../../common/decorators/write-throttle.decorator';
 
@@ -37,7 +38,10 @@ class DeleteDto {
 @ApiTags('listings')
 @Controller('listings')
 export class ListingsController {
-  constructor(private readonly listings: ListingsService) {}
+  constructor(
+    private readonly listings: ListingsService,
+    private readonly activity: AdminActivityService,
+  ) {}
   @Post()
   @WriteThrottle(10)
   @UseGuards(AuthGuard)
@@ -104,26 +108,70 @@ export class ListingsController {
   @Patch(':id/approve')
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  approve(@Param('id', ParseUUIDPipe) id: string) {
-    return this.listings.moderate(id, 'ACTIVE');
+  async approve(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const result = await this.listings.moderate(id, 'ACTIVE');
+    await this.activity.record(
+      user.authUserId,
+      'LISTING_APPROVED',
+      'LISTING',
+      id,
+      'Listing approved',
+    );
+    return result;
   }
   @Patch(':id/reject')
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  reject(@Param('id', ParseUUIDPipe) id: string) {
-    return this.listings.moderate(id, 'REJECTED');
+  async reject(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const result = await this.listings.moderate(id, 'REJECTED');
+    await this.activity.record(
+      user.authUserId,
+      'LISTING_REJECTED',
+      'LISTING',
+      id,
+      'Listing rejected',
+    );
+    return result;
   }
   @Patch(':id/deactivate')
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  deactivate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.listings.deactivate(id);
+  async deactivate(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const result = await this.listings.deactivate(id);
+    await this.activity.record(
+      user.authUserId,
+      'LISTING_DEACTIVATED',
+      'LISTING',
+      id,
+      'Listing deactivated',
+    );
+    return result;
   }
   @Patch(':id/reactivate')
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  reactivate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.listings.reactivate(id);
+  async reactivate(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const result = await this.listings.reactivate(id);
+    await this.activity.record(
+      user.authUserId,
+      'LISTING_REACTIVATED',
+      'LISTING',
+      id,
+      'Listing reactivated',
+    );
+    return result;
   }
   @Patch(':id/reconfirm')
   @UseGuards(AuthGuard)
@@ -149,7 +197,15 @@ export class ListingsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: DeleteDto,
   ) {
-    return this.listings.removeAdmin(user, id, body.reason);
+    const result = await this.listings.removeAdmin(user, id, body.reason);
+    await this.activity.record(
+      user.authUserId,
+      'LISTING_REMOVED',
+      'LISTING',
+      id,
+      'Listing removed by admin',
+    );
+    return result;
   }
   @Patch(':id')
   @WriteThrottle(20)

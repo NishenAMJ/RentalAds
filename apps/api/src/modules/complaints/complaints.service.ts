@@ -15,12 +15,14 @@ import { CreateComplaintDto } from './dto/create-complaint.dto';
 import type { CreateDisputeDto } from './dto/create-complaint.dto';
 import type { UpdateComplaintDto } from './dto/update-complaint.dto';
 import { NotifyService } from '../notifications/notify.service';
+import { AdminActivityService } from '../admin/admin-activity.service';
 
 @Injectable()
 export class ComplaintsService {
   constructor(
     private prisma: PrismaService,
     private readonly notify: NotifyService,
+    private readonly activity: AdminActivityService,
   ) {}
 
   async create(dto: CreateComplaintDto, reporterId?: string) {
@@ -205,6 +207,13 @@ export class ComplaintsService {
           : {}),
       },
     });
+    await this.activity.record(
+      authUserId,
+      'COMPLAINT_UPDATED',
+      'COMPLAINT',
+      id,
+      `Case status changed to ${dto.status}`,
+    );
     const resolutionChanged = Boolean(
       dto.resolution?.trim() && dto.resolution.trim() !== complaint.resolution,
     );

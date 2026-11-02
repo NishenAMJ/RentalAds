@@ -33,7 +33,10 @@ describe('OwnerPayoutsService', () => {
     };
     return {
       prisma,
-      service: new OwnerPayoutsService(prisma as unknown as PrismaService),
+      service: new OwnerPayoutsService(
+        prisma as unknown as PrismaService,
+        { record: jest.fn() } as never,
+      ),
     };
   };
 
@@ -85,7 +88,7 @@ describe('OwnerPayoutsService', () => {
   it('records a transfer only once and requires the admin to supply its reference', async () => {
     const { prisma, service } = setup();
     await expect(
-      service.markPaid(payoutId, { transferReference: 'BANK-123' }),
+      service.markPaid(authUserId, payoutId, { transferReference: 'BANK-123' }),
     ).resolves.toMatchObject({ id: payoutId });
     expect(prisma.ownerPayout.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -98,7 +101,7 @@ describe('OwnerPayoutsService', () => {
     );
     prisma.ownerPayout.findUnique.mockResolvedValue(null);
     await expect(
-      service.markPaid(payoutId, { transferReference: 'BANK-123' }),
+      service.markPaid(authUserId, payoutId, { transferReference: 'BANK-123' }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -109,7 +112,7 @@ describe('OwnerPayoutsService', () => {
       status: 'PAID',
     });
     await expect(
-      service.markPaid(payoutId, { transferReference: 'BANK-123' }),
+      service.markPaid(authUserId, payoutId, { transferReference: 'BANK-123' }),
     ).rejects.toThrow(ConflictException);
     prisma.ownerPayout.findUnique.mockResolvedValue({
       id: payoutId,
@@ -117,7 +120,7 @@ describe('OwnerPayoutsService', () => {
     });
     prisma.ownerPayout.updateMany.mockResolvedValue({ count: 0 });
     await expect(
-      service.markPaid(payoutId, { transferReference: 'BANK-123' }),
+      service.markPaid(authUserId, payoutId, { transferReference: 'BANK-123' }),
     ).rejects.toThrow(ConflictException);
   });
 

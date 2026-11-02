@@ -6,15 +6,17 @@ import {
 import { PrismaService } from '../../common/prisma.service';
 import { GrantPermissionDto } from './dto/grant-permission.dto';
 import { BookingsService } from '../bookings/bookings.service';
+import { AdminActivityService } from './admin-activity.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     private prisma: PrismaService,
     private bookings: BookingsService,
+    private activity: AdminActivityService,
   ) {}
 
-  async grantPermission(dto: GrantPermissionDto) {
+  async grantPermission(authUserId: string, dto: GrantPermissionDto) {
     const targetUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -23,7 +25,7 @@ export class AdminService {
 
     const flags = dto;
 
-    return this.prisma.adminPermission.upsert({
+    const result = await this.prisma.adminPermission.upsert({
       where: { userId: targetUser.id },
       create: {
         userId: targetUser.id,
@@ -47,6 +49,14 @@ export class AdminService {
           : {}),
       },
     });
+    await this.activity.record(
+      authUserId,
+      'ADMIN_PERMISSIONS_CHANGED',
+      'USER',
+      targetUser.id,
+      'Admin permissions changed',
+    );
+    return result;
   }
 
   /** Headline counts for the admin overview, limited to the areas the caller may manage. */

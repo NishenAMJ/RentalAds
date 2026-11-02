@@ -11,6 +11,7 @@ export function AdminSidebar() {
   const [expanded, setExpanded] = useState(false);
   const links = [
     { href: "/admin", label: "Overview", visible: true },
+    { href: "/admin/activity", label: "Activity history", visible: true },
     { href: "/admin/listings", label: "Listings", visible: permissions.canApproveListings },
     { href: "/admin/requests", label: "Rental requests", visible: permissions.canApproveListings },
     { href: "/admin/bookings", label: "Bookings", visible: permissions.canApproveListings },
