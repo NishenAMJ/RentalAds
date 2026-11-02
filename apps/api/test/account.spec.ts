@@ -47,6 +47,10 @@ function build(overrides: {
       findMany: jest.fn().mockResolvedValue([]),
       deleteMany: op('notification.deleteMany'),
     },
+    bookingReview: {
+      findMany: jest.fn().mockResolvedValue([]),
+      deleteMany: op('bookingReview.deleteMany'),
+    },
     match: { updateMany: op('match.updateMany') },
     $transaction: jest.fn().mockResolvedValue([]),
   };
@@ -69,6 +73,9 @@ describe('AccountService.exportData', () => {
       { select: Record<string, boolean> },
     ];
     expect(complaintQuery[0].select).not.toHaveProperty('adminNotes');
+    expect(prisma.bookingReview.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { reviewerId: 'u1' } }),
+    );
   });
 
   it('fails for an unknown account', async () => {
@@ -101,12 +108,19 @@ describe('AccountService.deleteAccount', () => {
     expect(prisma.notification.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'u1' },
     });
+    expect(prisma.bookingReview.deleteMany).toHaveBeenCalledWith({
+      where: { reviewerId: 'u1' },
+    });
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
       data: {
         email: 'deleted+u1@deleted.invalid',
         authUserId: 'deleted:u1',
         phone: null,
+        ownerVerificationStatus: 'NOT_REQUESTED',
+        ownerVerificationRequestedAt: null,
+        ownerVerificationReviewedAt: null,
+        ownerVerificationNote: null,
       },
     });
     expect(result).toEqual({ deleted: true, signInRemoved: false });

@@ -117,6 +117,6 @@ Browser tests run against a mocked backend, and the Docker files are verified by
 
 ## Status and limitations
 
-Usable end to end, but honest about what isn't done: refunds and owner payouts are recorded and tracked by hand rather than automated; there are no reviews or owner identity checks; rate limiting is per process; and the Sinhala and Tamil text needs a native speaker's review. The full list is in [ARCHITECTURE.md](docs/ARCHITECTURE.md#known-limitations).
+The product includes paid booking ratings and an owner verification request/review workflow. Ratings are numeric and tied to completed paid bookings; owner verification is a staff-recorded manual check, with no identity documents collected by the app. Refunds, deposits and owner transfers still require manual operations. The PayHere sandbox has not yet been exercised, rate limiting is per API process, and Sinhala and Tamil text needs native-speaker review. See [ARCHITECTURE.md](docs/ARCHITECTURE.md#known-limitations) and [LAUNCH-READINESS.md](docs/LAUNCH-READINESS.md) for remaining limits and decisions.
 
 No open-source licence has been chosen yet, so all rights are reserved by default.
