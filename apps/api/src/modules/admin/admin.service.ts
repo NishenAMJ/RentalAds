@@ -38,6 +38,7 @@ export class AdminService {
         canManageAdmins: flags.canManageAdmins ?? false,
         canManageComplaints: flags.canManageComplaints ?? false,
         canManagePayouts: flags.canManagePayouts ?? false,
+        canManageCommissions: flags.canManageCommissions ?? false,
       },
       update: {
         ...(flags.canApproveListings !== undefined
@@ -51,6 +52,9 @@ export class AdminService {
           : {}),
         ...(flags.canManagePayouts !== undefined
           ? { canManagePayouts: flags.canManagePayouts }
+          : {}),
+        ...(flags.canManageCommissions !== undefined
+          ? { canManageCommissions: flags.canManageCommissions }
           : {}),
       },
     });
@@ -100,6 +104,7 @@ export class AdminService {
             canManageAdmins: true,
             canManageComplaints: true,
             canManagePayouts: true,
+            canManageCommissions: true,
           },
         },
       },
@@ -229,7 +234,7 @@ export class AdminService {
     });
     const permission = user?.adminPermission;
     if (!permission) throw new ForbiddenException('Admin permission required');
-    const [listings, requests, complaints, bookings, payouts] =
+    const [listings, requests, complaints, bookings, payouts, commissions] =
       await Promise.all([
         permission.canApproveListings ? this.listingCounts() : undefined,
         permission.canApproveListings ? this.requestCounts() : undefined,
@@ -237,8 +242,15 @@ export class AdminService {
           ? this.prisma.complaint.count({ where: { status: 'OPEN' } })
           : undefined,
         permission.canApproveListings ? this.bookings.counts() : undefined,
-        permission.canManagePayouts
+        permission.canManagePayouts || permission.canManageCommissions
           ? this.prisma.ownerPayout.aggregate({
+              where: { status: 'DUE' },
+              _count: { _all: true },
+              _sum: { amount: true },
+            })
+          : undefined,
+        permission.canManageCommissions || permission.canManagePayouts
+          ? this.prisma.propertyCommission.aggregate({
               where: { status: 'DUE' },
               _count: { _all: true },
               _sum: { amount: true },
@@ -254,6 +266,14 @@ export class AdminService {
             payouts: {
               dueCount: payouts._count._all,
               dueAmount: payouts._sum.amount ?? 0,
+            },
+          }
+        : {}),
+      ...(commissions
+        ? {
+            commissions: {
+              dueCount: commissions._count._all,
+              dueAmount: commissions._sum.amount ?? 0,
             },
           }
         : {}),

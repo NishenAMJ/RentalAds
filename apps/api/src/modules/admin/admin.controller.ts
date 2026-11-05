@@ -24,6 +24,12 @@ import {
   RecordOwnerPayoutDto,
 } from './dto/owner-payout.dto';
 import { AdminActivityService } from './admin-activity.service';
+import { PropertyCommissionsService } from './property-commissions.service';
+import {
+  CreatePropertyCommissionDto,
+  PropertyCommissionQueryDto,
+  UpdatePropertyCommissionDto,
+} from './dto/property-commission.dto';
 import { PaginationQuery } from '../../common/pagination';
 import { AdminUsersQuery } from './dto/admin-users.query';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
@@ -36,6 +42,7 @@ export class AdminController {
   constructor(
     private adminService: AdminService,
     private payouts: OwnerPayoutsService,
+    private commissions: PropertyCommissionsService,
     private activity: AdminActivityService,
   ) {}
   /** Checks permissions itself, so any admin can load the overview. */
@@ -119,5 +126,43 @@ export class AdminController {
     @Body() dto: RecordOwnerPayoutDto,
   ) {
     return this.payouts.markPaid(user.authUserId, id, dto);
+  }
+
+  @Get('commissions')
+  @UseGuards(AdminPermissionGuard)
+  @RequirePermission('canManageCommissions')
+  commissionsList(@Query() query: PropertyCommissionQueryDto) {
+    return this.commissions.list(query);
+  }
+
+  @Get('commissions/mine')
+  myCommissions(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: PaginationQuery,
+  ) {
+    return this.commissions.listForOwner(user.authUserId, query);
+  }
+
+  @Post('commissions')
+  @UseGuards(AdminPermissionGuard)
+  @WriteThrottle(10)
+  @RequirePermission('canManageCommissions')
+  createCommission(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreatePropertyCommissionDto,
+  ) {
+    return this.commissions.create(user.authUserId, dto);
+  }
+
+  @Patch('commissions/:id')
+  @UseGuards(AdminPermissionGuard)
+  @WriteThrottle(10)
+  @RequirePermission('canManageCommissions')
+  updateCommission(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePropertyCommissionDto,
+  ) {
+    return this.commissions.update(user.authUserId, id, dto);
   }
 }

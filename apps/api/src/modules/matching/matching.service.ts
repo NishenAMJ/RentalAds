@@ -287,8 +287,20 @@ export class MatchingService {
       update: { score, ...audit },
     });
   }
-  async updateStatus(id: string, status: MatchStatus) {
-    const match = await this.prisma.match.findUnique({ where: { id } });
+  async updateStatus(
+    id: string,
+    status: MatchStatus,
+    agreedRent?: number,
+    commissionRatePercent?: number,
+    authUserId?: string,
+  ) {
+    const match = await this.prisma.match.findUnique({
+      where: { id },
+      include: {
+        listing: { select: { id: true, ownerId: true, monthlyRent: true } },
+        commission: { select: { id: true } },
+      },
+    });
     if (!match || match.invalidatedAt)
       throw new NotFoundException('Match not found');
     const request = await this.prisma.rentalRequest.findUnique({
@@ -298,6 +310,37 @@ export class MatchingService {
       throw new NotFoundException('Request not found');
     if (request.status === 'CLOSED')
       throw new BadRequestException('This request is closed');
-    return this.prisma.match.update({ where: { id }, data: { status } });
+
+    const updated = await this.prisma.match.update({
+      where: { id },
+      data: { status },
+    });
+
+    if (status === 'RENTED' && !match.commission) {
+      const admin = authUserId
+        ? await this.prisma.user.findUnique({
+            where: { authUserId },
+            select: { id: true },
+          })
+        : null;
+      const rent = agreedRent ?? match.listing.monthlyRent;
+      const rate = commissionRatePercent ?? 30;
+      const amount = Math.round((rent * rate) / 100);
+      await this.prisma.propertyCommission.create({
+        data: {
+          matchId: match.id,
+          listingId: match.listing.id,
+          ownerId: match.listing.ownerId,
+          feeType: 'COMMISSION',
+          agreedRent: rent,
+          ratePercent: rate,
+          amount,
+          status: 'DUE',
+          createdById: admin?.id ?? null,
+        },
+      });
+    }
+
+    return updated;
   }
 }

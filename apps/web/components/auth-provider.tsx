@@ -19,12 +19,14 @@ export type AdminPermissions = {
   canManageAdmins: boolean;
   canManageComplaints: boolean;
   canManagePayouts: boolean;
+  canManageCommissions: boolean;
 };
 const noPermissions: AdminPermissions = {
   canApproveListings: false,
   canManageAdmins: false,
   canManageComplaints: false,
   canManagePayouts: false,
+  canManageCommissions: false,
 };
 type Auth = State & {
   role: AccountRole | null;
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               canManageAdmins: data.adminPermission?.canManageAdmins === true,
               canManageComplaints: data.adminPermission?.canManageComplaints === true,
               canManagePayouts: data.adminPermission?.canManagePayouts === true,
+              canManageCommissions: data.adminPermission?.canManageCommissions === true,
             },
           });
       } catch {

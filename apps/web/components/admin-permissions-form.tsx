@@ -6,6 +6,7 @@ const flags = [
   ["canApproveListings", "Listings and rental matching"],
   ["canManageComplaints", "Complaint review"],
   ["canManagePayouts", "Owner payouts"],
+  ["canManageCommissions", "Property commissions & listing fees"],
   ["canManageAdmins", "Manage admin access"],
 ] as const;
 type Flag = (typeof flags)[number][0];
@@ -26,6 +27,7 @@ export function AdminPermissionsForm() {
       canManageComplaints: form.has("canManageComplaints"),
       canManagePayouts: form.has("canManagePayouts"),
       canManageAdmins: form.has("canManageAdmins"),
+      canManageCommissions: form.has("canManageCommissions"),
     };
     setBusy(true); setError(""); setMessage("");
     try {

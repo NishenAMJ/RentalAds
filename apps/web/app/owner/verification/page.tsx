@@ -37,15 +37,15 @@ function OwnerVerification() {
 
   const status = verification?.ownerVerificationStatus;
   return <main className="admin-workspace">
-    <header className="page-heading"><p className="eyebrow">Owner account</p><h1>Owner verification</h1>
-      <p className="intro">Request a manual check to help renters feel confident about who they are renting from.</p></header>
+    <header className="page-heading"><p className="eyebrow">Owner account</p><h1>Owner identity & authority check</h1>
+      <p className="intro">Request a manual identity and rental authority check by RentalHub staff before introducing renters.</p></header>
     <section className="panel">
-      <h2>Your status: {status ? status.replaceAll("_", " ").toLowerCase() : "Loading…"}</h2>
-      <p>Our team completes checks outside this website. Do not send identity documents or sensitive numbers here; we do not collect or store them in this verification flow.</p>
+      <h2>Your status: {status === "VERIFIED" ? "Identity and authority confirmed" : status ? status.replaceAll("_", " ").toLowerCase() : "Loading…"}</h2>
+      <p>Our team confirms identity and authority to rent outside this website. Do not upload identity documents or sensitive numbers here; we do not collect or store identity documents through this application.</p>
       {verification?.ownerVerificationNote && <p>Team note: {verification.ownerVerificationNote}</p>}
       {error && <p role="alert" className="notice error">{error}</p>}
       {status !== "REQUESTED" && status !== "VERIFIED" && <button className="ui-button ui-button-primary" type="button" disabled={busy || !verification} onClick={() => void request()}>
-        {busy ? "Sending request…" : status === "REJECTED" ? "Request another review" : "Request verification"}
+        {busy ? "Sending request…" : status === "REJECTED" ? "Request another review" : "Request identity & authority check"}
       </button>}
     </section>
   </main>;

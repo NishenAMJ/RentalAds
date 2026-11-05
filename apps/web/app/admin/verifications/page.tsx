@@ -51,21 +51,21 @@ export default function AdminVerificationsPage() {
   }
 
   return <main className="admin-workspace">
-    <header className="page-heading"><p className="eyebrow">Administration</p><h1>Owner verification requests</h1>
-      <p className="intro">Record the outcome of a manual check completed outside this website. Never request or attach identity documents here.</p></header>
+    <header className="page-heading"><p className="eyebrow">Administration</p><h1>Owner identity & authority checks</h1>
+      <p className="intro">Record the outcome of a manual identity and rental authority check completed outside this website (e.g. title deeds, proof of residence, power of attorney). Never request or attach identity documents here.</p></header>
     {error && <p role="alert" className="notice error">{error}</p>}
     {message && <p role="status" className="notice">{message}</p>}
     {loading && <p role="status">Loading requests…</p>}
-    {!loading && result?.data.length === 0 && <section className="panel"><p>No pending verification requests.</p></section>}
+    {!loading && result?.data.length === 0 && <section className="panel"><p>No pending identity & authority check requests.</p></section>}
     {!!result?.data.length && <div className="stack">{result.data.map(account => <article className="panel" key={account.id}>
       <h2>{account.email}</h2>
       <p>Requested {account.ownerVerificationRequestedAt ? new Date(account.ownerVerificationRequestedAt).toLocaleString() : "date unavailable"}.</p>
-      <label htmlFor={`note-${account.id}`}>Decision note</label>
+      <label htmlFor={`note-${account.id}`}>Decision note (e.g. checked deed, utility bill, authority basis)</label>
       <textarea id={`note-${account.id}`} rows={3} maxLength={1000} value={notes[account.id] ?? ""}
         onChange={event => setNotes(current => ({ ...current, [account.id]: event.target.value }))} disabled={busy === account.id} />
       <div className="wizard-actions">
-        <button type="button" className="secondary" disabled={busy === account.id} onClick={() => void decide(account, "REJECTED")}>Reject request</button>
-        <button type="button" className="ui-button ui-button-primary" disabled={busy === account.id} onClick={() => void decide(account, "VERIFIED")}>Mark verified</button>
+        <button type="button" className="secondary" disabled={busy === account.id} onClick={() => void decide(account, "REJECTED")}>Decline check</button>
+        <button type="button" className="ui-button ui-button-primary" disabled={busy === account.id} onClick={() => void decide(account, "VERIFIED")}>Confirm identity & authority</button>
       </div>
     </article>)}</div>}
     {!!result?.data.length && <nav aria-label="Verification request pages" className="pagination">

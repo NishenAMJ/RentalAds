@@ -28,6 +28,22 @@ type RentalRequest = SavedSearchArea & {
   followUpAt?: string | null;
 };
 
+function promptAgreedRent(): number | undefined {
+  if (typeof window === "undefined") return undefined;
+  const val = window.prompt("Enter agreed monthly rent in LKR (leave blank to use listing rent):");
+  if (!val) return undefined;
+  const num = Number(val);
+  return Number.isFinite(num) && num > 0 ? Math.round(num) : undefined;
+}
+
+function promptCommissionRate(): number | undefined {
+  if (typeof window === "undefined") return undefined;
+  const val = window.prompt("Enter commission rate % (press Enter for default 30%):", "30");
+  if (!val) return undefined;
+  const num = Number(val);
+  return Number.isFinite(num) && num >= 0 && num <= 100 ? Math.round(num) : undefined;
+}
+
 import { MatchSuggestionCard, type MatchStatus } from "@/components/match-suggestion-card";
 import type { MatchAssessment } from "@/lib/matching";
 
@@ -133,7 +149,11 @@ function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNod
             }>(`/matching/matches/${suggestion.matchId}/status`, {
               method: "PATCH",
               authenticated: true,
-              body: JSON.stringify({ status }),
+              body: JSON.stringify({
+                status,
+                agreedRent: status === "RENTED" ? promptAgreedRent() : undefined,
+                commissionRatePercent: status === "RENTED" ? promptCommissionRate() : undefined,
+              }),
             })
           : await apiRequest<{
               id: string;

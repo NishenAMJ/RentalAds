@@ -13,6 +13,7 @@ export function toPublicListing(
     reference: listing.reference,
     category: listing.category,
     ownerVerified: listing.owner?.ownerVerificationStatus === 'VERIFIED',
+    ownerIdentityConfirmed: listing.owner?.ownerVerificationStatus === 'VERIFIED',
     title: listing.title,
     description: listing.description,
     attributes: listing.attributes,

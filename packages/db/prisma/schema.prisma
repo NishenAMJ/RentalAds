@@ -50,6 +50,9 @@ model User {
   bookings        Booking[]
   payouts         OwnerPayout[]
   reviews         BookingReview[]
+  commissions     PropertyCommission[] @relation("OwnerCommissions")
+  createdCommissions PropertyCommission[] @relation("CommissionCreator")
+  updatedCommissions PropertyCommission[] @relation("CommissionUpdater")
   resolvedComplaints Complaint[] @relation("ComplaintResolver")
   adminActivities AdminActivity[]
 
@@ -64,6 +67,7 @@ model AdminPermission {
   canManageAdmins     Boolean @default(false)
   canManageComplaints Boolean @default(false)
   canManagePayouts    Boolean @default(false)
+  canManageCommissions Boolean @default(false)
 
  
   @@map("admin_permissions")
@@ -180,6 +184,7 @@ model Listing {
   bookings     Booking[]
   blocks       ListingBlock[]
   reviews      BookingReview[]
+  commissions  PropertyCommission[]
 
   @@index([status, category, createdAt])
   @@index([status, propertyType, areaText])
@@ -265,6 +270,7 @@ model Match {
   createdAt DateTime    @default(now())
   invalidatedAt DateTime?
   invalidationReason String?
+  commission   PropertyCommission?
 
   @@unique([listingId, requestId])
   @@index([requestId])
@@ -462,4 +468,48 @@ model ListingBlock {
 
   @@index([listingId, startDate, endDate])
   @@map("listing_blocks")
+}
+
+enum CommissionStatus {
+  DUE
+  INVOICED
+  PAID
+  WAIVED
+}
+
+enum PropertyFeeType {
+  COMMISSION
+  LISTING_FEE
+}
+
+// A success commission or ad posting fee for a property listing.
+// Default commission is 30% of agreed monthly rent, which authorized admins can adjust or waive.
+model PropertyCommission {
+  id               String           @id @default(uuid())
+  matchId          String?          @unique
+  match            Match?           @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  listingId        String
+  listing          Listing          @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  ownerId          String
+  owner            User             @relation("OwnerCommissions", fields: [ownerId], references: [id], onDelete: Restrict)
+  feeType          PropertyFeeType  @default(COMMISSION)
+  agreedRent       Int?
+  ratePercent      Int?             @default(30)
+  amount           Int
+  status           CommissionStatus @default(DUE)
+  paymentReference String?
+  note             String?
+  invoicedAt       DateTime?
+  paidAt           DateTime?
+  createdById      String?
+  createdByUser    User?            @relation("CommissionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById      String?
+  updatedByUser    User?            @relation("CommissionUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([ownerId, status])
+  @@index([listingId])
+  @@map("property_commissions")
 }

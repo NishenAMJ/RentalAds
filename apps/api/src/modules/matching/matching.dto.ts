@@ -1,10 +1,13 @@
 import {
   IsEnum,
-  IsUUID,
+  IsInt,
   IsOptional,
   IsString,
+  IsUUID,
+  Max,
   MaxLength,
   Matches,
+  Min,
 } from 'class-validator';
 import { MatchStatus } from '@prisma/client';
 export class SaveSuggestionDto {
@@ -24,4 +27,15 @@ export class SaveSuggestionDto {
 export class UpdateMatchStatusDto {
   @IsEnum(MatchStatus)
   status!: MatchStatus;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  agreedRent?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  commissionRatePercent?: number;
 }

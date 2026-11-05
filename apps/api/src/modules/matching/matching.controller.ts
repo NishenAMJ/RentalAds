@@ -70,7 +70,14 @@ export class MatchingController {
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateMatchStatusDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.matchingService.updateStatus(id, dto.status);
+    return this.matchingService.updateStatus(
+      id,
+      dto.status,
+      dto.agreedRent,
+      dto.commissionRatePercent,
+      user?.authUserId,
+    );
   }
 }

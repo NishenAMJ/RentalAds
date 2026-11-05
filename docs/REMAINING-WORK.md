@@ -10,6 +10,10 @@ Statuses describe the current repository and decisions still needed. A completed
 - Staff can record an owner verification decision after a manual check outside the app. The app does not collect identity documents.
 - Renters can submit one numeric rating per completed, paid item booking. Public pages show the listing average and count; there are no written reviews.
 - Admins can record owner payouts, booking disputes, refunds, account moderation, and admin activity. These records do not themselves move money.
+- **Property commission model (BR-001).** Admin-configurable 30 % of one month's agreed rent (default). Admins with the `canManageCommissions` permission can create, adjust, and record commissions and listing-fee alternatives. A commission record is created automatically when a match is marked RENTED.
+- **Owner identity & authority check terminology (BR-002/D-003).** "Verified" language replaced with "identity & authority confirmed / checked" across all public-facing UI and i18n strings. Internal DB enum values (`VERIFIED`, `REJECTED`) are unchanged to avoid a breaking migration.
+- **Islandwide scope.** The homes pilot is not restricted to Colombo. The search area picker now includes Kandy, Galle and Gampaha quick-start buttons; help text updated to "islandwide across Sri Lanka".
+- **Item rental isolation for homes pilot.** `ENABLED_CATEGORIES=PROPERTY` is now the documented default in `.env.example`. The booking service already blocks PROPERTY listings from the item booking flow (`isItemCategory` check). Item and vehicle booking is switched off during the pilot.
 
 ## Product and engineering
 
@@ -24,7 +28,7 @@ Statuses describe the current repository and decisions still needed. A completed
 - [ ] **Owner payout terms.** Define payout calculation, method, schedule, thresholds, and how cancellations or chargebacks affect payouts. The admin ledger records due amounts and transfers marked paid but does not execute transfers.
 - [ ] **Deposit custody and disputes.** Define who holds deposits, when they are returned, what evidence supports damage claims, how both parties respond, and who decides outcomes. Deposit handling remains manual and has no separate ledger.
 - [ ] **Support ownership and response targets.** Assign an operator and targets for payment failures, cancellations, deposit disputes, unsafe listings, owner no-shows, and privacy/account requests.
-- [ ] **Pilot scope and supply.** Choose the initial categories and geographic areas; confirm reviewed supply and support capacity before inviting renters.
+- [ ] **Pilot scope and supply.** Homes pilot is islandwide across Sri Lanka (D-010 revised). Confirm reviewed supply and support capacity before inviting renters. Item and vehicle bookings remain switched off until financial reconciliation, deposit handling, refund workflows, payment validation, and inventory controls are addressed (see BR-003, BR-004, BR-006).
 - [ ] **Owner-check standard.** Define what the manual verification check means, who can perform it, what evidence may be reviewed outside the app, whether and where that evidence is retained, and how the badge's limits are explained. Do not request uploads through this app; it has no identity-document storage or review controls.
 - [ ] **Rating rules.** Decide how to handle suspected manipulation and disputes, and how to explain averages based on few bookings. Current ratings have no written comments.
 
