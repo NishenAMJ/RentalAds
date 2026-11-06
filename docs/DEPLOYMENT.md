@@ -52,11 +52,13 @@ Build it from the Dockerfile (`apps/api/Dockerfile`, build context = repository 
 | `ENABLED_CATEGORIES` | | Comma-separated, e.g. `PROPERTY,VEHICLE`, to open categories one at a time |
 | `ENABLE_API_DOCS` | | `true` publishes `/docs`; off by default in production |
 | `TRUSTED_PROXY_CIDRS` | behind a proxy | Only the proxy's exact addresses. Never a catch-all range. |
-| `SUPABASE_SERVICE_ROLE_KEY` | optional | Lets "delete my account" also remove the sign-in identity. Server-side only. |
+| `SUPABASE_SERVICE_ROLE_KEY` | required for account deletion | Lets "delete my account" also remove the sign-in identity. Server-side only; without it, a deleted account's old login may still authenticate. |
 
 Point your host's health check at `GET /health/ready`: it returns 503 when the database is unreachable.
 
-**Run one instance at first.** Rate limiting counts in memory, so several instances multiply the limits (see ARCHITECTURE.md, *Known limitations*).
+The API and website Docker runtime stages run as the unprivileged `node` user and install production dependencies only.
+
+**Run one API instance at first.** Rate limiting counts in memory, so several instances multiply the limits (see ARCHITECTURE.md, *Known limitations*). Configure shared throttler storage before scaling the API horizontally.
 
 ## 4. The website
 

@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from '@supabase/supabase-js';
@@ -98,6 +99,9 @@ export class AccountService {
       throw new ConflictException(
         'Administrator accounts cannot be deleted here. Ask another administrator to remove admin access first.',
       );
+    // Remove sign-in first. If Supabase is unavailable, leave the account intact
+    // so the user can retry instead of anonymising their record while preserving login.
+    await this.removeSignIn(authUser.authUserId);
     const now = new Date();
     const reason = 'Account deleted by user';
     await this.prisma.$transaction([
@@ -146,32 +150,32 @@ export class AccountService {
         },
       }),
     ]);
-    return {
-      deleted: true,
-      signInRemoved: await this.removeSignIn(authUser.authUserId),
-    };
+    return { deleted: true, signInRemoved: true };
   }
 
-  /** Deletes the Supabase identity when a service-role key is configured. */
-  private async removeSignIn(authUserId: string): Promise<boolean> {
+  /** Deletes the Supabase identity; account deletion must not succeed without it. */
+  private async removeSignIn(authUserId: string): Promise<void> {
     const url =
       this.config.get<string>('SUPABASE_URL') ??
       this.config.get<string>('NEXT_PUBLIC_SUPABASE_URL');
     const serviceKey = this.config.get<string>('SUPABASE_SERVICE_ROLE_KEY');
-    if (!url || !serviceKey) return false;
+    if (!url || !serviceKey)
+      throw new ServiceUnavailableException(
+        'Account deletion is not available right now. Please contact support.',
+      );
     try {
       const admin = createClient(url, serviceKey, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
       const { error } = await admin.auth.admin.deleteUser(authUserId);
       if (error) throw error;
-      return true;
     } catch (cause) {
-      // Personal data is already gone; surface the gap for operators without failing the user.
       this.logger.error(
-        `Could not delete sign-in identity for a removed account: ${String(cause)}`,
+        `Could not delete sign-in identity for account deletion: ${String(cause)}`,
       );
-      return false;
+      throw new ServiceUnavailableException(
+        'We could not remove your sign-in. Your account has not been deleted; please try again later.',
+      );
     }
   }
 }

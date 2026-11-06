@@ -23,7 +23,19 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_CONTACT_EMAIL=$NEXT_PUBLIC_CONTACT_EMAIL
 RUN pnpm --filter web build
 
-FROM build AS runtime
+FROM base AS runtime
 ENV NODE_ENV=production PORT=3000
+COPY --from=build --chown=node:node /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml ./
+COPY --from=build --chown=node:node /repo/node_modules ./node_modules
+COPY --from=build --chown=node:node /repo/apps/web/node_modules ./apps/web/node_modules
+COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/package.json
+COPY --from=build --chown=node:node /repo/apps/web/package.json ./apps/web/package.json
+COPY --from=build --chown=node:node /repo/packages/db/package.json ./packages/db/package.json
+COPY --from=build --chown=node:node /repo/apps/web/.next ./apps/web/.next
+COPY --from=build --chown=node:node /repo/apps/web/public ./apps/web/public
+COPY --from=build --chown=node:node /repo/apps/web/next.config.* ./apps/web/
+RUN CI=true corepack pnpm install --prod --filter web --frozen-lockfile \
+  && chown -R node:node /repo
 EXPOSE 3000
+USER node
 CMD ["pnpm", "--filter", "web", "start"]

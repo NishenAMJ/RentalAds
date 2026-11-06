@@ -442,12 +442,21 @@ export class BookingsService {
       this.logger.warn(`PayHere amount mismatch for booking ${booking.id}`);
       return;
     }
-    if (body.status_code !== '2' || booking.paidAt) return;
+    if (body.status_code !== '2') return;
 
     const now = new Date();
-    const confirmed = await this.prisma.$transaction(async (tx) => {
+    const outcome = await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM listings WHERE id = ${booking.listingId} FOR UPDATE`;
-      let canConfirm = booking.status === 'PENDING_PAYMENT';
+
+      // Read after acquiring the listing lock: concurrent PayHere retries may
+      // have loaded the same unpaid booking before either transaction started.
+      const current = await tx.booking.findUnique({
+        where: { id: booking.id },
+        select: { status: true, paidAt: true },
+      });
+      if (!current || current.paidAt) return 'ALREADY_PROCESSED' as const;
+
+      let canConfirm = current.status === 'PENDING_PAYMENT';
       if (canConfirm) {
         try {
           await this.assertFree(
@@ -462,8 +471,8 @@ export class BookingsService {
           canConfirm = false;
         }
       }
-      await tx.booking.update({
-        where: { id: booking.id },
+      const claimed = await tx.booking.updateMany({
+        where: { id: booking.id, paidAt: null },
         data: {
           paidAt: now,
           paymentReference: body.payment_id ?? null,
@@ -479,10 +488,12 @@ export class BookingsService {
               }),
         },
       });
-      return canConfirm;
+      if (!claimed.count) return 'ALREADY_PROCESSED' as const;
+      return canConfirm ? 'CONFIRMED' as const : 'REFUND_DUE' as const;
     });
 
-    if (!confirmed) {
+    if (outcome === 'ALREADY_PROCESSED') return;
+    if (outcome === 'REFUND_DUE') {
       // Paid after the window closed and the dates were taken: the money is owed back in full.
       this.logger.warn(
         `Booking ${booking.id} was paid but could not be confirmed; refund due`,

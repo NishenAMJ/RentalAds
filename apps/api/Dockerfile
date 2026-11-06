@@ -18,8 +18,20 @@ COPY packages/db packages/db
 COPY apps/api apps/api
 RUN pnpm db:generate && pnpm --filter api build
 
-FROM build AS runtime
+FROM base AS runtime
 ENV NODE_ENV=production
+COPY --from=build --chown=node:node /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml ./
+COPY --from=build --chown=node:node /repo/node_modules ./node_modules
+COPY --from=build --chown=node:node /repo/apps/api/node_modules ./apps/api/node_modules
+COPY --from=build --chown=node:node /repo/packages/db/node_modules ./packages/db/node_modules
+COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/package.json
+COPY --from=build --chown=node:node /repo/apps/web/package.json ./apps/web/package.json
+COPY --from=build --chown=node:node /repo/packages/db/package.json ./packages/db/package.json
+COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
+COPY --from=build --chown=node:node /repo/packages/db/prisma ./packages/db/prisma
+RUN CI=true corepack pnpm install --prod --filter . --filter api... --filter db --frozen-lockfile \
+  && chown -R node:node /repo
 EXPOSE 3001
 # Apply any new migrations, then start. Safe to repeat: already-applied migrations are skipped.
-CMD ["sh", "-c", "pnpm --filter db exec prisma migrate deploy && node apps/api/dist/main.js"]
+USER node
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy --schema packages/db/prisma/schema.prisma && node apps/api/dist/main.js"]
