@@ -62,7 +62,7 @@ export class UsersService {
     try {
       return await this.prisma.user.upsert({
         where: { authUserId: authUser.authUserId },
-        update: {},
+        update: { email: authUser.email },
         create: {
           authUserId: authUser.authUserId,
           email: authUser.email,
@@ -78,7 +78,13 @@ export class UsersService {
         const existing = await this.prisma.user.findUnique({
           where: { authUserId: authUser.authUserId },
         });
-        if (existing) return existing;
+        if (existing) {
+          if (existing.email !== authUser.email)
+            throw new ConflictException(
+              'This email is already linked to another account',
+            );
+          return existing;
+        }
         throw new ConflictException(
           'This email is already linked to another account',
         );
