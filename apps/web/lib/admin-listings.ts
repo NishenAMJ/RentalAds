@@ -31,5 +31,6 @@ export interface AdminSummary {
   requests?: { open: number; unassigned: number };
   bookings?: { upcoming: number; refundDue: number };
   payouts?: { dueCount: number; dueAmount: number };
+  commissions?: { dueCount: number; dueAmount: number };
   complaints?: { open: number };
 }

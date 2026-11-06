@@ -343,172 +343,29 @@ export default function AdminCommissionsPage() {
       )}
 
       {!!result?.data.length && (
-        <div className="stack" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {result.data.map((c) => (
-            <article key={c.id} className="panel" style={{ position: "relative" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                <div>
-                  <span className={`ui-badge ${c.status === "PAID" ? "badge-success" : c.status === "WAIVED" ? "" : "badge-warning"}`}>
-                    {c.status}
-                  </span>
-                  {" "}
-                  <span className="ui-badge">
-                    {c.feeType === "COMMISSION" ? "Introduction commission" : "Ad posting fee"}
-                  </span>
-                  {c.listing.reference && <span className="record-reference" style={{ marginLeft: "0.5rem" }}>{c.listing.reference}</span>}
-                </div>
-                <div style={{ fontWeight: 600, fontSize: "1.2rem" }}>
-                  LKR {c.amount.toLocaleString("en-LK")}
-                </div>
-              </div>
-
-              <div style={{ marginTop: "0.75rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.5rem" }}>
-                <div>
-                  <small className="muted" style={{ display: "block" }}>Property location</small>
-                  <strong>{c.listing.areaText}</strong>
-                </div>
-                <div>
-                  <small className="muted" style={{ display: "block" }}>Owner account</small>
-                  <span>{c.owner.email}</span>
-                </div>
-                {c.feeType === "COMMISSION" && (
-                  <div>
-                    <small className="muted" style={{ display: "block" }}>Agreed rent & rate</small>
-                    <span>LKR {(c.agreedRent ?? c.listing.monthlyRent).toLocaleString("en-LK")} @ {c.ratePercent ?? 30}%</span>
-                  </div>
-                )}
-                {c.paymentReference && (
-                  <div>
-                    <small className="muted" style={{ display: "block" }}>Payment ref</small>
-                    <code>{c.paymentReference}</code>
-                  </div>
-                )}
-                {c.paidAt && (
-                  <div>
-                    <small className="muted" style={{ display: "block" }}>Paid at</small>
-                    <span>{new Date(c.paidAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</span>
-                  </div>
-                )}
-              </div>
-
-              {c.note && (
-                <p style={{ marginTop: "0.5rem", fontStyle: "italic", fontSize: "0.9rem" }}>
-                  Note: {c.note}
-                </p>
-              )}
-
-              {editingId === c.id ? (
-                <div style={{ marginTop: "1rem", padding: "0.75rem", background: "var(--surface-sunken, #f8f9fa)", borderRadius: "6px" }}>
-                  <h4>Adjust commission & rate</h4>
-                  <div className="field-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
-                    <label>
-                      Agreed rent (LKR)
-                      <input
-                        type="number"
-                        min={1}
-                        value={editRent}
-                        onChange={(e) => {
-                          const r = Number(e.target.value);
-                          setEditRent(r);
-                          setEditAmount(Math.round((r * editRate) / 100));
-                        }}
-                      />
-                    </label>
-                    <label>
-                      Rate %
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={editRate}
-                        onChange={(e) => {
-                          const p = Number(e.target.value);
-                          setEditRate(p);
-                          setEditAmount(Math.round((editRent * p) / 100));
-                        }}
-                      />
-                    </label>
-                    <label>
-                      Amount override (LKR)
-                      <input
-                        type="number"
-                        min={0}
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(Number(e.target.value))}
-                      />
-                    </label>
-                    <label>
-                      Payment Reference
-                      <input
-                        type="text"
-                        value={editRef}
-                        onChange={(e) => setEditRef(e.target.value)}
-                        placeholder="e.g. Bank slip # / Tx ID"
-                      />
-                    </label>
-                    <label style={{ gridColumn: "1 / -1" }}>
-                      Admin note
-                      <input
-                        type="text"
-                        value={editNote}
-                        onChange={(e) => setEditNote(e.target.value)}
-                      />
-                    </label>
-                  </div>
-                  <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
-                    <button type="button" className="ui-button ui-button-primary" onClick={() => saveEdit(c.id)} disabled={busy === c.id}>
-                      Save changes
-                    </button>
-                    <button type="button" className="secondary" onClick={() => setEditingId(null)}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="wizard-actions" style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                  <button type="button" className="secondary" onClick={() => startEdit(c)} disabled={busy === c.id}>
-                    Adjust commission / rate
-                  </button>
-
-                  {c.status === "DUE" && (
-                    <button type="button" className="secondary" onClick={() => updateStatus(c.id, "INVOICED")} disabled={busy === c.id}>
-                      Mark invoiced
-                    </button>
-                  )}
-
-                  {c.status !== "PAID" && (
-                    <button
-                      type="button"
-                      className="ui-button ui-button-primary"
-                      onClick={() => {
-                        const ref = window.prompt("Enter payment transfer reference / bank receipt #:");
-                        if (ref !== null) updateStatus(c.id, "PAID", ref);
-                      }}
-                      disabled={busy === c.id}
-                    >
-                      Record payment
-                    </button>
-                  )}
-
-                  {c.status !== "WAIVED" && c.status !== "PAID" && (
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() => {
-                        if (window.confirm("Are you sure you want to waive this fee?")) updateStatus(c.id, "WAIVED");
-                      }}
-                      disabled={busy === c.id}
-                    >
-                      Waive
-                    </button>
-                  )}
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
+        <div className="table-wrap"><table><thead><tr><th scope="col">Property / fee</th><th scope="col">Owner</th><th scope="col">Status / amount</th><th scope="col">Terms / payment</th><th scope="col">Actions</th></tr></thead>
+          <tbody>{result.data.map((c) => <tr key={c.id}>
+            <td><strong>{c.listing.title ?? c.listing.areaText}</strong><br />{c.listing.areaText}<br />{c.listing.reference}<br /><span className="ui-badge">{c.feeType === "COMMISSION" ? "Introduction commission" : "Ad posting fee"}</span></td>
+            <td>{c.owner.email}</td>
+            <td><span className={`ui-badge ${c.status === "PAID" ? "badge-success" : c.status === "WAIVED" ? "" : "badge-warning"}`}>{c.status.toLowerCase()}</span><br /><strong>LKR {c.amount.toLocaleString("en-LK")}</strong></td>
+            <td>{c.feeType === "COMMISSION" && <>Rent: LKR {(c.agreedRent ?? c.listing.monthlyRent).toLocaleString("en-LK")} @ {c.ratePercent ?? 30}%<br /></>}
+              {c.paymentReference && <>Payment ref: <code>{c.paymentReference}</code><br /></>}{c.paidAt && <>Paid {new Date(c.paidAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}<br /></>}{c.note && <small>{c.note}</small>}</td>
+            <td>{editingId === c.id ? <div className="stack">
+              <label>Agreed rent<input type="number" min={1} value={editRent} onChange={e => { const value = Number(e.target.value); setEditRent(value); setEditAmount(Math.round(value * editRate / 100)); }} /></label>
+              <label>Rate %<input type="number" min={0} max={100} value={editRate} onChange={e => { const value = Number(e.target.value); setEditRate(value); setEditAmount(Math.round(editRent * value / 100)); }} /></label>
+              <label>Amount override<input type="number" min={0} value={editAmount} onChange={e => setEditAmount(Number(e.target.value))} /></label>
+              <label>Payment reference<input value={editRef} onChange={e => setEditRef(e.target.value)} /></label>
+              <label>Admin note<input value={editNote} onChange={e => setEditNote(e.target.value)} /></label>
+              <button type="button" onClick={() => saveEdit(c.id)} disabled={busy === c.id}>Save changes</button><button type="button" className="secondary" onClick={() => setEditingId(null)}>Cancel</button>
+            </div> : <div className="table-actions">
+              <button type="button" className="secondary" onClick={() => startEdit(c)} disabled={busy === c.id}>Adjust terms</button>
+              {c.status === "DUE" && <button type="button" className="secondary" onClick={() => updateStatus(c.id, "INVOICED")} disabled={busy === c.id}>Mark invoiced</button>}
+              {c.status !== "PAID" && <button type="button" onClick={() => { const ref = window.prompt("Enter payment transfer reference / bank receipt #:"); if (ref !== null) updateStatus(c.id, "PAID", ref); }} disabled={busy === c.id}>Record payment</button>}
+              {c.status !== "WAIVED" && c.status !== "PAID" && <button type="button" className="secondary" onClick={() => { if (window.confirm("Are you sure you want to waive this fee?")) updateStatus(c.id, "WAIVED"); }} disabled={busy === c.id}>Waive</button>}
+            </div>}</td>
+          </tr>)}</tbody>
+        </table></div>
       )}
-
       {!!result?.data.length && (
         <nav aria-label="Commission pages" className="pagination" style={{ marginTop: "1rem" }}>
           <button className="secondary" disabled={page <= 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>

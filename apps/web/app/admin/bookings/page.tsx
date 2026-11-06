@@ -38,7 +38,7 @@ function RefundDue({ booking, onDone }: { booking: BookingView; onDone: () => vo
     <p>Refund {lkr(booking.refundAmount ?? 0)} to the renter in the PayHere dashboard{booking.paymentReference ? ` (payment ${booking.paymentReference})` : ""}, then record it here.</p>
     <label>PayHere refund reference (optional)<input value={reference} maxLength={200} onChange={(event) => setReference(event.target.value)} disabled={busy} /></label>
     {error && <p role="alert" className="field-error">{error}</p>}
-    <button className="ui-button ui-button-primary" disabled={busy} onClick={() => void done()}>{busy ? "Saving…" : "I have sent this refund"}</button>
+    <button className="ui-button ui-button-primary" disabled={busy} onClick={() => void done()}>{busy ? "Savingâ€¦" : "I have sent this refund"}</button>
   </div>;
 }
 
@@ -50,26 +50,18 @@ function BookingRows({ filter }: { filter: string }) {
     {message && <p role="status" className="notice">{message}</p>}
     {pager.loading && <p role="status">Loading bookings...</p>}
     {!pager.loading && !pager.error && !pager.items.length && <p>No bookings here yet.</p>}
-    <div className="stack">{pager.items.map((booking) => <article key={booking.id} className="panel">
-      <div className="record-heading">
-        <h2>{booking.listing.title ?? booking.listing.areaText}</h2>
-        <span className={`ui-badge ${TONE[booking.status]}`}>{booking.status.replaceAll("_", " ").toLowerCase()}</span>
-      </div>
-      {booking.refundDue && <RefundDue booking={booking} onDone={() => { setMessage("Refund recorded. The renter has been told."); pager.retry(); }} />}
-      {booking.refundStatus === "DONE" && <p className="notice">Refunded {lkr(booking.refundAmount ?? 0)}{booking.refundReference ? ` (ref ${booking.refundReference})` : ""}.</p>}
-      {booking.cancelledBy && <p className="muted">Cancelled by {booking.cancelledBy.toLowerCase()}{booking.cancelReason ? `: ${booking.cancelReason}` : ""}</p>}
-      <dl className="spec-grid">
-        <div><dt>Category</dt><dd>{categoryLabel(booking.listing.category)}</dd></div>
-        <div><dt>Dates</dt><dd>{booking.startDate} to {booking.endDate} ({booking.units} × {booking.ratePeriod.toLowerCase()})</dd></div>
-        <div><dt>Charged</dt><dd>{lkr(booking.totalAmount)} (rental {lkr(booking.rentalTotal)}, fee {lkr(booking.serviceFee)}, deposit {lkr(booking.depositAmount)})</dd></div>
-        <div><dt>Owner</dt><dd>{booking.ownerContact}</dd></div>
-        <div><dt>Renter</dt><dd>{booking.renterContact}</dd></div>
-        <div><dt>Paid</dt><dd>{booking.paidAt ? new Date(booking.paidAt).toLocaleString("en-GB", { timeZone: "Asia/Colombo" }) : "Not paid"}</dd></div>
-      </dl>
-      {booking.status !== "CANCELLED" && <AdminDeleteButton path={`/bookings/${booking.id}/admin-cancel`} subject="booking" verb="Cancel" verbing="Cancelling" audience="renter and owner"
-        onDeleted={() => { setMessage(booking.paidAt ? "Booking cancelled. Remember to refund the renter in PayHere." : "Booking cancelled."); pager.retry(); }} />}
-    </article>)}</div>
-    <Pagination {...pager} onPageChange={pager.setPage} />
+    {pager.items.length > 0 && <div className="table-wrap"><table><thead><tr><th scope="col">Listing / status</th><th scope="col">Dates / units</th><th scope="col">Renter / owner</th><th scope="col">Payment</th><th scope="col">Actions</th></tr></thead>
+      <tbody>{pager.items.map(booking => <tr key={booking.id}>
+        <td><strong>{booking.listing.title ?? booking.listing.areaText}</strong><br />{categoryLabel(booking.listing.category)}<br /><span className={`ui-badge ${TONE[booking.status]}`}>{booking.status.replaceAll("_", " ").toLowerCase()}</span>
+          {booking.cancelledBy && <div className="small-copy">Cancelled by {booking.cancelledBy.toLowerCase()}{booking.cancelReason ? `: ${booking.cancelReason}` : ""}</div>}</td>
+        <td>{booking.startDate} to {booking.endDate}<br />{booking.units} × {booking.ratePeriod.toLowerCase()}</td>
+        <td>Renter: {booking.renterContact}<br />Owner: {booking.ownerContact}</td>
+        <td>{lkr(booking.totalAmount)}<br /><small>Rental {lkr(booking.rentalTotal)} · Fee {lkr(booking.serviceFee)} · Deposit {lkr(booking.depositAmount)}</small><br />Paid: {booking.paidAt ? new Date(booking.paidAt).toLocaleString("en-GB", { timeZone: "Asia/Colombo" }) : "Not paid"}
+          {booking.refundStatus === "DONE" && <div className="small-copy">Refunded {lkr(booking.refundAmount ?? 0)}{booking.refundReference ? ` (ref ${booking.refundReference})` : ""}</div>}
+          {booking.refundDue && <details><summary>Record refund</summary><RefundDue booking={booking} onDone={() => { setMessage("Refund recorded. The renter has been told."); pager.retry(); }} /></details>}</td>
+        <td>{booking.status !== "CANCELLED" && <AdminDeleteButton path={`/bookings/${booking.id}/admin-cancel`} subject="booking" verb="Cancel" verbing="Cancelling" audience="renter and owner"
+          onDeleted={() => { setMessage(booking.paidAt ? "Booking cancelled. Remember to refund the renter in PayHere." : "Booking cancelled."); pager.retry(); }} />}</td>
+      </tr>)}</tbody></table></div>}    <Pagination {...pager} onPageChange={pager.setPage} />
   </>;
 }
 

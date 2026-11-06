@@ -20,11 +20,13 @@ function PayoutRow({ payout, onChange }: { payout: Payout; onChange: () => void 
       onChange();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not update payout."); setBusy(false); }
   }
-  return <article className="panel">
-    <div className="record-heading"><h2>{payout.booking.listing.title ?? payout.booking.listing.areaText}</h2><span className={`ui-badge ${payout.status === "DUE" ? "badge-warning" : "badge-success"}`}>{payout.status.toLowerCase()}</span></div>
-    <dl className="spec-grid"><div><dt>Owner account</dt><dd>{payout.owner.email}</dd></div><div><dt>Amount due</dt><dd>{lkr(payout.amount)}</dd></div><div><dt>Rental dates</dt><dd>{payout.booking.startDate} to {payout.booking.endDate}</dd></div><div><dt>Booking</dt><dd>{payout.bookingId}</dd></div><div><dt>Payment reference</dt><dd>{payout.booking.paymentReference ?? "Not available"}</dd></div><div><dt>Note</dt><dd>{payout.note || "—"}</dd></div>{payout.paidAt && <div><dt>Transfer recorded</dt><dd>{new Date(payout.paidAt).toLocaleString("en-GB", { timeZone: "Asia/Colombo" })} · {payout.transferReference}</dd></div>}</dl>
-    {payout.status === "DUE" && <form onSubmit={markPaid} className="stack"><label>Transfer reference (required)<input required maxLength={200} value={reference} onChange={e => setReference(e.target.value)} disabled={busy} /></label>{error && <p role="alert" className="notice error">{error}</p>}<button className="ui-button ui-button-primary" disabled={busy}>{busy ? "Saving…" : "Record transfer as paid"}</button></form>}
-  </article>;
+  return <tr>
+    <td><strong>{payout.booking.listing.title ?? payout.booking.listing.areaText}</strong><br />{payout.owner.email}<br /><span className={`ui-badge ${payout.status === "DUE" ? "badge-warning" : "badge-success"}`}>{payout.status.toLowerCase()}</span></td>
+    <td>{lkr(payout.amount)}<br />{payout.booking.startDate} to {payout.booking.endDate}</td>
+    <td><code>{payout.bookingId}</code><br />Payment: {payout.booking.paymentReference ?? "Not available"}{payout.note && <p>Note: {payout.note}</p>}</td>
+    <td>{payout.paidAt ? <>Transfer recorded {new Date(payout.paidAt).toLocaleString("en-GB", { timeZone: "Asia/Colombo" })}<br />Ref: {payout.transferReference}</> : "—"}</td>
+    <td>{payout.status === "DUE" && <form onSubmit={markPaid} className="stack"><label>Transfer reference<input required maxLength={200} value={reference} onChange={e => setReference(e.target.value)} disabled={busy} /></label>{error && <p role="alert" className="notice error">{error}</p>}<button className="ui-button ui-button-primary" disabled={busy}>{busy ? "Saving…" : "Record paid"}</button></form>}</td>
+  </tr>;
 }
 
 function CreatePayout({ onCreated }: { onCreated: () => void }) {
@@ -61,7 +63,7 @@ function Workspace() {
   return <section className="admin-workspace"><div className="page-heading"><div><p className="eyebrow">Payments · Manual ledger</p><h1>Owner payouts</h1><p className="intro">Track amounts your team has confirmed are owed and record transfers completed outside RentalHub. This page does not initiate payments.</p></div></div>
     <CreatePayout onCreated={refresh} />
     <div className="segmented" role="group" aria-label="Payout status">{[["DUE", "Due"], ["PAID", "Paid"], ["CANCELLED", "Cancelled"]].map(([value, label]) => <button key={value} type="button" aria-pressed={status === value} onClick={() => setStatus(value)}>{label}</button>)}</div>
-    {error && <p role="alert" className="notice error">{error} <button type="button" onClick={refresh}>Retry</button></p>}{loading && <p role="status">Loading payouts…</p>}{!loading && !error && !payouts.length && <p>No {status.toLowerCase()} payout records.</p>}<div className="stack">{payouts.map(p => <PayoutRow key={p.id} payout={p} onChange={refresh} />)}</div>
+    {error && <p role="alert" className="notice error">{error} <button type="button" onClick={refresh}>Retry</button></p>}{loading && <p role="status">Loading payouts…</p>}{!loading && !error && !payouts.length && <p>No {status.toLowerCase()} payout records.</p>}{payouts.length > 0 && <div className="table-wrap"><table><thead><tr><th scope="col">Owner / listing</th><th scope="col">Amount / dates</th><th scope="col">Booking / payment</th><th scope="col">Transfer</th><th scope="col">Action</th></tr></thead><tbody>{payouts.map(p => <PayoutRow key={p.id} payout={p} onChange={refresh} />)}</tbody></table></div>}
   </section>;
 }
 

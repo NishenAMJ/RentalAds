@@ -29,34 +29,24 @@ function ComplaintRow({ complaint, updating, onUpdate }: { complaint: Complaint;
   const [resolution, setResolution] = useState(complaint.resolution ?? "");
   const isDispute = Boolean(complaint.bookingId);
   const statusLabel = complaint.status.charAt(0) + complaint.status.slice(1).toLowerCase();
-  return <article className="panel complaint-row">
-    <div className="complaint-main">
-      <div className="complaint-meta">
-        <span className="ui-badge">{isDispute ? `booking · ${complaint.disputeType?.toLowerCase().replaceAll("_", " ")}` : complaint.targetType.toLowerCase()}</span>
-        {complaint.booking && <span className="record-reference">{complaint.booking.listing.title ?? complaint.booking.listing.areaText} · {complaint.booking.startDate} – {complaint.booking.endDate}</span>}
-        {!isDispute && <code className="record-reference">{complaint.targetId}</code>}
-        <Badge tone={complaint.status === "RESOLVED" ? "success" : complaint.status === "REVIEWING" ? "warning" : "danger"}>{statusLabel}</Badge>
-        {complaint.reporter && <span className="record-reference">Reported by {complaint.reporter.email}</span>}
-        <span className="record-reference">Logged {new Date(complaint.createdAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</span>
-      </div>
-      <p className="complaint-reason">{complaint.reason}</p>
-      {complaint.resolvedBy && complaint.resolvedAt && <p className="small-copy">Resolved by {complaint.resolvedBy.email} on {new Date(complaint.resolvedAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</p>}
-    </div>
-    <div className="complaint-admin-fields">
-      <label>Private team notes<textarea rows={3} maxLength={5000} value={adminNotes} onChange={event => setAdminNotes(event.target.value)} disabled={updating || complaint.status === "RESOLVED"} /></label>
-      <label>Resolution summary<textarea rows={3} minLength={10} maxLength={5000} value={resolution} onChange={event => setResolution(event.target.value)} disabled={updating || complaint.status === "RESOLVED"} aria-describedby={`resolution-help-${complaint.id}`} /></label>
-      <p id={`resolution-help-${complaint.id}`} className="small-copy">Required to resolve. Record the agreed outcome; any money transfer still happens separately.</p>
-    </div>
-    <div className="complaint-actions">
-    <button type="button" className="ui-button ui-button-ghost" onClick={() => void onUpdate(complaint.id, complaint.status, adminNotes, resolution)} disabled={updating || complaint.status === "RESOLVED"}>
+  return <tr>
+    <td><span className="ui-badge">{isDispute ? `booking · ${complaint.disputeType?.toLowerCase().replaceAll("_", " ")}` : complaint.targetType.toLowerCase()}</span>
+      {complaint.booking && <p>{complaint.booking.listing.title ?? complaint.booking.listing.areaText} · {complaint.booking.startDate} – {complaint.booking.endDate}</p>}
+      {!isDispute && <code>{complaint.targetId}</code>}<p>{complaint.reason}</p></td>
+    <td>{complaint.reporter?.email ?? "Unknown reporter"}<br />{new Date(complaint.createdAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</td>
+    <td><Badge tone={complaint.status === "RESOLVED" ? "success" : complaint.status === "REVIEWING" ? "warning" : "danger"}>{statusLabel}</Badge>
+      {complaint.resolvedBy && complaint.resolvedAt && <p className="small-copy">By {complaint.resolvedBy.email} on {new Date(complaint.resolvedAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</p>}</td>
+    <td><label>Private team notes<textarea rows={2} maxLength={5000} value={adminNotes} onChange={event => setAdminNotes(event.target.value)} disabled={updating || complaint.status === "RESOLVED"} /></label>
+      <label>Resolution summary<textarea rows={2} minLength={10} maxLength={5000} value={resolution} onChange={event => setResolution(event.target.value)} disabled={updating || complaint.status === "RESOLVED"} aria-describedby={`resolution-help-${complaint.id}`} /></label>
+      <p id={`resolution-help-${complaint.id}`} className="small-copy">Required to resolve. Money transfers remain separate.</p>
+      <button type="button" className="ui-button ui-button-ghost" onClick={() => void onUpdate(complaint.id, complaint.status, adminNotes, resolution)} disabled={updating || complaint.status === "RESOLVED"}>
       {updating ? "Saving…" : "Save notes"}
-    </button>
-    <div className="segmented status-set" role="group" aria-label={`Set ${isDispute ? "case" : "complaint"} status`}>
+    </button><div className="segmented status-set" role="group" aria-label={`Set ${isDispute ? "case" : "complaint"} status`}>
       {(["OPEN", "REVIEWING", "RESOLVED"] as const).map(status => <button key={status} type="button" aria-pressed={complaint.status === status} onClick={() => void onUpdate(complaint.id, status, adminNotes, resolution)} disabled={updating || complaint.status === "RESOLVED" || complaint.status === status || (status === "RESOLVED" && resolution.trim().length < 10)}>
         {status === "OPEN" ? "Mark open" : status === "REVIEWING" ? "Mark reviewing" : "Resolve case"}
       </button>)}
-    </div></div>
-  </article>;
+    </div></td>
+  </tr>;
 }
 
 function AdminComplaints() {
@@ -91,7 +81,8 @@ function AdminComplaints() {
     {error && <p role="alert">{error} <button onClick={pager.retry}>Retry</button></p>}
     {actionError && <p className="notice error" role="alert">{actionError}</p>}
     {!loading && !error && shown.length === 0 && <p className="notice">No {filter === "ALL" ? "cases" : filter.toLowerCase() + " cases"} on this page.</p>}
-    <div className="stack">{shown.map(complaint => <ComplaintRow key={complaint.id} complaint={complaint} updating={updatingId !== null} onUpdate={updateStatus} />)}</div>
+    {shown.length > 0 && <div className="table-wrap"><table><thead><tr><th scope="col">Report</th><th scope="col">Reporter / date</th><th scope="col">Status</th><th scope="col">Review / update</th></tr></thead>
+      <tbody>{shown.map(complaint => <ComplaintRow key={complaint.id} complaint={complaint} updating={updatingId !== null} onUpdate={updateStatus} />)}</tbody></table></div>}
     <Pagination {...pager} loading={loading || updatingId !== null} onPageChange={pager.setPage} />
   </div>;
 }

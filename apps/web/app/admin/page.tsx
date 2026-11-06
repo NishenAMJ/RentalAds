@@ -23,6 +23,7 @@ function attentionItems(summary: AdminSummary): AttentionItem[] {
     summary.bookings && { key: "refunds", label: "Refunds to record", count: summary.bookings.refundDue, detail: "Process refunds with your payment provider, then record the reference.", href: "/admin/bookings", action: "Review refunds" },
     summary.complaints && { key: "complaints", label: "Open complaints", count: summary.complaints.open, detail: "Review reports and update their status or notes.", href: "/admin/complaints", action: "Review complaints" },
     summary.payouts && { key: "payouts", label: "Owner payouts due", count: summary.payouts.dueCount, detail: `Manually transfer and record ${summary.payouts.dueAmount.toLocaleString("en-LK")} LKR when the amount is confirmed.`, href: "/admin/payouts", action: "Review payouts" },
+    summary.commissions && { key: "commissions", label: "Property commissions due", count: summary.commissions.dueCount, detail: `Invoice or record payment for ${summary.commissions.dueAmount.toLocaleString("en-LK")} LKR in outstanding commissions.`, href: "/admin/commissions", action: "Review commissions" },
   ].filter((item): item is AttentionItem => Boolean(item && item.count > 0));
 }
 
@@ -67,6 +68,7 @@ export default function AdminDashboard() {
       {summary.requests && <SummaryCard title="Rental requests" href="/admin/requests" cta="Manage requests" rows={[["Open", summary.requests.open], ["Not yet assigned", summary.requests.unassigned]]} />}
       {summary.bookings && <SummaryCard title="Bookings" href="/admin/bookings" cta="Review bookings" rows={[["Upcoming and paid", summary.bookings.upcoming], ["Refunds to make", summary.bookings.refundDue]]} />}
       {summary.payouts && <SummaryCard title="Owner payouts" href="/admin/payouts" cta="Manage payouts" rows={[["Due for transfer", summary.payouts.dueCount], ["Total amount due", `LKR ${summary.payouts.dueAmount.toLocaleString("en-LK")}`]]} />}
+      {summary.commissions && <SummaryCard title="Commissions & fees" href="/admin/commissions" cta="Manage commissions" rows={[["Invoices outstanding", summary.commissions.dueCount], ["Total amount due", `LKR ${summary.commissions.dueAmount.toLocaleString("en-LK")}`]]} />}
       {summary.complaints && <SummaryCard title="Complaints" href="/admin/complaints" cta="Review complaints" rows={[["Open", summary.complaints.open]]} />}
     </div>
   </>;

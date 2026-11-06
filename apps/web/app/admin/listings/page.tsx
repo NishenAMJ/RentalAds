@@ -2,12 +2,15 @@
 import { useState } from "react";
 import { RequireSession } from "@/components/require-session";
 import { Pagination } from "@/components/pagination";
-import { AdminListingCard } from "@/components/admin-listing-card";
+import { AdminDeleteButton } from "@/components/admin-delete-button";
 import { AdminListingLookup } from "@/components/admin-listing-lookup";
 import { usePaginated } from "@/lib/use-paginated";
 import { apiRequest } from "@/lib/api-client";
-import { ACTION_MESSAGES, STATUS_TABS, type ListingAction, type ListingStatus } from "@/lib/admin-listings";
+import { ACTION_MESSAGES, ACTIONS_BY_STATUS, STATUS_TABS, type ListingAction, type ListingStatus } from "@/lib/admin-listings";
 import type { OwnerListing } from "@/lib/listings";
+import { categoryLabel } from "@/lib/categories";
+import { money, rateUnit, statusLabel } from "@/lib/listings";
+
 
 function ListingList({ status, empty }: { status: ListingStatus; empty: string }) {
   const pager = usePaginated<OwnerListing>("/listings/admin", true, `status=${status}`);
@@ -41,12 +44,24 @@ function ListingList({ status, empty }: { status: ListingStatus; empty: string }
     {message && <p role="status" className="notice">{message}</p>}
     {pager.loading && <p role="status">Loading listings...</p>}
     {!pager.loading && !pager.error && !pager.items.length && <p>{empty}</p>}
-    <div className="stack">{pager.items.map((listing) =>
-      <AdminListingCard key={listing.id} listing={listing} disabled={!!saving || pager.loading}
-        savingAction={saving?.id === listing.id ? saving.action : null}
-        onAction={(action) => void act(listing.id, action)}
-        onDeleted={() => { setMessage("Listing deleted. The owner has been notified."); refresh(); }} />)}
-    </div>
+    {pager.items.length > 0 && <div className="table-wrap"><table><thead><tr><th scope="col">Listing</th><th scope="col">Category / status</th><th scope="col">Price</th><th scope="col">Owner</th><th scope="col">Details</th><th scope="col">Actions</th></tr></thead>
+      <tbody>{pager.items.map(listing => <tr key={listing.id}>
+        <td><strong>{listing.title ?? listing.areaText}</strong>{listing.reference && <><br /><small>{listing.reference}</small></>}</td>
+        <td>{categoryLabel(listing.category)}<br />{statusLabel[listing.status]}</td>
+        <td>{money(listing.monthlyRent)} / {rateUnit(listing.ratePeriod)}</td>
+        <td>{listing.ownerContact}</td>
+        <td><details><summary>Review details</summary><div className="listing-review-details">
+          {listing.photoUrls[0] && <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={listing.photoUrls[0]} alt="Listing preview" loading="lazy" />
+          </>}
+          <p>{listing.areaText}</p>
+          <p>{Object.entries(listing.attributes ?? {}).map(([key, value]) => `${key}: ${String(value)}`).join(" · ") || "No additional details"}</p>
+          <p>{listing.mapLink && <a href={listing.mapLink} target="_blank" rel="noreferrer">Open map</a>}</p>
+        </div></details></td>
+        <td><div className="table-actions">{ACTIONS_BY_STATUS[listing.status].map(({ action, label, danger }) => <button key={action} className={danger ? "danger-button" : undefined} disabled={!!saving || pager.loading} onClick={() => void act(listing.id, action)}>{saving?.id === listing.id && saving.action === action ? "Saving…" : label}</button>)}
+          <AdminDeleteButton path={`/listings/${listing.id}/admin-delete`} subject="listing" disabled={!!saving || pager.loading} onDeleted={() => { setMessage("Listing deleted. The owner has been notified."); refresh(); }} /></div></td>
+      </tr>)}</tbody></table></div>}
     <Pagination {...pager} loading={pager.loading || !!saving} onPageChange={pager.setPage} />
   </>;
 }

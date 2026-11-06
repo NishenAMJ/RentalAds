@@ -57,17 +57,17 @@ export default function AdminVerificationsPage() {
     {message && <p role="status" className="notice">{message}</p>}
     {loading && <p role="status">Loading requests…</p>}
     {!loading && result?.data.length === 0 && <section className="panel"><p>No pending identity & authority check requests.</p></section>}
-    {!!result?.data.length && <div className="stack">{result.data.map(account => <article className="panel" key={account.id}>
-      <h2>{account.email}</h2>
-      <p>Requested {account.ownerVerificationRequestedAt ? new Date(account.ownerVerificationRequestedAt).toLocaleString() : "date unavailable"}.</p>
-      <label htmlFor={`note-${account.id}`}>Decision note (e.g. checked deed, utility bill, authority basis)</label>
-      <textarea id={`note-${account.id}`} rows={3} maxLength={1000} value={notes[account.id] ?? ""}
-        onChange={event => setNotes(current => ({ ...current, [account.id]: event.target.value }))} disabled={busy === account.id} />
-      <div className="wizard-actions">
-        <button type="button" className="secondary" disabled={busy === account.id} onClick={() => void decide(account, "REJECTED")}>Decline check</button>
-        <button type="button" className="ui-button ui-button-primary" disabled={busy === account.id} onClick={() => void decide(account, "VERIFIED")}>Confirm identity & authority</button>
-      </div>
-    </article>)}</div>}
+    {!!result?.data.length && <div className="table-wrap"><table><thead><tr><th scope="col">Owner account</th><th scope="col">Requested</th><th scope="col">Decision note</th><th scope="col">Actions</th></tr></thead>
+      <tbody>{result.data.map(account => <tr key={account.id}>
+        <td>{account.email}</td>
+        <td>{account.ownerVerificationRequestedAt ? new Date(account.ownerVerificationRequestedAt).toLocaleString("en-GB", { timeZone: "Asia/Colombo" }) : "Date unavailable"}</td>
+        <td><label className="sr-only" htmlFor={`note-${account.id}`}>Decision note for {account.email}</label><textarea id={`note-${account.id}`} rows={2} maxLength={1000} value={notes[account.id] ?? ""}
+          placeholder="Record what was checked and the basis for the decision" onChange={event => setNotes(current => ({ ...current, [account.id]: event.target.value }))} disabled={busy === account.id} /></td>
+        <td><div className="wizard-actions">
+          <button type="button" className="secondary" disabled={busy === account.id} onClick={() => void decide(account, "REJECTED")}>Decline</button>
+          <button type="button" className="ui-button ui-button-primary" disabled={busy === account.id} onClick={() => void decide(account, "VERIFIED")}>Confirm</button>
+        </div></td>
+      </tr>)}</tbody></table></div>}
     {!!result?.data.length && <nav aria-label="Verification request pages" className="pagination">
       <button className="secondary" disabled={page <= 1 || loading} onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</button>
       <span>Page {page}</span>

@@ -73,6 +73,7 @@ export class AdminService {
     const users = await this.prisma.user.findMany({
       where: {
         ...(query.status ? { accountStatus: query.status } : {}),
+        ...(query.role ? { role: query.role } : {}),
         ...(query.verificationStatus
           ? { ownerVerificationStatus: query.verificationStatus }
           : {}),

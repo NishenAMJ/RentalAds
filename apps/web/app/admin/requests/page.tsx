@@ -86,6 +86,8 @@ function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNod
     setExpansion((current) => ({ ...current, [requestId]: { open, epoch: (current[requestId]?.epoch ?? 0) + 1 } }));
 
   const [actionError, setActionError] = useState<string | null>(null);
+  const [reviewRequestId, setReviewRequestId] = useState<string | null>(null);
+  const reviewRequest = requests.find((request) => request.id === reviewRequestId) ?? null;
 
   useEffect(() => {
     if (!copiedKey) return;
@@ -246,109 +248,33 @@ function RequestQueue({ filters, toolbar }: { filters: string; toolbar: ReactNod
       {!loading && !error && requests.length === 0 && (
         <p className="notice">{filters ? "No requests match these filters." : "No rental requests yet."}</p>
       )}
-      <div className="space-y-6">
-        {requests.map((r) => (
-          <div key={r.id} className="panel request-split">
-            <div className="request-left">
-            <div className="record-heading">
-              <div>
-                <span className="font-semibold">{r.areaText}</span>
-                <p className="text-sm text-gray-600 mt-1">
-                  {r.propertyType === "APARTMENT" ? "Apartment" : "House"} · up
-                  to LKR {r.budgetMax.toLocaleString()} · {r.durationMonths}+
-                  months
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Contact: {r.renterContact}
-                </p>
-              </div>
-              <span className={`ui-badge ${REQUEST_TONE[r.status] ?? "badge-neutral"}`}>
-                {r.status}
-              </span>
-            </div>
-
-            <SavedSearchAreaView
-              request={r}
-              exact
-              properties={(suggestionsByRequest[r.id]?.data ?? []).flatMap(
-                (s) =>
-                  s.latitude != null && s.longitude != null
-                    ? [
-                        {
-                          id: s.listingId,
-                          latitude: s.latitude,
-                          longitude: s.longitude,
-                          areaText: s.areaText,
-                          monthlyRent: s.monthlyRent,
-                          distanceKm: s.distanceKm,
-                        },
-                      ]
-                    : [],
-              )}
-            />
-            <AdminLocationOverride request={r} />
-            </div>
-            <div className="request-right">
-            <AdminRequestWork request={r} onUpdated={(next) => pager.setItems((rows) => rows.map((row) => (row.id === r.id ? { ...row, ...next } : row)))} />
-            <AdminDeleteButton path={`/requests/${r.id}/admin-delete`} subject="request" disabled={loadingMatchesFor !== null || !!savingMatch} onDeleted={pager.retry} />
-            <button
-              onClick={() => void findMatches(r.id)}
-              disabled={
-                loadingMatchesFor !== null ||
-                !!savingMatch ||
-                r.status === "CLOSED"
-              }
-              className="match-action"
-            >
-              {loadingMatchesFor === r.id
-                ? "Finding matches..."
-                : "Find potential matches"}
-            </button>
-
-            {suggestionsByRequest[r.id] && (
-              <div className="mt-4 space-y-3">
-                <Pagination
-                  {...suggestionsByRequest[r.id]}
-                  loading={loadingMatchesFor !== null || !!savingMatch}
-                  onPageChange={(page) => void findMatches(r.id, page)}
-                />
-                {suggestionsByRequest[r.id].data.length === 0 && (
-                  <p className="text-sm text-gray-500">
-                    No active properties on this page.
-                  </p>
-                )}
-                {suggestionsByRequest[r.id].data.length > 0 && (
-                  <div className="match-bar">
-                    <span className="small-copy">{suggestionsByRequest[r.id].data.length} potential matches on this page</span>
-                    <span className="match-bar-actions">
-                      <button type="button" className="text-button" onClick={() => setAllOpen(r.id, true)}>Expand all</button>
-                      <button type="button" className="text-button" onClick={() => setAllOpen(r.id, false)}>Collapse all</button>
-                    </span>
-                  </div>
-                )}
-                {suggestionsByRequest[r.id].data.map((s) => (
-                  <MatchSuggestionCard
-                    key={`${s.listingId}:${expansion[r.id]?.epoch ?? 0}`}
-                    suggestion={s}
-                    defaultOpen={expansion[r.id]?.open ?? false}
-                    reason={reviewReasons[`${r.id}:${s.listingId}`] ?? ""}
-                    onReasonChange={(value) => setReviewReasons((current) => ({ ...current, [`${r.id}:${s.listingId}`]: value }))}
-                    busy={!!savingMatch || loadingMatchesFor !== null}
-                    saving={savingMatch === `${r.id}:${s.listingId}`}
-                    requestClosed={r.status === "CLOSED"}
-                    copied={copiedKey === `${r.id}:${s.listingId}`}
-                    onSave={() => void saveMatch(r.id, s)}
-                    onStatusChange={(status) => void saveMatch(r.id, s, status)}
-                    onCopy={() => void copyMessage(r.id, s.listingId, s.whatsappMessage)}
-                  />
-                ))}
-              </div>
-            )}
+      {requests.length > 0 && <div className="table-wrap"><table className="request-queue-table">
+        <thead><tr><th scope="col">Area</th><th scope="col">Property brief</th><th scope="col">Renter</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
+        <tbody>{requests.map((r) => <tr key={r.id}>
+          <td><strong>{r.areaText}</strong></td>
+          <td>{r.propertyType === "APARTMENT" ? "Apartment" : "House"}<br />Up to LKR {r.budgetMax.toLocaleString()}<br />{r.durationMonths}+ months</td>
+          <td>{r.renterContact}</td>
+          <td><span className={`ui-badge ${REQUEST_TONE[r.status] ?? "badge-neutral"}`}>{r.status}</span></td>
+          <td><button type="button" onClick={() => setReviewRequestId(r.id)}>Review request</button></td>
+        </tr>)}</tbody>
+      </table></div>}
+      {reviewRequest && <div className="request-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setReviewRequestId(null); }}>
+        <section className="request-review-dialog" role="dialog" aria-modal="true" aria-labelledby="request-review-title">
+          <header className="request-review-header"><div><p className="eyebrow">Rental request review</p><h2 id="request-review-title">{reviewRequest.areaText}</h2><p>{reviewRequest.propertyType === "APARTMENT" ? "Apartment" : "House"} - Budget up to LKR {reviewRequest.budgetMax.toLocaleString()} - {reviewRequest.durationMonths}+ months - {reviewRequest.renterContact}</p></div><button type="button" className="secondary" onClick={() => setReviewRequestId(null)}>Close</button></header>
+          {actionError && <p role="alert" className="notice error">{actionError}</p>}
+          <div className="request-review-layout">
+            <div className="request-review-map"><h3>Saved search area</h3><SavedSearchAreaView request={reviewRequest} exact initialOpen properties={(suggestionsByRequest[reviewRequest.id]?.data ?? []).flatMap((s) => s.latitude != null && s.longitude != null ? [{ id: s.listingId, latitude: s.latitude, longitude: s.longitude, areaText: s.areaText, monthlyRent: s.monthlyRent, distanceKm: s.distanceKm }] : [])} /><AdminLocationOverride request={reviewRequest} /></div>
+            <div className="request-review-work"><AdminRequestWork request={reviewRequest} onUpdated={(next) => pager.setItems((rows) => rows.map((row) => (row.id === reviewRequest.id ? { ...row, ...next } : row)))} />
+              <div className="request-review-actions"><AdminDeleteButton path={`/requests/${reviewRequest.id}/admin-delete`} subject="request" disabled={loadingMatchesFor !== null || !!savingMatch} onDeleted={() => { setReviewRequestId(null); pager.retry(); }} /><button type="button" disabled={loadingMatchesFor !== null || !!savingMatch || reviewRequest.status === "CLOSED"} onClick={() => void findMatches(reviewRequest.id)}>{loadingMatchesFor === reviewRequest.id ? "Finding matches..." : "Find potential matches"}</button></div>
+              {suggestionsByRequest[reviewRequest.id] && <div className="request-suggestions"><Pagination {...suggestionsByRequest[reviewRequest.id]} loading={loadingMatchesFor !== null || !!savingMatch} onPageChange={(page) => void findMatches(reviewRequest.id, page)} />
+                {suggestionsByRequest[reviewRequest.id].data.length === 0 && <p>No active properties on this page.</p>}
+                {suggestionsByRequest[reviewRequest.id].data.length > 0 && <div className="match-bar"><span className="small-copy">{suggestionsByRequest[reviewRequest.id].data.length} potential matches</span><span className="match-bar-actions"><button type="button" className="text-button" onClick={() => setAllOpen(reviewRequest.id, true)}>Expand all</button><button type="button" className="text-button" onClick={() => setAllOpen(reviewRequest.id, false)}>Collapse all</button></span></div>}
+                <div className="match-table-content">{suggestionsByRequest[reviewRequest.id].data.map((s) => <MatchSuggestionCard key={`${s.listingId}:${expansion[reviewRequest.id]?.epoch ?? 0}`} suggestion={s} defaultOpen={expansion[reviewRequest.id]?.open ?? false} reason={reviewReasons[`${reviewRequest.id}:${s.listingId}`] ?? ""} onReasonChange={(value) => setReviewReasons((current) => ({ ...current, [`${reviewRequest.id}:${s.listingId}`]: value }))} busy={!!savingMatch || loadingMatchesFor !== null} saving={savingMatch === `${reviewRequest.id}:${s.listingId}`} requestClosed={reviewRequest.status === "CLOSED"} copied={copiedKey === `${reviewRequest.id}:${s.listingId}`} onSave={() => void saveMatch(reviewRequest.id, s)} onStatusChange={(status) => void saveMatch(reviewRequest.id, s, status)} onCopy={() => void copyMessage(reviewRequest.id, s.listingId, s.whatsappMessage)} />)}</div>
+              </div>}
             </div>
           </div>
-        ))}
-      </div>
-      <Pagination
+        </section>
+      </div>}      <Pagination
         {...pager}
         loading={loading || loadingMatchesFor !== null || !!savingMatch}
         onPageChange={pager.setPage}
