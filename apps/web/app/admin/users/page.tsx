@@ -93,22 +93,26 @@ export default function AdminUsersPage() {
   }
 
   const isAdmin = (account: Account) => account.role === "ADMIN" || (!!account.adminPermission && Object.values(account.adminPermission).some(Boolean));
+  const visibleAccounts = result?.data ?? [];
+  const visibleSuspended = visibleAccounts.filter(account => account.accountStatus === "SUSPENDED").length;
+  const visibleAdmins = visibleAccounts.filter(isAdmin).length;
 
   return <main className="admin-workspace">
-    <header className="page-heading"><p className="eyebrow">Administration</p><h1>User moderation</h1>
-      <p className="intro">Find accounts by email or phone, narrow by role or status, and suspend or restore access. Active administrator accounts must have their permissions removed before suspension.</p></header>
-    <form className="panel actions" onSubmit={searchUsers}>
-      <label htmlFor="user-search">Email or phone</label>
-      <input id="user-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search accounts" />
-      <label htmlFor="user-status">Account status</label>
-      <select id="user-status" value={status} onChange={event => changeFilter("status", event.target.value)}>
-        <option value="">All accounts</option><option value="ACTIVE">Active</option><option value="SUSPENDED">Suspended</option>
-      </select>
-      <label htmlFor="user-role">Account role</label>
-      <select id="user-role" value={role} onChange={event => changeFilter("role", event.target.value)}>
-        <option value="">All roles</option><option value="RENTER">Renter</option><option value="OWNER">Owner</option><option value="ADMIN">Administrator</option>
-      </select>
-      <div className="wizard-actions"><button type="submit">Search</button>
+    <header className="page-heading user-page-heading"><span className="user-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><div><p className="eyebrow">Administration / Access control</p><h1>User management</h1>
+      <p className="intro">Find accounts by email or phone, narrow by role or status, and suspend or restore access. Active administrator accounts must have their permissions removed before suspension.</p></div></header>
+    <section className="user-summary-grid" aria-label="Current page summary">
+      <article className="user-summary-card"><span>Accounts shown</span><strong>{result?.data.length ?? "—"}</strong><small>Page {page}, up to 25 per page</small></article>
+      <article className="user-summary-card"><span>Active</span><strong>{visibleAccounts.length - visibleSuspended}</strong><small>On this page</small></article>
+      <article className="user-summary-card"><span>Suspended</span><strong>{visibleSuspended}</strong><small>On this page</small></article>
+      <article className="user-summary-card"><span>Admin access</span><strong>{visibleAdmins}</strong><small>On this page</small></article>
+    </section>
+    <form className="panel user-filter-panel" onSubmit={searchUsers}>
+      <div className="user-filter-grid">
+        <label htmlFor="user-search">Email or phone<input id="user-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search accounts" /></label>
+        <label htmlFor="user-status">Account status<select id="user-status" value={status} onChange={event => changeFilter("status", event.target.value)}><option value="">All accounts</option><option value="ACTIVE">Active</option><option value="SUSPENDED">Suspended</option></select></label>
+        <label htmlFor="user-role">Account role<select id="user-role" value={role} onChange={event => changeFilter("role", event.target.value)}><option value="">All roles</option><option value="RENTER">Renter</option><option value="OWNER">Owner</option><option value="ADMIN">Administrator</option></select></label>
+      </div>
+      <div className="user-filter-actions"><button type="submit">Search accounts</button>
         {(query || search || status || role) && <button type="button" className="secondary" onClick={() => { setLoading(true); setSearch(""); setQuery(""); setStatus(""); setRole(""); setPage(1); }}>Clear filters</button>}
       </div>
     </form>
@@ -119,17 +123,15 @@ export default function AdminUsersPage() {
     {!loading && result?.data.length === 0 && <section className="panel"><p>No accounts match these filters.</p></section>}
     {!!result?.data.length && <div className="table-wrap">
       <table>
-        <thead><tr>
-          <th scope="col">Account</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Joined</th><th scope="col">Details</th><th scope="col">Action</th>
-        </tr></thead>
+        <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Joined</th><th scope="col">Moderation details</th><th scope="col">Action</th></tr></thead>
         <tbody>{result.data.map(account => {
           const admin = isAdmin(account);
           return <tr key={account.id}>
-            <td><strong>{account.email}</strong>{account.phone && <><br /><span>{account.phone}</span></>}</td>
-            <td style={{ textTransform: "capitalize" }}>{account.role.toLowerCase()}{admin && <><br /><small>Admin permissions</small></>}</td>
-            <td><span className={`ui-badge ${account.accountStatus === "ACTIVE" ? "badge-success" : "badge-warning"}`}>{account.accountStatus.toLowerCase()}</span></td>
+            <td><div className="user-account-cell"><span className="user-avatar" aria-hidden="true">{account.email.charAt(0).toUpperCase()}</span><span><strong>{account.email}</strong><small>{account.phone || "No phone listed"}</small></span></div></td>
+            <td><span className="user-role-badge">{account.role.toLowerCase()}</span>{admin && <small className="user-admin-hint">Admin permissions</small>}</td>
+            <td><span className={`user-status-pill ${account.accountStatus === "ACTIVE" ? "is-active" : "is-suspended"}`}><span />{account.accountStatus.toLowerCase()}</span></td>
             <td style={{ whiteSpace: "nowrap" }}>{new Date(account.createdAt).toLocaleDateString()}</td>
-            <td style={{ maxWidth: 260 }}>{account.accountStatus === "SUSPENDED" ? <span title={account.suspensionReason ?? ""}>{account.suspendedAt ? new Date(account.suspendedAt).toLocaleDateString() : "Suspended"}: {account.suspensionReason || "No reason recorded"}</span> : admin ? "Remove admin permissions before suspension" : "—"}</td>
+            <td style={{ maxWidth: 280 }}>{account.accountStatus === "SUSPENDED" ? <span title={account.suspensionReason ?? ""}><strong>Reason</strong><br />{account.suspensionReason || "No reason recorded"}<small className="user-admin-hint">{account.suspendedAt ? `Since ${new Date(account.suspendedAt).toLocaleDateString()}` : "Suspended"}</small></span> : admin ? <span className="user-admin-warning">Remove admin permissions before suspension</span> : <span className="muted">No moderation notes</span>}</td>
             <td style={{ whiteSpace: "nowrap" }}><button type="button" className={account.accountStatus === "ACTIVE" ? "danger-button" : "ui-button ui-button-primary"}
               disabled={account.accountStatus === "ACTIVE" && admin} onClick={() => { setSelected(account); setReason(""); setError(""); }}>
               {account.accountStatus === "ACTIVE" ? "Suspend" : "Restore"}
