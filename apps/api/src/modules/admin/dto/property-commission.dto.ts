@@ -8,20 +8,14 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { CommissionStatus, PropertyFeeType } from '@prisma/client';
+
 import { PaginationQuery } from '../../../common/pagination';
 
-export enum CommissionStatusDto {
-  DUE = 'DUE',
-  INVOICED = 'INVOICED',
-  PAID = 'PAID',
-  WAIVED = 'WAIVED',
-}
-
-export enum PropertyFeeTypeDto {
-  COMMISSION = 'COMMISSION',
-  LISTING_FEE = 'LISTING_FEE',
-}
+export {
+  CommissionStatus as CommissionStatusDto,
+  PropertyFeeType as PropertyFeeTypeDto,
+} from '@prisma/client';
 
 export class CreatePropertyCommissionDto {
   @IsUUID()
@@ -32,8 +26,8 @@ export class CreatePropertyCommissionDto {
   matchId?: string;
 
   @IsOptional()
-  @IsEnum(PropertyFeeTypeDto)
-  feeType?: PropertyFeeTypeDto;
+  @IsEnum(PropertyFeeType)
+  feeType?: PropertyFeeType;
 
   @IsOptional()
   @IsInt()
@@ -52,8 +46,8 @@ export class CreatePropertyCommissionDto {
   amount?: number;
 
   @IsOptional()
-  @IsEnum(CommissionStatusDto)
-  status?: CommissionStatusDto;
+  @IsEnum(CommissionStatus)
+  status?: CommissionStatus;
 
   @IsOptional()
   @IsString()
@@ -84,8 +78,8 @@ export class UpdatePropertyCommissionDto {
   amount?: number;
 
   @IsOptional()
-  @IsEnum(CommissionStatusDto)
-  status?: CommissionStatusDto;
+  @IsEnum(CommissionStatus)
+  status?: CommissionStatus;
 
   @IsOptional()
   @IsString()
@@ -100,12 +94,12 @@ export class UpdatePropertyCommissionDto {
 
 export class PropertyCommissionQueryDto extends PaginationQuery {
   @IsOptional()
-  @IsEnum(CommissionStatusDto)
-  status?: CommissionStatusDto;
+  @IsEnum(CommissionStatus)
+  status?: CommissionStatus;
 
   @IsOptional()
-  @IsEnum(PropertyFeeTypeDto)
-  feeType?: PropertyFeeTypeDto;
+  @IsEnum(PropertyFeeType)
+  feeType?: PropertyFeeType;
 
   @IsOptional()
   @IsUUID()
@@ -115,4 +109,3 @@ export class PropertyCommissionQueryDto extends PaginationQuery {
   @IsUUID()
   listingId?: string;
 }
-
