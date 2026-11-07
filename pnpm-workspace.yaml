@@ -1,3 +1,18 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Security fixes for packages nested inside Express, NestJS and the dev tools, which have not released updates of their own yet.
+# Each pin is the first patched version; remove one when its parent package ships the fix (check with `pnpm audit --prod`).
+overrides:
+  proxy-addr: ^2.0.8
+  body-parser: ^2.4.0
+  multer: ^2.5.0
+  qs: ^6.16.1
+  source-map-js: ^1.2.2
+  js-yaml@5: ^5.4.1
+  handlebars@4: ^4.7.10
+  zod@4: ^4.6.6
+  brace-expansion@1: ^1.1.20
+  brace-expansion@2: ^2.1.6
+  brace-expansion@5: ^5.0.11

@@ -8,7 +8,7 @@ import { useT } from "@/components/i18n-provider";
 import { categoryBySlug, categoryBlurbKey, categoryNameKey } from "@/lib/categories";
 import { labelFor, type ItemListing } from "@/lib/items";
 import { usePaginated } from "@/lib/use-paginated";
-import { useCategoryDefinitions } from "@/lib/use-categories";
+import { useCategoryDefinitions, useCategoryDefinitionsError } from "@/lib/use-categories";
 
 function ItemList({ query }: { query: string }) {
   const t = useT();
@@ -27,10 +27,14 @@ export function ItemBrowse({ slug }: { slug: string }) {
   const t = useT();
   const category = categoryBySlug(slug);
   const definitions = useCategoryDefinitions();
+  const categoriesFailed = useCategoryDefinitionsError();
   const [applied, setApplied] = useState("");
   if (!category?.item) return <section><p role="alert" className="notice error">{t("rent.notFound")}</p><Link href="/categories">{t("nav.categories")}</Link></section>;
+  if (categoriesFailed) return <p role="alert" className="notice error">Rental categories could not be loaded. Please refresh and try again.</p>;
+  if (definitions === null) return <p role="status" className="notice">Loading available rental categories…</p>;
 
   const definition = definitions?.find((candidate) => candidate.id === category.id);
+  if (!definition) return <section><p role="status" className="notice">This rental category is not currently available.</p><Link href="/categories">{t("nav.categories")}</Link></section>;
   const typeField = definition?.fields.find((field) => field.key === definition.typeField);
 
   function apply(event: FormEvent<HTMLFormElement>) {

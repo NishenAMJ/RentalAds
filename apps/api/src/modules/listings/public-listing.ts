@@ -2,12 +2,19 @@ import type { Listing } from '@prisma/client';
 import { approximateLocation } from '../../common/geography';
 
 // Adding a database field never publishes it automatically.
-export function toPublicListing(listing: Listing) {
+export function toPublicListing(
+  listing: Listing & {
+    owner?: { ownerVerificationStatus: string };
+  },
+) {
   const location = approximateLocation(listing.latitude, listing.longitude);
   return {
     id: listing.id,
     reference: listing.reference,
     category: listing.category,
+    ownerVerified: listing.owner?.ownerVerificationStatus === 'VERIFIED',
+    ownerIdentityConfirmed:
+      listing.owner?.ownerVerificationStatus === 'VERIFIED',
     title: listing.title,
     description: listing.description,
     attributes: listing.attributes,

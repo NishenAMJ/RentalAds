@@ -16,6 +16,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
+import { AdminActivityModule } from './modules/admin/admin-activity.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
     MatchingModule,
     ComplaintsModule,
     AdminModule,
+    AdminActivityModule,
     NotificationsModule,
     CategoriesModule,
     BookingsModule,

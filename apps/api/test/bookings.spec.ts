@@ -260,7 +260,7 @@ describe('bookings service', () => {
     } = {},
   ) {
     const notifySend = jest.fn().mockResolvedValue(undefined);
-    const bookingUpdate = jest.fn().mockResolvedValue({});
+    const bookingUpdate = jest.fn().mockResolvedValue({ count: 1 });
     const prisma = {
       listing: { findFirst: jest.fn().mockResolvedValue(listing) },
       booking: {
@@ -280,6 +280,7 @@ describe('bookings service', () => {
             Promise.resolve({ ...pendingBooking, ...data, listing }),
           ),
         update: bookingUpdate,
+        updateMany: bookingUpdate,
       },
       listingBlock: { findFirst: jest.fn().mockResolvedValue(null) },
       $queryRaw: jest.fn().mockResolvedValue([]),
@@ -466,6 +467,21 @@ describe('booking contact privacy', () => {
       '+94771111111',
     );
     expect(view('CONFIRMED', 'renter')).not.toHaveProperty('renterContact');
+  });
+
+  it('shows an unpaid booking whose hold has run out as expired, and a live one as waiting', () => {
+    const unpaid = (expiresAt: string) =>
+      toBookingView(
+        {
+          ...base,
+          status: 'PENDING_PAYMENT',
+          expiresAt: new Date(expiresAt),
+        } as never,
+        'renter',
+        new Date('2026-11-01T10:00:00Z'),
+      ).status;
+    expect(unpaid('2026-11-01T09:59:00Z')).toBe('EXPIRED');
+    expect(unpaid('2026-11-01T10:20:00Z')).toBe('PENDING_PAYMENT');
   });
 
   it('shows a finished confirmed booking as completed', () => {

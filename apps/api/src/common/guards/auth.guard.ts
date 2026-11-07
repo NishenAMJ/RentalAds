@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { createClient } from '@supabase/supabase-js';
 import type { Request } from 'express';
+import { PrismaService } from '../prisma.service';
 
 export interface AuthenticatedUser {
   authUserId: string;
@@ -18,7 +20,10 @@ export interface AuthenticatedUser {
 export class AuthGuard implements CanActivate {
   private readonly supabase: ReturnType<typeof createClient>;
 
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     const url =
       config.get<string>('SUPABASE_URL') ??
       config.get<string>('NEXT_PUBLIC_SUPABASE_URL');
@@ -55,6 +60,16 @@ export class AuthGuard implements CanActivate {
 
     if (error || !data?.user) {
       throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const account = await this.prisma.user.findUnique({
+      where: { authUserId: data.user.id },
+      select: { accountStatus: true },
+    });
+    if (account?.accountStatus === 'SUSPENDED') {
+      throw new ForbiddenException(
+        'This account is suspended. Contact support for help.',
+      );
     }
 
     request.user = {

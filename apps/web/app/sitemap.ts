@@ -4,7 +4,7 @@ import { siteUrl } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteUrl();
-  const pages = ["", "/listings", "/categories", "/c/vehicles", "/c/equipment", "/c/event-gear", "/privacy", "/terms", "/cookies"].map((path) => ({
+  const pages = ["", "/listings", "/categories", "/c/vehicles", "/c/equipment", "/c/event-gear", "/help", "/privacy", "/terms", "/cookies"].map((path) => ({
     url: `${origin}${path}`,
     changeFrequency: path === "/listings" ? ("daily" as const) : ("monthly" as const),
     priority: path === "" ? 1 : path === "/listings" ? 0.9 : 0.3,

@@ -5,6 +5,8 @@ import { apiRequest } from "@/lib/api-client";
 const flags = [
   ["canApproveListings", "Listings and rental matching"],
   ["canManageComplaints", "Complaint review"],
+  ["canManagePayouts", "Owner payouts"],
+  ["canManageCommissions", "Property commissions & listing fees"],
   ["canManageAdmins", "Manage admin access"],
 ] as const;
 type Flag = (typeof flags)[number][0];
@@ -23,12 +25,14 @@ export function AdminPermissionsForm() {
       email: String(form.get("email") ?? "").trim(),
       canApproveListings: form.has("canApproveListings"),
       canManageComplaints: form.has("canManageComplaints"),
+      canManagePayouts: form.has("canManagePayouts"),
       canManageAdmins: form.has("canManageAdmins"),
+      canManageCommissions: form.has("canManageCommissions"),
     };
     setBusy(true); setError(""); setMessage("");
     try {
       await apiRequest("/admin/permissions", { method: "POST", authenticated: true, body: JSON.stringify(body) });
-      setMessage(`Permissions saved for ${body.email}.`);
+      setMessage(`Permissions saved for ${body.email}. Changes take effect when their session refreshes.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save permissions.");
     } finally {
@@ -39,7 +43,7 @@ export function AdminPermissionsForm() {
   return (
     <section className="panel admin-permissions" aria-labelledby="admin-permissions-title">
       <h2 id="admin-permissions-title">Admin access</h2>
-      <p className="admin-description">Set exactly which tools an existing user can use. Unchecked tools are removed.</p>
+      <p className="admin-description">Set exactly which tools an existing user can use. Unchecked tools are removed. Give payout access only to staff responsible for recording owner transfers.</p>
       <form onSubmit={submit} aria-busy={busy} className="permissions-form">
         <div className="ui-field">
           <label htmlFor="permission-email">User email</label>

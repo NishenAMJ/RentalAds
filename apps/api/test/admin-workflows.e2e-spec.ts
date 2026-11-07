@@ -234,13 +234,39 @@ describe('Admin permissions, complaints and matching lifecycle', () => {
           findUnique: () => Promise.resolve({ id: complaintId }),
           update: complaintUpdate,
         },
+        adminActivity: {
+          create: jest.fn().mockResolvedValue({}),
+        },
         match: {
           findMany: matchFind,
           findUnique: ({ where }: { where: { id: string } }) =>
-            Promise.resolve(saved?.id === where.id ? saved : null),
+            Promise.resolve(
+              saved?.id === where.id
+                ? {
+                    ...saved,
+                    listing: {
+                      id: listing.id,
+                      ownerId: listing.ownerId,
+                      monthlyRent: listing.monthlyRent,
+                    },
+                    commission: null,
+                  }
+                : null,
+            ),
           upsert: matchUpsert,
           update: matchUpdate,
         },
+        propertyCommission: {
+          create: jest.fn().mockResolvedValue({ id: 'commission-1' }),
+        },
+        $transaction: (work: (tx: object) => unknown) =>
+          work({
+            user: { findUnique: userFind },
+            match: { update: matchUpdate },
+            propertyCommission: {
+              create: jest.fn().mockResolvedValue({ id: 'commission-1' }),
+            },
+          }),
       })
       .overrideProvider(CLOUDINARY)
       .useValue({})
@@ -618,12 +644,24 @@ describe('Admin permissions, complaints and matching lifecycle', () => {
     await call()
       .patch(`/complaints/${complaintId}`)
       .auth('moderator', { type: 'bearer' })
-      .send({ status: 'RESOLVED', adminNotes: 'Verified with owner' })
+      .send({
+        status: 'RESOLVED',
+        adminNotes: 'Verified with owner',
+        resolution: 'The reported issue was reviewed and resolved.',
+      })
       .expect(200);
-    expect(complaintUpdate).toHaveBeenCalledWith({
-      where: { id: complaintId },
-      data: { status: 'RESOLVED', adminNotes: 'Verified with owner' },
-    });
+    expect(complaintUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: complaintId },
+        data: expect.objectContaining({
+          status: 'RESOLVED',
+          adminNotes: 'Verified with owner',
+          resolution: 'The reported issue was reviewed and resolved.',
+          resolvedAt: expect.any(Date),
+          resolvedById: 'db-moderator',
+        }),
+      }),
+    );
   });
   it('uses a paginated pending-only queue', async () => {
     listing.status = 'PENDING_APPROVAL';

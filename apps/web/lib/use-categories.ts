@@ -19,3 +19,18 @@ export function useCategoryDefinitions(): CategoryDefinition[] | null {
   }, []);
   return definitions;
 }
+
+/** Whether the shared category registry could not be loaded. */
+export function useCategoryDefinitionsError(): boolean {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    cached ??= apiRequest<CategoryDefinition[]>("/categories");
+    cached.then(() => { if (active) setFailed(false); }).catch(() => {
+      cached = null;
+      if (active) setFailed(true);
+    });
+    return () => { active = false; };
+  }, []);
+  return failed;
+}

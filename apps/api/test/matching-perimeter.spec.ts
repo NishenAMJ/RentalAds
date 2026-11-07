@@ -57,7 +57,7 @@ describe('exact admin matching and attributable location overrides', () => {
       durationMonths: 12,
       furnishing: null,
     } as unknown as RentalRequest;
-    service = new MatchingService({
+    const prisma = {
       rentalRequest: { findUnique: jest.fn(async () => rental) },
       listing: {
         findUnique: jest.fn(async () => listing),
@@ -75,7 +75,11 @@ describe('exact admin matching and attributable location overrides', () => {
           adminPermission: { canApproveListings: true },
         })),
       },
-    } as unknown as PrismaService);
+    } as unknown as PrismaService;
+    prisma.$transaction = jest.fn(async (work: unknown) =>
+      (work as (tx: PrismaService) => unknown)(prisma),
+    ) as never;
+    service = new MatchingService(prisma);
   });
   it('calls the same shared distance function using exact coordinates and awards 30 location points', async () => {
     const spy = jest.spyOn(geography, 'distanceKm');

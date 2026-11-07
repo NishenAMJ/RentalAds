@@ -20,6 +20,15 @@ test('only item categories can be browsed and listed through the item pages', ()
   assert.equal(categoryLabel('EVENT_GEAR'), 'Event gear');
 });
 
+test('each category tile points at its own browse or listing flow', () => {
+  assert.deepEqual(CATEGORIES.map(({ id, browseHref, listHref }) => [id, browseHref, listHref]), [
+    ['PROPERTY', '/listings', '/owner/new'],
+    ['VEHICLE', '/c/vehicles', '/owner/new/vehicles'],
+    ['EQUIPMENT', '/c/equipment', '/owner/new/equipment'],
+    ['EVENT_GEAR', '/c/event-gear', '/owner/new/event-gear'],
+  ]);
+});
+
 test('labels from the API fall back to the key instead of crashing when the web has no text yet', () => {
   const t = (key) => en[key];
   assert.equal(hasMessage('cat.VEHICLE.fuel.PETROL'), true);

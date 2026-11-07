@@ -15,4 +15,12 @@ export class GrantPermissionDto {
   @IsOptional()
   @IsBoolean()
   canManageComplaints?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  canManagePayouts?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  canManageCommissions?: boolean;
 }

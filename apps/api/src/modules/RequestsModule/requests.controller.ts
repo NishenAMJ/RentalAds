@@ -26,6 +26,7 @@ class DeleteDto {
   @IsString() @MaxLength(1000) @Matches(/\S/) reason!: string;
 }
 import { PrismaService } from '../../common/prisma.service';
+import { AdminActivityService } from '../admin/admin-activity.service';
 
 @ApiTags('requests')
 @Controller('requests')
@@ -34,6 +35,7 @@ export class RequestsController {
   constructor(
     private requestsService: RequestsService,
     private prisma: PrismaService,
+    private activity: AdminActivityService,
   ) {}
 
   @Post()
@@ -74,12 +76,24 @@ export class RequestsController {
   @Patch(':id/work')
   @UseGuards(AdminPermissionGuard)
   @RequirePermission('canApproveListings')
-  work(
+  async work(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateRequestWorkDto,
   ) {
-    return this.requestsService.updateWork(user.authUserId, id, body);
+    const result = await this.requestsService.updateWork(
+      user.authUserId,
+      id,
+      body,
+    );
+    await this.activity.record(
+      user.authUserId,
+      'REQUEST_WORK_UPDATED',
+      'REQUEST',
+      id,
+      'Rental request queue details updated',
+    );
+    return result;
   }
 
   @Patch(':id/close')
@@ -111,6 +125,18 @@ export class RequestsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: DeleteDto,
   ) {
-    return this.requestsService.removeAdmin(u.authUserId, id, body.reason);
+    const result = await this.requestsService.removeAdmin(
+      u.authUserId,
+      id,
+      body.reason,
+    );
+    await this.activity.record(
+      u.authUserId,
+      'REQUEST_REMOVED',
+      'REQUEST',
+      id,
+      'Rental request removed by admin',
+    );
+    return result;
   }
 }

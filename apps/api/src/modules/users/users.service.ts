@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -18,9 +19,39 @@ export class UsersService {
         canApproveListings: true,
         canManageAdmins: true,
         canManageComplaints: true,
+        canManagePayouts: true,
       },
     });
     return { ...user, adminPermission: permissions };
+  }
+
+  async requestOwnerVerification(authUser: AuthenticatedUser) {
+    const user = await this.findOrCreate(authUser);
+    if (user.ownerVerificationStatus === 'REQUESTED')
+      throw new ConflictException(
+        'Your verification request is already pending',
+      );
+    if (user.ownerVerificationStatus === 'VERIFIED')
+      throw new ConflictException('Your account is already verified');
+    if (user.accountStatus === 'SUSPENDED')
+      throw new BadRequestException(
+        'Suspended accounts cannot request verification',
+      );
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ownerVerificationStatus: 'REQUESTED',
+        ownerVerificationRequestedAt: new Date(),
+        ownerVerificationReviewedAt: null,
+        ownerVerificationNote: null,
+      },
+      select: {
+        ownerVerificationStatus: true,
+        ownerVerificationRequestedAt: true,
+        ownerVerificationReviewedAt: true,
+        ownerVerificationNote: true,
+      },
+    });
   }
   async findOrCreate(
     authUser: AuthenticatedUser,
@@ -31,7 +62,7 @@ export class UsersService {
     try {
       return await this.prisma.user.upsert({
         where: { authUserId: authUser.authUserId },
-        update: {},
+        update: { email: authUser.email },
         create: {
           authUserId: authUser.authUserId,
           email: authUser.email,
@@ -47,7 +78,13 @@ export class UsersService {
         const existing = await this.prisma.user.findUnique({
           where: { authUserId: authUser.authUserId },
         });
-        if (existing) return existing;
+        if (existing) {
+          if (existing.email !== authUser.email)
+            throw new ConflictException(
+              'This email is already linked to another account',
+            );
+          return existing;
+        }
         throw new ConflictException(
           'This email is already linked to another account',
         );

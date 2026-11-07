@@ -47,6 +47,10 @@ function build(overrides: {
       findMany: jest.fn().mockResolvedValue([]),
       deleteMany: op('notification.deleteMany'),
     },
+    bookingReview: {
+      findMany: jest.fn().mockResolvedValue([]),
+      deleteMany: op('bookingReview.deleteMany'),
+    },
     match: { updateMany: op('match.updateMany') },
     $transaction: jest.fn().mockResolvedValue([]),
   };
@@ -69,6 +73,9 @@ describe('AccountService.exportData', () => {
       { select: Record<string, boolean> },
     ];
     expect(complaintQuery[0].select).not.toHaveProperty('adminNotes');
+    expect(prisma.bookingReview.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { reviewerId: 'u1' } }),
+    );
   });
 
   it('fails for an unknown account', async () => {
@@ -83,7 +90,13 @@ describe('AccountService.deleteAccount', () => {
   beforeEach(() => deleteUser.mockReset());
 
   it('scrubs personal data in one transaction and anonymises the account', async () => {
-    const { prisma, service } = build({});
+    deleteUser.mockResolvedValue({ error: null });
+    const { prisma, service } = build({
+      env: {
+        SUPABASE_URL: 'https://x.supabase.co',
+        SUPABASE_SERVICE_ROLE_KEY: 'k',
+      },
+    });
     const result = await service.deleteAccount(authUser);
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(prisma.listing.updateMany).toHaveBeenCalledWith(
@@ -101,15 +114,30 @@ describe('AccountService.deleteAccount', () => {
     expect(prisma.notification.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'u1' },
     });
+    expect(prisma.bookingReview.deleteMany).toHaveBeenCalledWith({
+      where: { reviewerId: 'u1' },
+    });
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
       data: {
         email: 'deleted+u1@deleted.invalid',
         authUserId: 'deleted:u1',
         phone: null,
+        ownerVerificationStatus: 'NOT_REQUESTED',
+        ownerVerificationRequestedAt: null,
+        ownerVerificationReviewedAt: null,
+        ownerVerificationNote: null,
       },
     });
-    expect(result).toEqual({ deleted: true, signInRemoved: false });
+    expect(result).toEqual({ deleted: true, signInRemoved: true });
+  });
+
+  it('does not alter account data when identity removal is not configured', async () => {
+    const { prisma, service } = build({});
+    await expect(service.deleteAccount(authUser)).rejects.toThrow(
+      'Account deletion is not available right now',
+    );
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('also removes the sign-in identity when a service key is configured', async () => {
@@ -127,18 +155,18 @@ describe('AccountService.deleteAccount', () => {
     expect(deleteUser).toHaveBeenCalledWith('auth-1');
   });
 
-  it('still succeeds when the identity provider call fails', async () => {
+  it('does not alter account data when the identity provider call fails', async () => {
     deleteUser.mockResolvedValue({ error: new Error('boom') });
-    const { service } = build({
+    const { prisma, service } = build({
       env: {
         SUPABASE_URL: 'https://x.supabase.co',
         SUPABASE_SERVICE_ROLE_KEY: 'k',
       },
     });
-    await expect(service.deleteAccount(authUser)).resolves.toEqual({
-      deleted: true,
-      signInRemoved: false,
-    });
+    await expect(service.deleteAccount(authUser)).rejects.toThrow(
+      'We could not remove your sign-in',
+    );
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('refuses to delete administrator accounts', async () => {

@@ -36,7 +36,7 @@ function MyListings() {
     finally { inFlight.current = false; setBusy(null); }
   }
   return <>
-    <div className="dashboard-heading"><div><p className="eyebrow">Your owner workspace</p><h1>Good homes. <em>In good hands.</em></h1><p className="intro">Follow your submissions and keep our team up to date.</p></div><ActionLink href="/owner/start">+ Add a property</ActionLink></div>
+    <div className="dashboard-heading"><div><p className="eyebrow">Your owner workspace</p><h1>Good homes. <em>In good hands.</em></h1><p className="intro">Follow your submissions and keep our team up to date.</p><ActionLink href="/owner/verification">Owner identity &amp; authority check</ActionLink><ActionLink href="/owner/commissions">Commissions &amp; fees</ActionLink></div><ActionLink href="/owner/start">+ Add a property</ActionLink></div>
         {!loading && !pager.error && listings.length > 0 && <section className="dashboard-summary" aria-label="Properties on this page"><div><strong>{listings.length}</strong><span>Properties on this page</span></div><div><strong>{listings.filter(item => item.status === "PENDING_APPROVAL").length}</strong><span>Awaiting review on this page</span></div><div><strong>{listings.filter(item => item.status === "ACTIVE").length}</strong><span>Active on this page</span></div></section>}
     <div className="section-heading compact"><h2>Your properties</h2><span className="muted small-copy">Page {pager.page} · Latest submissions first</span></div>
     {message && <div className="feedback-toast" role="status"><span>✓ {message}</span><Button variant="ghost" aria-label="Dismiss confirmation" onClick={() => setMessage("")}>×</Button></div>}

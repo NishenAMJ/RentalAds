@@ -11,7 +11,7 @@ export function ItemCard({ listing }: { listing: ItemListing }) {
   const category = categoryById(listing.category);
   const name = listing.title ?? listing.areaText;
   return <article className="listing-card">
-    <Link href={`/item/${listing.id}`} aria-label={`${name}, ${listing.areaText}`}>
+    <Link href={`/item/${listing.id}`}>
       {listing.photoUrls[0]
         ? <PropertyImage className="property-photo" src={listing.photoUrls[0]} alt={name} width={640} height={420} sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 400px" />
         : <div className="photo-placeholder">{t("rent.photoSoon")}</div>}

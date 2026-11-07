@@ -1,14 +1,25 @@
 import type { Booking, Listing } from '@prisma/client';
 import { formatCalendarDate, todayInSriLanka } from './booking-rules';
 
-type BookingWithListing = Booking & { listing: Listing };
+type BookingWithListing = Booking & {
+  listing: Listing;
+  review?: { rating: number } | null;
+};
 
-/** A booking whose rental period has ended is shown as completed without needing a background job. */
+/**
+ * What to show for a booking. Two states are worked out from the clock so no background job is needed:
+ * a paid rental whose period has ended is COMPLETED, and an unpaid one whose 30-minute hold has run out is EXPIRED.
+ */
 function displayStatus(booking: Booking, now: Date) {
-  return booking.status === 'CONFIRMED' &&
-    booking.endDate <= todayInSriLanka(now)
-    ? 'COMPLETED'
-    : booking.status;
+  if (booking.status === 'CONFIRMED' && booking.endDate <= todayInSriLanka(now))
+    return 'COMPLETED' as const;
+  if (
+    booking.status === 'PENDING_PAYMENT' &&
+    booking.expiresAt !== null &&
+    booking.expiresAt <= now
+  )
+    return 'EXPIRED' as const;
+  return booking.status;
 }
 
 /**
@@ -37,6 +48,9 @@ export function toBookingView(
     expiresAt: booking.expiresAt,
     paidAt: booking.paidAt,
     createdAt: booking.createdAt,
+    ...(viewer === 'renter'
+      ? { reviewRating: booking.review?.rating ?? null }
+      : {}),
     cancelledBy: booking.cancelledBy,
     cancelReason: booking.cancelReason,
     listing: {

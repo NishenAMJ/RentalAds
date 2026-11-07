@@ -52,11 +52,13 @@ Build it from the Dockerfile (`apps/api/Dockerfile`, build context = repository 
 | `ENABLED_CATEGORIES` | | Comma-separated, e.g. `PROPERTY,VEHICLE`, to open categories one at a time |
 | `ENABLE_API_DOCS` | | `true` publishes `/docs`; off by default in production |
 | `TRUSTED_PROXY_CIDRS` | behind a proxy | Only the proxy's exact addresses. Never a catch-all range. |
-| `SUPABASE_SERVICE_ROLE_KEY` | optional | Lets "delete my account" also remove the sign-in identity. Server-side only. |
+| `SUPABASE_SERVICE_ROLE_KEY` | required for account deletion | Lets "delete my account" also remove the sign-in identity. Server-side only; without it, a deleted account's old login may still authenticate. |
 
 Point your host's health check at `GET /health/ready`: it returns 503 when the database is unreachable.
 
-**Run one instance at first.** Rate limiting counts in memory, so several instances multiply the limits (see ARCHITECTURE.md, *Known limitations*).
+The API and website Docker runtime stages run as the unprivileged `node` user and install production dependencies only.
+
+**Run one API instance at first.** Rate limiting counts in memory, so several instances multiply the limits (see ARCHITECTURE.md, *Known limitations*). Configure shared throttler storage before scaling the API horizontally.
 
 ## 4. The website
 
@@ -67,7 +69,7 @@ Build from `apps/web/Dockerfile`, or `pnpm --filter web build` and `pnpm --filte
 | `NEXT_PUBLIC_API_URL` | The API's public address |
 | `NEXT_PUBLIC_SITE_URL` | The website's own origin (sitemap, canonical links) |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sign-in |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | Shown on the legal pages |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | **Required before launch.** A monitored support address shown on help and legal pages; the example value is a placeholder. |
 
 The same values must be present when the server starts, because the Content-Security-Policy is built from them.
 
@@ -80,6 +82,8 @@ Do these in order, and do not skip the sandbox pass.
 3. Complete PayHere's merchant verification for live mode and register your website domain in their dashboard, following their current instructions.
 4. Set the live merchant ID and secret, set `PAYHERE_SANDBOX=false`, redeploy the API, and make one small real booking and refund yourself.
 5. Update the Terms page if you changed any `CANCEL_*` value or the service fee.
+
+Before the first real booking, settle the owner payout, deposit custody and dispute, and support-response policies in [LAUNCH-READINESS.md](LAUNCH-READINESS.md). The current payout and refund work is manual.
 
 ## 6. After deploying
 

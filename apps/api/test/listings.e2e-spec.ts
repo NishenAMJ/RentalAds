@@ -92,6 +92,9 @@ describe('Users and listings HTTP flow', () => {
             phone: null,
             createdAt: new Date(),
             ...create,
+            accountStatus: create.accountStatus ?? 'ACTIVE',
+            suspendedAt: create.suspendedAt ?? null,
+            suspensionReason: create.suspensionReason ?? null,
           };
           users.push(user);
           return Promise.resolve(user);
@@ -114,6 +117,7 @@ describe('Users and listings HTTP flow', () => {
       },
       match: { updateMany: () => Promise.resolve({ count: 0 }) },
       notification: { create: () => Promise.resolve({}) },
+      adminActivity: { create: () => Promise.resolve({}) },
       // The service passes ready-made operations; running them all is equivalent for this in-memory store.
       $transaction: (operations: Promise<unknown>[]) => Promise.all(operations),
       listing: {
@@ -221,6 +225,13 @@ describe('Users and listings HTTP flow', () => {
       role: 'ADMIN',
       phone: null,
       createdAt: new Date(),
+      accountStatus: 'ACTIVE',
+      suspendedAt: null,
+      suspensionReason: null,
+      ownerVerificationStatus: 'NOT_REQUESTED',
+      ownerVerificationRequestedAt: null,
+      ownerVerificationReviewedAt: null,
+      ownerVerificationNote: null,
     }));
   });
   afterAll(async () => {
@@ -476,10 +487,16 @@ describe('Users and listings HTTP flow', () => {
     Object.assign(listings[0], { internalNotes: 'private-note-marker' });
     for (const path of ['/listings', `/listings/${listing.id}`]) {
       const response = await call().get(path).expect(200);
-      expect(response.text).not.toMatch(
-        /ownerContact|ownerId|94712345678|internalNotes|private-note-marker/,
+      const publicListing =
+        path === '/listings' ? response.body.data[0] : response.body;
+      expect(publicListing).not.toHaveProperty('ownerContact');
+      expect(publicListing).not.toHaveProperty('ownerId');
+      expect(publicListing).not.toHaveProperty('internalNotes');
+      expect(JSON.stringify(publicListing)).not.toContain('94712345678');
+      expect(JSON.stringify(publicListing)).not.toContain(
+        'private-note-marker',
       );
-      expect(response.text).toContain(listing.id);
+      expect(publicListing.id).toBe(listing.id);
     }
     await call()
       .patch(`/listings/${listing.id}/approve`)

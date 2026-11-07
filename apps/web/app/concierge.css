@@ -250,6 +250,24 @@ a.category-tile:hover, a.category-tile:focus-visible { border-color: var(--prima
 .summary-card dt { color: var(--muted); }
 .summary-card dd { margin: 0; font-weight: 600; }
 .summary-card .button { margin-top: auto; }
+.admin-dashboard { display: grid; gap: 24px; }
+.admin-attention { display: grid; gap: 12px; }
+.admin-attention-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+.admin-attention-heading h2 { margin: 0; font-size: 21px; }
+.admin-attention-heading p { margin: 0; }
+.admin-attention-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.admin-attention-list li { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; }
+.admin-attention-count { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--warning-bg); color: var(--text); font-weight: 700; }
+.admin-attention-copy h3 { margin: 0; font-size: 15px; }
+.admin-attention-copy p, .admin-attention-empty { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+.admin-attention-empty { padding: 16px; border-radius: 10px; background: var(--surface-soft); }
+.complaint-admin-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.complaint-admin-fields label { display: grid; gap: 6px; font-weight: 600; }
+.complaint-admin-fields textarea { width: 100%; min-height: 80px; resize: vertical; }
+.complaint-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.booking-dispute { grid-column: 1 / -1; display: grid; gap: 8px; }
+.booking-dispute .notice p + p { margin-top: 8px; }
+@media (max-width: 600px) { .admin-attention-list li { grid-template-columns: 38px minmax(0, 1fr); } .admin-attention-list li .button { grid-column: 2; justify-self: start; } }
 .booking-panel { display: grid; gap: 14px; }
 .booking-panel label { display: grid; gap: 6px; font-size: 14px; }
 .booking-quote { margin: 0; }
@@ -265,3 +283,6 @@ a.category-tile:hover, a.category-tile:focus-visible { border-color: var(--prima
 .cancel-panel p { margin: 0; }
 .block-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .block-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; }
+.photo-edit-row { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; margin: 0 0 12px; padding: 0; }
+.photo-edit-row li { display: grid; gap: 4px; justify-items: start; }
+.photo-edit-row img { border-radius: 10px; object-fit: cover; }

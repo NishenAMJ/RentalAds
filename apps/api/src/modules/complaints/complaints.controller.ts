@@ -20,7 +20,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { PrismaService } from '../../common/prisma.service';
 import { ComplaintsService } from './complaints.service';
-import { CreateComplaintDto } from './dto/create-complaint.dto';
+import {
+  CreateComplaintDto,
+  CreateDisputeDto,
+  MyDisputeQuery,
+} from './dto/create-complaint.dto';
 import { UpdateComplaintDto } from './dto/update-complaint.dto';
 
 @ApiTags('complaints')
@@ -44,6 +48,23 @@ export class ComplaintsController {
       : null;
     return this.complaintsService.create(dto, reporter?.id);
   }
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Post('disputes')
+  @UseGuards(ThrottlerGuard, AuthGuard)
+  createDispute(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateDisputeDto,
+  ) {
+    return this.complaintsService.createDispute(user.authUserId, dto);
+  }
+  @Get('disputes/mine')
+  @UseGuards(AuthGuard)
+  myDispute(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: MyDisputeQuery,
+  ) {
+    return this.complaintsService.myDispute(user.authUserId, query.bookingId);
+  }
   @Get()
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canManageComplaints')
@@ -54,9 +75,10 @@ export class ComplaintsController {
   @UseGuards(AuthGuard, AdminPermissionGuard)
   @RequirePermission('canManageComplaints')
   update(
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateComplaintDto,
   ) {
-    return this.complaintsService.updateStatus(id, dto.status, dto.adminNotes);
+    return this.complaintsService.updateStatus(id, dto, user.authUserId);
   }
 }

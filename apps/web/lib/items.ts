@@ -27,6 +27,7 @@ export interface ItemListing {
   id: string;
   reference?: string | null;
   category: string;
+  ownerVerified?: boolean;
   title: string | null;
   description: string | null;
   attributes: Record<string, string | number | boolean> | null;
@@ -41,7 +42,7 @@ export interface ItemListing {
   createdAt: string;
 }
 
-export type BookingStatus = "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+export type BookingStatus = "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "EXPIRED";
 
 export interface BookingView {
   id: string;
@@ -58,6 +59,7 @@ export interface BookingView {
   expiresAt: string | null;
   paidAt: string | null;
   createdAt: string;
+  reviewRating?: number | null;
   listing: { id: string; reference: string | null; category: string; title: string | null; areaText: string; photoUrl: string | null };
   ownerContact?: string;
   renterContact?: string;

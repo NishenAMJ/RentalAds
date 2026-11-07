@@ -55,8 +55,7 @@ export function SiteHeader() {
       <nav id="site-navigation" className={adminView ? "" : "public-nav"} data-open={menuExpanded} aria-label={adminView ? "Account navigation" : "Main navigation"}>
         {!navigationLoading && !adminView && (
           <>
-            <Link href="/categories" aria-current={pathname === "/categories" ? "page" : undefined}>{t("nav.categories")}</Link>
-            <Link href="/listings" aria-current={pathname === "/listings" ? "page" : undefined}>{t("nav.explore")}</Link>
+            <Link href="/categories" aria-current={pathname === "/categories" || pathname.startsWith("/c/") ? "page" : undefined}>{t("nav.explore")}</Link>
             <Link className="nav-cta" href="/renter/new" aria-current={pathname === "/renter/new" ? "page" : undefined}>{t("nav.find")}</Link>
             <Link href="/owner/start" aria-current={pathname === "/owner/start" ? "page" : undefined}>{t("nav.owners")}</Link>
             {user && (
@@ -91,7 +90,7 @@ export function SiteHeader() {
         )}
         <LanguageSwitcher />
         <ThemeToggle />
-        {user && <Link className="avatar" href="/account" aria-label="Account and privacy"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg></Link>}
+        {user && <Link className="avatar account-nav-link" href="/account" aria-label="Account and privacy" title="Account and privacy" aria-current={pathname === "/account" ? "page" : undefined}><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6" /><path d="M4.2 20a7.8 7.8 0 0 1 15.6 0" /></svg></Link>}
       </nav>
       {error && (
         <p role="alert" className="notice error">

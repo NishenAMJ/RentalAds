@@ -30,5 +30,7 @@ export interface AdminSummary {
   listings?: { pending: number; active: number; inactive: number };
   requests?: { open: number; unassigned: number };
   bookings?: { upcoming: number; refundDue: number };
+  payouts?: { dueCount: number; dueAmount: number };
+  commissions?: { dueCount: number; dueAmount: number };
   complaints?: { open: number };
 }

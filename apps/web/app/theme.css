@@ -16,8 +16,8 @@
   --background: #f6f7f8; --foreground: #16181a; --muted: #5d636b;
   --surface: #ffffff; --surface-2: #f0f2f3; --surface-soft: #eef0f2; --secondary: #e8ebed;
   --input-bg: #ffffff; --border: #dfe2e5; --border-strong: #c3c8cd;
-  --accent: #0b8a5f; --primary: #0b8a5f; --primary-hover: #086f4c; --on-accent: #ffffff;
-  --brass: #5d636b; --focus: #0b8a5f;
+  --accent: #087a53; --primary: #087a53; --primary-hover: #066443; --on-accent: #ffffff;
+  --brass: #5d636b; --focus: #087a53;
   --success: #0b6b49; --success-bg: #dff3ea; --warning: #7a5200; --warning-bg: #fbefce;
   --danger: #b0342c; --danger-bg: #fdeae8; --info-bg: #e3edf8;
   --shadow-card: 0 1px 2px #1618201a, 0 6px 18px #16182010;
@@ -29,8 +29,8 @@
     --background: #f6f7f8; --foreground: #16181a; --muted: #5d636b;
     --surface: #ffffff; --surface-2: #f0f2f3; --surface-soft: #eef0f2; --secondary: #e8ebed;
     --input-bg: #ffffff; --border: #dfe2e5; --border-strong: #c3c8cd;
-    --accent: #0b8a5f; --primary: #0b8a5f; --primary-hover: #086f4c; --on-accent: #ffffff;
-    --brass: #5d636b; --focus: #0b8a5f;
+    --accent: #087a53; --primary: #087a53; --primary-hover: #066443; --on-accent: #ffffff;
+    --brass: #5d636b; --focus: #087a53;
     --success: #0b6b49; --success-bg: #dff3ea; --warning: #7a5200; --warning-bg: #fbefce;
     --danger: #b0342c; --danger-bg: #fdeae8; --info-bg: #e3edf8;
     --shadow-card: 0 1px 2px #1618201a, 0 6px 18px #16182010;
@@ -95,7 +95,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .brand { font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
 .brand span { color: var(--accent); margin-left: 6px; font-weight: 600; }
 .brand::after { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-left: 7px; vertical-align: middle; }
-.site-header nav { font-size: 14px; gap: 6px; }
+.site-header nav { display: flex; align-items: center; font-size: 14px; gap: 6px; }
 .site-header nav a { padding: 7px 14px; min-height: 36px; border-radius: 8px; color: var(--foreground); display: inline-flex; align-items: center; }
 .site-header nav a:hover { background: var(--surface-soft); text-decoration: none; }
 .site-header nav a[aria-current="page"] { background: var(--surface-soft); color: var(--foreground); text-decoration: none; }

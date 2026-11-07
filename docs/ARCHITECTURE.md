@@ -84,7 +84,7 @@ The checkout form is signed by the API, so changing the amount in the browser fa
 
 ### 5. Privacy as a feature
 
-Owner and renter phone numbers are never public. For homes, the team introduces people. For items, each side sees the other's number only **after the booking is paid**, which is also what protects the platform's fee. Public location is rounded to a grid, and exact coordinates are admin-only.
+Owner and renter phone numbers are never public. For homes, the team introduces people. For items, each side sees the other's number only **after the booking is paid**, which is also what protects the platform's fee. Public location is rounded to a grid; exact coordinates are available to the listing owner and authorized staff, not public visitors.
 
 ### 6. Editing cannot bypass moderation
 
@@ -106,8 +106,13 @@ The policy is configuration (`CANCEL_*` settings) and is mirrored in the Terms p
 erDiagram
   USER ||--o{ LISTING : owns
   USER ||--o{ BOOKING : rents
+  USER ||--o{ BOOKING_REVIEW : rates
+  USER ||--o{ OWNER_PAYOUT : receives
   USER ||--o{ RENTAL_REQUEST : submits
   LISTING ||--o{ BOOKING : "booked as"
+  LISTING ||--o{ BOOKING_REVIEW : rated
+  BOOKING ||--o| BOOKING_REVIEW : reviewed
+  BOOKING ||--o| OWNER_PAYOUT : payout
   LISTING ||--o{ LISTING_BLOCK : "owner calendar"
   LISTING ||--o{ MATCH : "recommended in"
   RENTAL_REQUEST ||--o{ MATCH : has
@@ -144,11 +149,10 @@ Money is stored as whole Sri Lankan rupees (integers), never floats. Migrations 
 Stated plainly, because they are the roadmap:
 
 - Rate limiting counts in memory, so it is per process. Several API instances need shared storage first.
-- Owner payouts and deposit returns are tracked by hand; there is no payout ledger yet.
-- Refunds are manual (see decision 7).
-- No reviews or ratings, and no identity verification of owners.
-- Replacing photos replaces all of them; individual photos cannot be removed.
-- Item listings have a pickup area but no map pin.
-- Event gear is booked as a single unit; a `quantity` of more than one is informational.
+- Refunds, deposit returns and owner transfers are performed manually. The admin payout ledger records amounts due and transfers recorded, but it does not move money or track deposit custody separately.
+- PayHere sandbox and live merchant flows have not been exercised; payment setup and real transactions remain launch work.
+- Ratings are numeric only, one per completed paid booking. There are no written reviews or review moderation workflow.
+- Owner verification records a request and a staff decision after a manual check outside the app. The app collects no identity documents and does not define the evidence or checking procedure.
+- Event gear is booked as a single unit; its `quantity` field is informational and is not used to reserve multiple units.
 - Sinhala and Tamil text needs a native speaker's review.
 - No load testing has been done.

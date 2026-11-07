@@ -147,6 +147,7 @@ export class ListingsService {
     if (query.searchLatitude !== undefined) return this.browseRadius(query);
     const listings = await this.prisma.listing.findMany({
       where: { ...this.publicWhere(), ...listingFilterWhere(query) },
+      include: { owner: { select: { ownerVerificationStatus: true } } },
       orderBy: listingOrderBy(query.sort),
       ...pageWindow(query),
     });
@@ -170,6 +171,7 @@ export class ListingsService {
           ...listingFilterWhere(query),
           ...boundingBox(lat!, lng!, radius!, true),
         },
+        include: { owner: { select: { ownerVerificationStatus: true } } },
         orderBy: { id: 'asc' },
         take: 250,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -221,9 +223,29 @@ export class ListingsService {
   async detail(id: string) {
     const listing = await this.prisma.listing.findFirst({
       where: { id, ...this.publicWhere() },
+      include: { owner: { select: { ownerVerificationStatus: true } } },
     });
     if (!listing) throw new NotFoundException('Listing not found');
     return toPublicListing(listing);
+  }
+  async ratings(id: string) {
+    const listing = await this.prisma.listing.findFirst({
+      where: { id, ...this.publicWhere() },
+      select: { id: true },
+    });
+    if (!listing) throw new NotFoundException('Listing not found');
+    const result = await this.prisma.bookingReview.aggregate({
+      where: { listingId: id },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    return {
+      average:
+        result._avg.rating === null
+          ? null
+          : Number(result._avg.rating.toFixed(1)),
+      count: result._count._all,
+    };
   }
   async adminLookup(identifier: string) {
     const listing = await this.prisma.listing.findFirst({
@@ -326,6 +348,31 @@ export class ListingsService {
 
     const data: Prisma.ListingUpdateInput = {};
     let material = false;
+    if (input.latitude !== undefined || input.longitude !== undefined) {
+      const latitude =
+        input.latitude === undefined
+          ? listing.latitude == null
+            ? null
+            : Number(listing.latitude)
+          : input.latitude;
+      const longitude =
+        input.longitude === undefined
+          ? listing.longitude == null
+            ? null
+            : Number(listing.longitude)
+          : input.longitude;
+      if ((latitude == null) !== (longitude == null))
+        throw new BadRequestException(
+          'Set or clear both map coordinates together',
+        );
+      data.latitude = latitude;
+      data.longitude = longitude;
+      data.mapLink =
+        latitude != null && longitude != null
+          ? (mapLinkFor({ latitude, longitude }) ?? null)
+          : null;
+      material = true;
+    }
     if (input.rate !== undefined) data.monthlyRent = input.rate;
     if (input.monthlyRent !== undefined) data.monthlyRent = input.monthlyRent;
     if (input.ratePeriod !== undefined) {

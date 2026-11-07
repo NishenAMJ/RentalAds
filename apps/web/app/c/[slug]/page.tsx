@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { ItemBrowse } from "@/components/item-browse";
 import { categoryBySlug, categoryLabel } from "@/lib/categories";
 
@@ -18,5 +19,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CategoryBrowsePage({ params }: Props) {
   const { slug } = await params;
+  if (!categoryBySlug(slug)?.item) notFound();
   return <ItemBrowse key={slug} slug={slug} />;
 }

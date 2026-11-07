@@ -12,91 +12,81 @@ type Complaint = {
   targetType: string;
   targetId: string;
   reason: string;
-  status: string;
+  status: "OPEN" | "REVIEWING" | "RESOLVED";
   adminNotes: string | null;
+  resolution: string | null;
+  resolvedAt: string | null;
   createdAt: string;
+  disputeType: string | null;
+  bookingId: string | null;
+  reporter: { email: string } | null;
+  resolvedBy: { email: string } | null;
+  booking: { id: string; startDate: string; endDate: string; status: string; renterId: string; listing: { ownerId: string; title: string | null; areaText: string } } | null;
 };
+
+function ComplaintRow({ complaint, updating, onUpdate }: { complaint: Complaint; updating: boolean; onUpdate: (id: string, status: Complaint["status"], adminNotes: string, resolution: string) => Promise<void> }) {
+  const [adminNotes, setAdminNotes] = useState(complaint.adminNotes ?? "");
+  const [resolution, setResolution] = useState(complaint.resolution ?? "");
+  const isDispute = Boolean(complaint.bookingId);
+  const statusLabel = complaint.status.charAt(0) + complaint.status.slice(1).toLowerCase();
+  return <tr>
+    <td><span className="ui-badge">{isDispute ? `booking · ${complaint.disputeType?.toLowerCase().replaceAll("_", " ")}` : complaint.targetType.toLowerCase()}</span>
+      {complaint.booking && <p>{complaint.booking.listing.title ?? complaint.booking.listing.areaText} · {complaint.booking.startDate} – {complaint.booking.endDate}</p>}
+      {!isDispute && <code>{complaint.targetId}</code>}<p>{complaint.reason}</p></td>
+    <td>{complaint.reporter?.email ?? "Unknown reporter"}<br />{new Date(complaint.createdAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</td>
+    <td><Badge tone={complaint.status === "RESOLVED" ? "success" : complaint.status === "REVIEWING" ? "warning" : "danger"}>{statusLabel}</Badge>
+      {complaint.resolvedBy && complaint.resolvedAt && <p className="small-copy">By {complaint.resolvedBy.email} on {new Date(complaint.resolvedAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</p>}</td>
+    <td><label>Private team notes<textarea rows={2} maxLength={5000} value={adminNotes} onChange={event => setAdminNotes(event.target.value)} disabled={updating || complaint.status === "RESOLVED"} /></label>
+      <label>Resolution summary<textarea rows={2} minLength={10} maxLength={5000} value={resolution} onChange={event => setResolution(event.target.value)} disabled={updating || complaint.status === "RESOLVED"} aria-describedby={`resolution-help-${complaint.id}`} /></label>
+      <p id={`resolution-help-${complaint.id}`} className="small-copy">Required to resolve. Money transfers remain separate.</p>
+      <button type="button" className="ui-button ui-button-ghost" onClick={() => void onUpdate(complaint.id, complaint.status, adminNotes, resolution)} disabled={updating || complaint.status === "RESOLVED"}>
+      {updating ? "Saving…" : "Save notes"}
+    </button><div className="segmented status-set" role="group" aria-label={`Set ${isDispute ? "case" : "complaint"} status`}>
+      {(["OPEN", "REVIEWING", "RESOLVED"] as const).map(status => <button key={status} type="button" aria-pressed={complaint.status === status} onClick={() => void onUpdate(complaint.id, status, adminNotes, resolution)} disabled={updating || complaint.status === "RESOLVED" || complaint.status === status || (status === "RESOLVED" && resolution.trim().length < 10)}>
+        {status === "OPEN" ? "Mark open" : status === "REVIEWING" ? "Mark reviewing" : "Resolve case"}
+      </button>)}
+    </div></td>
+  </tr>;
+}
 
 function AdminComplaints() {
   const pager = usePaginated<Complaint>("/complaints", true);
   const { items: complaints, setItems: setComplaints, loading, error } = pager;
   const [actionError, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"ALL" | "OPEN" | "REVIEWING" | "RESOLVED">("ALL");
-  const count = (status: string) => complaints.filter((c) => c.status === status).length;
-  const shown = filter === "ALL" ? complaints : complaints.filter((c) => c.status === filter);
+  const [filter, setFilter] = useState<"ALL" | "OPEN" | "REVIEWING" | "RESOLVED">("OPEN");
+  const count = (status: string) => complaints.filter(complaint => complaint.status === status).length;
+  const shown = filter === "ALL" ? complaints : complaints.filter(complaint => complaint.status === filter);
 
-  async function updateStatus(id: string, status: string) {
-    setUpdatingId(id);
-    setError(null);
+  async function updateStatus(id: string, status: Complaint["status"], adminNotes: string, resolution: string) {
+    setUpdatingId(id); setError(null);
     try {
-      const updated = await apiRequest<Complaint>(
-        `/complaints/${encodeURIComponent(id)}`,
-        {
-          method: "PATCH",
-          authenticated: true,
-          body: JSON.stringify({ status }),
-        },
-      );
-      setComplaints((prev) => prev.map((c) => (c.id === id ? updated : c)));
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update complaint.",
-      );
-    } finally {
-      setUpdatingId(null);
-    }
+      const updated = await apiRequest<Complaint>(`/complaints/${encodeURIComponent(id)}`, {
+        method: "PATCH", authenticated: true,
+        body: JSON.stringify({ status, adminNotes, ...(resolution.trim() ? { resolution: resolution.trim() } : {}) }),
+      });
+      setComplaints(previous => previous.map(complaint => complaint.id === id ? updated : complaint));
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Failed to update case."); }
+    finally { setUpdatingId(null); }
   }
 
-  return (
-    <div className="admin-workspace">
-      <div className="page-heading"><div><p className="eyebrow">Trust and quality</p><h1>Complaint review</h1><p className="intro">Review reports and keep their progress clear for the team.</p></div>
-        <div className="segmented" role="group" aria-label="Filter complaints on this page">
-          {(["ALL", "OPEN", "REVIEWING", "RESOLVED"] as const).map((value) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>
-            {value === "ALL" ? "All" : value.charAt(0) + value.slice(1).toLowerCase()} <span className="seg-count">{value === "ALL" ? complaints.length : count(value)}</span></button>)}
-        </div></div>
-      {loading && <p role="status">Loading...</p>}
-      {error && (
-        <p role="alert">
-          {error} <button onClick={pager.retry}>Retry</button>
-        </p>
-      )}
-      {actionError && <p className="notice error" role="alert">{actionError}</p>}
-      {!loading && !error && shown.length === 0 && (
-        <p className="notice">No complaints{filter === "ALL" ? "" : ` marked ${filter.toLowerCase()}`} on this page.</p>
-      )}
-      <div className="stack">
-        {shown.map((c) => (
-          <div key={c.id} className="panel complaint-row">
-            <div className="complaint-main">
-              <div className="complaint-meta"><span className="ui-badge">{c.targetType.toLowerCase()}</span><code className="record-reference">{c.targetId}</code>
-                <Badge tone={c.status === "RESOLVED" ? "success" : c.status === "REVIEWING" ? "warning" : "danger"}>{c.status.toLowerCase()}</Badge>
-                <span className="record-reference">Logged {new Date(c.createdAt).toLocaleDateString("en-GB", { timeZone: "Asia/Colombo" })}</span></div>
-              <p className="complaint-reason">{c.reason}</p>
-              {c.adminNotes && <p className="team-note">Team notes: {c.adminNotes}</p>}
-            </div>
-            <div className="segmented status-set" role="group" aria-label="Set complaint status">
-              {(["OPEN", "REVIEWING", "RESOLVED"] as const).map((s) => (
-                <button key={s} type="button" aria-pressed={c.status === s} onClick={() => updateStatus(c.id, s)} disabled={updatingId !== null || c.status === s}>
-                  {s === "OPEN" ? "Mark open" : s === "REVIEWING" ? "Mark reviewing" : "Mark resolved"}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
+  return <div className="admin-workspace">
+    <div className="page-heading"><div><p className="eyebrow">Trust and resolution</p><h1>Cases and complaints</h1><p className="intro">Review reports, record a private team note, and document the resolution. Updates are sent to both people when a booking is linked; money transfers remain manual.</p></div>
+      <div className="segmented" role="group" aria-label="Filter cases on this page">
+        {(["OPEN", "REVIEWING", "RESOLVED", "ALL"] as const).map(status => <button key={status} type="button" aria-pressed={filter === status} onClick={() => setFilter(status)}>
+          {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()} <span className="seg-count">{status === "ALL" ? complaints.length : count(status)}</span></button>)}
       </div>
-      <Pagination
-        {...pager}
-        loading={loading || updatingId !== null}
-        onPageChange={pager.setPage}
-      />
     </div>
-  );
+    {loading && <p role="status">Loading cases…</p>}
+    {error && <p role="alert">{error} <button onClick={pager.retry}>Retry</button></p>}
+    {actionError && <p className="notice error" role="alert">{actionError}</p>}
+    {!loading && !error && shown.length === 0 && <p className="notice">No {filter === "ALL" ? "cases" : filter.toLowerCase() + " cases"} on this page.</p>}
+    {shown.length > 0 && <div className="table-wrap"><table><thead><tr><th scope="col">Report</th><th scope="col">Reporter / date</th><th scope="col">Status</th><th scope="col">Review / update</th></tr></thead>
+      <tbody>{shown.map(complaint => <ComplaintRow key={complaint.id} complaint={complaint} updating={updatingId !== null} onUpdate={updateStatus} />)}</tbody></table></div>}
+    <Pagination {...pager} loading={loading || updatingId !== null} onPageChange={pager.setPage} />
+  </div>;
 }
+
 export default function AdminComplaintsPage() {
-  return (
-    <RequireSession>
-      <AdminComplaints />
-    </RequireSession>
-  );
+  return <RequireSession><AdminComplaints /></RequireSession>;
 }
