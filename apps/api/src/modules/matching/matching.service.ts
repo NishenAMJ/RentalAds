@@ -1,4 +1,4 @@
-import type { MatchStatus } from '@prisma/client';
+import { CommissionStatus, MatchStatus, PropertyFeeType } from '@prisma/client';
 import type { RentalRequest } from '@prisma/client';
 import { isPropertyListing, type PropertyListing } from './property-listing';
 import {
@@ -311,36 +311,38 @@ export class MatchingService {
     if (request.status === 'CLOSED')
       throw new BadRequestException('This request is closed');
 
-    const updated = await this.prisma.match.update({
-      where: { id },
-      data: { status },
-    });
-
-    if (status === 'RENTED' && !match.commission) {
-      const admin = authUserId
-        ? await this.prisma.user.findUnique({
-            where: { authUserId },
-            select: { id: true },
-          })
-        : null;
-      const rent = agreedRent ?? match.listing.monthlyRent;
-      const rate = commissionRatePercent ?? 30;
-      const amount = Math.round((rent * rate) / 100);
-      await this.prisma.propertyCommission.create({
-        data: {
-          matchId: match.id,
-          listingId: match.listing.id,
-          ownerId: match.listing.ownerId,
-          feeType: 'COMMISSION',
-          agreedRent: rent,
-          ratePercent: rate,
-          amount,
-          status: 'DUE',
-          createdById: admin?.id ?? null,
-        },
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.match.update({
+        where: { id },
+        data: { status },
       });
-    }
 
-    return updated;
+      if (status === MatchStatus.RENTED && !match.commission) {
+        const admin = authUserId
+          ? await tx.user.findUnique({
+              where: { authUserId },
+              select: { id: true },
+            })
+          : null;
+        const rent = agreedRent ?? match.listing.monthlyRent;
+        const rate = commissionRatePercent ?? 30;
+        const amount = Math.round((rent * rate) / 100);
+        await tx.propertyCommission.create({
+          data: {
+            matchId: match.id,
+            listingId: match.listing.id,
+            ownerId: match.listing.ownerId,
+            feeType: PropertyFeeType.COMMISSION,
+            agreedRent: rent,
+            ratePercent: rate,
+            amount,
+            status: CommissionStatus.DUE,
+            createdById: admin?.id ?? null,
+          },
+        });
+      }
+
+      return updated;
+    });
   }
 }

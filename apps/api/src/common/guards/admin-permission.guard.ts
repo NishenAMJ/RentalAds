@@ -37,10 +37,7 @@ export class AdminPermissionGuard implements CanActivate {
       include: { adminPermission: true },
     });
 
-    const hasPermission =
-      dbUser?.adminPermission?.[required] ||
-      (required === 'canManageCommissions' &&
-        dbUser?.adminPermission?.canManagePayouts);
+    const hasPermission = dbUser?.adminPermission?.[required];
     if (!hasPermission) {
       throw new ForbiddenException(`${required} permission required`);
     }

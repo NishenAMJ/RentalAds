@@ -107,7 +107,19 @@ export async function mockBackend(browserPage: Page, role: Role): Promise<Backen
     const { pathname: path } = url;
     const method = request.method();
 
-    if (path === "/users/me") return json(route, { authUserId: USER_ID, role, adminPermission: admin ? { canApproveListings: true, canManageAdmins: false, canManageComplaints: true } : null });
+    if (path === "/users/me") return json(route, {
+      authUserId: USER_ID,
+      role,
+      adminPermission: admin
+        ? {
+            canApproveListings: true,
+            canManageAdmins: false,
+            canManageComplaints: true,
+            canManageCommissions: true,
+            canManagePayouts: true,
+          }
+        : null,
+    });
     if (path === "/users/me/export") return json(route, { exportedAt: NOW, account: { id: USER_ID, email: user.email }, listings: [], rentalRequests: [], complaints: [], notifications: [] });
     if (path === "/users/me/delete") return json(route, { deleted: true, signInRemoved: false });
     if (path === "/notifications/unread-count") return json(route, { count: 0 });

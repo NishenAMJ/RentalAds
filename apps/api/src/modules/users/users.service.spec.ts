@@ -43,7 +43,7 @@ describe('UsersService identity conflicts', () => {
       existing,
     );
     expect(prisma.user.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: {} }),
+      expect.objectContaining({ update: { email: identity.email } }),
     );
   });
 });
