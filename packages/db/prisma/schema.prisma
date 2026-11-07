@@ -41,6 +41,8 @@ model User {
   ownerVerificationReviewedAt DateTime?
   ownerVerificationNote String?
 
+  @@index([ownerVerificationStatus, createdAt])
+
   listings        Listing[]
   rentalRequests  RentalRequest[] @relation("RenterRequests")
   assignedRequests RentalRequest[] @relation("AssignedRequests")

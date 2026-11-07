@@ -1,4 +1,8 @@
-import { AccountStatus, OwnerVerificationStatus, UserRole } from '@prisma/client';
+import {
+  AccountStatus,
+  OwnerVerificationStatus,
+  UserRole,
+} from '@prisma/client';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQuery } from '../../../common/pagination';
 

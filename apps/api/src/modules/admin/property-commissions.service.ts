@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CommissionStatus, PropertyFeeType } from '@prisma/client';
 import { PrismaService } from '../../common/prisma.service';
 import { AdminActivityService } from './admin-activity.service';
 import type {
@@ -11,7 +12,7 @@ import type {
   PropertyCommissionQueryDto,
   UpdatePropertyCommissionDto,
 } from './dto/property-commission.dto';
-import { pageResult, pageWindow, type PaginationQuery } from '../../common/pagination';
+import { pageWindow, type PaginationQuery } from '../../common/pagination';
 
 @Injectable()
 export class PropertyCommissionsService {
@@ -109,21 +110,27 @@ export class PropertyCommissionsService {
     if (dto.matchId) {
       const match = await this.prisma.match.findUnique({
         where: { id: dto.matchId },
-        select: { id: true, listingId: true, commission: { select: { id: true } } },
+        select: {
+          id: true,
+          listingId: true,
+          commission: { select: { id: true } },
+        },
       });
       if (!match) throw new NotFoundException('Match not found');
       if (match.listingId !== listing.id)
         throw new BadRequestException('Match does not belong to this listing');
       if (match.commission)
-        throw new ConflictException('A commission record already exists for this match');
+        throw new ConflictException(
+          'A commission record already exists for this match',
+        );
     }
 
-    const feeType = dto.feeType ?? 'COMMISSION';
+    const feeType = dto.feeType ?? PropertyFeeType.COMMISSION;
     let agreedRent: number | null = null;
     let ratePercent: number | null = null;
     let amount = dto.amount;
 
-    if (feeType === 'COMMISSION') {
+    if (feeType === PropertyFeeType.COMMISSION) {
       agreedRent = dto.agreedRent ?? listing.monthlyRent;
       ratePercent = dto.ratePercent ?? 30;
       if (amount === undefined) {
@@ -144,18 +151,20 @@ export class PropertyCommissionsService {
         agreedRent,
         ratePercent,
         amount,
-        status: dto.status ?? 'DUE',
+        status: dto.status ?? CommissionStatus.DUE,
         note: dto.note?.trim() || null,
         paymentReference: dto.paymentReference?.trim() || null,
-        invoicedAt: dto.status === 'INVOICED' ? now : null,
-        paidAt: dto.status === 'PAID' ? now : null,
+        invoicedAt: dto.status === CommissionStatus.INVOICED ? now : null,
+        paidAt: dto.status === CommissionStatus.PAID ? now : null,
         createdById: admin.id,
       },
     });
 
     await this.activity.record(
       authUserId,
-      feeType === 'COMMISSION' ? 'PROPERTY_COMMISSION_CREATED' : 'LISTING_FEE_CREATED',
+      feeType === PropertyFeeType.COMMISSION
+        ? 'PROPERTY_COMMISSION_CREATED'
+        : 'LISTING_FEE_CREATED',
       'PROPERTY_COMMISSION',
       commission.id,
       `Created ${feeType.toLowerCase()} of LKR ${amount} for listing ${listing.id}`,
@@ -164,7 +173,11 @@ export class PropertyCommissionsService {
     return commission;
   }
 
-  async update(authUserId: string, id: string, dto: UpdatePropertyCommissionDto) {
+  async update(
+    authUserId: string,
+    id: string,
+    dto: UpdatePropertyCommissionDto,
+  ) {
     const admin = await this.prisma.user.findUnique({
       where: { authUserId },
       select: { id: true },
@@ -178,11 +191,16 @@ export class PropertyCommissionsService {
     if (!existing) throw new NotFoundException('Commission record not found');
 
     let amount = dto.amount;
-    let agreedRent = dto.agreedRent !== undefined ? dto.agreedRent : existing.agreedRent;
-    let ratePercent = dto.ratePercent !== undefined ? dto.ratePercent : existing.ratePercent;
+    const agreedRent =
+      dto.agreedRent !== undefined ? dto.agreedRent : existing.agreedRent;
+    const ratePercent =
+      dto.ratePercent !== undefined ? dto.ratePercent : existing.ratePercent;
 
-    if (amount === undefined && (dto.agreedRent !== undefined || dto.ratePercent !== undefined)) {
-      if (existing.feeType === 'COMMISSION') {
+    if (
+      amount === undefined &&
+      (dto.agreedRent !== undefined || dto.ratePercent !== undefined)
+    ) {
+      if (existing.feeType === PropertyFeeType.COMMISSION) {
         const rent = agreedRent ?? existing.listing.monthlyRent;
         const rate = ratePercent ?? 30;
         amount = Math.round((rent * rate) / 100);
@@ -197,10 +215,16 @@ export class PropertyCommissionsService {
         ...(ratePercent !== undefined ? { ratePercent } : {}),
         ...(amount !== undefined ? { amount } : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
-        ...(dto.paymentReference !== undefined ? { paymentReference: dto.paymentReference?.trim() || null } : {}),
+        ...(dto.paymentReference !== undefined
+          ? { paymentReference: dto.paymentReference?.trim() || null }
+          : {}),
         ...(dto.note !== undefined ? { note: dto.note?.trim() || null } : {}),
-        ...(dto.status === 'INVOICED' && !existing.invoicedAt ? { invoicedAt: now } : {}),
-        ...(dto.status === 'PAID' && !existing.paidAt ? { paidAt: now } : {}),
+        ...(dto.status === CommissionStatus.INVOICED && !existing.invoicedAt
+          ? { invoicedAt: now }
+          : {}),
+        ...(dto.status === CommissionStatus.PAID && !existing.paidAt
+          ? { paidAt: now }
+          : {}),
         updatedById: admin.id,
       },
     });
@@ -253,4 +277,3 @@ export class PropertyCommissionsService {
     };
   }
 }
-

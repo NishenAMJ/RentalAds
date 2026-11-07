@@ -489,7 +489,7 @@ export class BookingsService {
         },
       });
       if (!claimed.count) return 'ALREADY_PROCESSED' as const;
-      return canConfirm ? 'CONFIRMED' as const : 'REFUND_DUE' as const;
+      return canConfirm ? ('CONFIRMED' as const) : ('REFUND_DUE' as const);
     });
 
     if (outcome === 'ALREADY_PROCESSED') return;
