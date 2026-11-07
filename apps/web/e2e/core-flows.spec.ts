@@ -221,7 +221,7 @@ test.describe("administrators", () => {
     const backend = await mockBackend(page, "ADMIN");
     await signIn(page);
     await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.getByRole("heading", { name: "Your platform at a glance." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Platform overview" })).toBeVisible();
 
     await page.getByRole("link", { name: "Listings", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Listings", exact: true })).toBeVisible();
@@ -233,6 +233,7 @@ test.describe("administrators", () => {
     const backend = await mockBackend(page, "ADMIN");
     await signIn(page);
     await page.getByRole("link", { name: "Rental requests" }).first().click();
+    await page.getByRole("button", { name: "Review request" }).click();
     await page.getByRole("button", { name: "Find potential matches" }).click();
 
     const best = page.locator(".match-suggestion", { hasText: "SL-000101" });
@@ -361,7 +362,7 @@ test.describe("item rentals", () => {
     await mockBackend(page, "RENTER");
     await signIn(page);
     await page.getByText("My activity").click();
-    await page.getByRole("link", { name: "My bookings" }).click();
+    await page.getByRole("link", { name: "Item bookings" }).click();
     await expect(page.getByRole("heading", { name: "My bookings" })).toBeVisible();
     await expect(page.getByText("Waiting for payment")).toBeVisible();
     await expect(page.getByRole("button", { name: "Pay now" })).toBeVisible();
@@ -371,7 +372,7 @@ test.describe("item rentals", () => {
     const backend = await mockBackend(page, "RENTER");
     await signIn(page);
     await page.getByText("My activity").click();
-    await page.getByRole("link", { name: "My bookings" }).click();
+    await page.getByRole("link", { name: "Item bookings" }).click();
     const card = page.locator(".booking-card", { hasText: "Confirmed" });
     await expect(card.getByRole("link", { name: "Message on WhatsApp" })).toHaveAttribute("href", "https://wa.me/94770000000");
     await card.getByRole("button", { name: "Cancel booking" }).click();
@@ -389,7 +390,7 @@ test.describe("item rentals", () => {
     const backend = await mockBackend(page, "OWNER");
     await signIn(page);
     await page.getByText("My activity").click();
-    await page.getByRole("link", { name: "Bookings of my items" }).click();
+    await page.getByRole("link", { name: "Bookings for my items" }).click();
     await expect(page.getByText("+94771234567")).toBeVisible();
     await page.getByRole("button", { name: "Cancel booking" }).click();
     const confirm = page.getByRole("button", { name: "Cancel and refund the renter" });
@@ -462,6 +463,7 @@ test.describe("item rentals", () => {
     await signIn(page);
     await page.getByRole("link", { name: "Bookings", exact: true }).click();
     await page.getByRole("button", { name: "Refunds due" }).click();
+    await page.getByText("Record refund").click();
     await expect(page.getByText(/Refund LKR 26,500 to the renter/)).toBeVisible();
     await page.getByLabel(/PayHere refund reference/).fill("RF-77");
     await page.getByRole("button", { name: "I have sent this refund" }).click();

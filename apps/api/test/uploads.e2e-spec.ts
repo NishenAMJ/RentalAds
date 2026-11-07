@@ -53,7 +53,12 @@ describe('Authenticated property image uploads', () => {
     process.env.SUPABASE_PUBLISHABLE_KEY = 'test-key';
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
-      .useValue({ user: { upsert } })
+      .useValue({
+        user: {
+          upsert,
+          findUnique: jest.fn().mockResolvedValue(null),
+        },
+      })
       .overrideProvider(CLOUDINARY)
       .useValue({ uploader: { upload_stream: uploadStream } })
       .compile();

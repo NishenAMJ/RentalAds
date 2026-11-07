@@ -48,7 +48,7 @@ test.describe("accessibility, signed-in pages", () => {
     await mockBackend(page, "OWNER");
     await signIn(page);
     await page.getByText("My activity").click();
-    await page.getByRole("link", { name: "My bookings" }).click();
+    await page.getByRole("link", { name: "Item bookings" }).click();
     await expect(page.getByRole("heading", { name: "My bookings" })).toBeVisible();
     await expectNoViolations(page, "my bookings");
 
@@ -75,7 +75,7 @@ test.describe("accessibility, signed-in pages", () => {
   test("admin screens", async ({ page }) => {
     await mockBackend(page, "ADMIN");
     await signIn(page);
-    await expect(page.getByRole("heading", { name: "Your platform at a glance." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Platform overview" })).toBeVisible();
     await expectNoViolations(page, "admin overview");
     for (const [link, heading] of [["Listings", "Listings"], ["Bookings", "Bookings"], ["Rental requests", "Rental requests"]] as const) {
       await page.getByRole("link", { name: link, exact: true }).click();

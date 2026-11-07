@@ -260,7 +260,7 @@ describe('bookings service', () => {
     } = {},
   ) {
     const notifySend = jest.fn().mockResolvedValue(undefined);
-    const bookingUpdate = jest.fn().mockResolvedValue({});
+    const bookingUpdate = jest.fn().mockResolvedValue({ count: 1 });
     const prisma = {
       listing: { findFirst: jest.fn().mockResolvedValue(listing) },
       booking: {
@@ -280,6 +280,7 @@ describe('bookings service', () => {
             Promise.resolve({ ...pendingBooking, ...data, listing }),
           ),
         update: bookingUpdate,
+        updateMany: bookingUpdate,
       },
       listingBlock: { findFirst: jest.fn().mockResolvedValue(null) },
       $queryRaw: jest.fn().mockResolvedValue([]),
