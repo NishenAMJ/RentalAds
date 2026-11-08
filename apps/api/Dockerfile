@@ -29,8 +29,7 @@ COPY --from=build --chown=node:node /repo/apps/web/package.json ./apps/web/packa
 COPY --from=build --chown=node:node /repo/packages/db/package.json ./packages/db/package.json
 COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
 COPY --from=build --chown=node:node /repo/packages/db/prisma ./packages/db/prisma
-RUN CI=true corepack pnpm install --prod --filter . --filter api... --filter db --frozen-lockfile \
-  && chown -R node:node /repo
+RUN CI=true corepack pnpm install --prod --filter . --filter api... --filter db --frozen-lockfile
 EXPOSE 3001
 # Apply any new migrations, then start. Safe to repeat: already-applied migrations are skipped.
 USER node

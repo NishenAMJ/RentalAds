@@ -36,8 +36,7 @@ COPY --from=build --chown=node:node /repo/packages/db/package.json ./packages/db
 COPY --from=build --chown=node:node /repo/apps/web/.next ./apps/web/.next
 COPY --from=build --chown=node:node /repo/apps/web/public ./apps/web/public
 COPY --from=build --chown=node:node /repo/apps/web/next.config.* ./apps/web/
-RUN CI=true corepack pnpm install --prod --filter web --frozen-lockfile \
-  && chown -R node:node /repo
+RUN CI=true corepack pnpm install --prod --filter web --frozen-lockfile
 EXPOSE 3000
 USER node
 CMD ["pnpm", "--filter", "web", "start"]
