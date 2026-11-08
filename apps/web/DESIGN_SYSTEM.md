@@ -6,7 +6,7 @@ Use a quiet, editorial layout with generous space, warm surfaces and purposeful 
 
 Tokens live in `app/concierge.css`, imported after the legacy stylesheet. Tailwind aliases expose the same semantic colors and typography. Existing pages inherit shared controls, typography and surfaces; the three redesigned screens use the new component classes.
 
-| Token | Value | Use |
+| Token | Value |  Use |
 | --- | --- | --- |
 | Background | `#f8f7f2` | Warm ivory canvas |
 | Foreground | `#203e35` | Primary text |
@@ -42,6 +42,7 @@ Public cards consume `PublicListing`. Owner cards consume `OwnerListing` only un
 - Availability confirmation has a busy state, a dismissible persistent live-region confirmation, and a recoverable error state. Loading uses skeletons. Empty/error states always provide a next action.
 - Every field has an associated label. Errors use `aria-invalid` and `aria-describedby`; form-level errors receive focus. Step changes focus the heading. Status badges include text as well as color.
 - Honor reduced motion. Maintain visible keyboard focus and the skip-to-content link. Mobile layouts collapse to one column without changing the semantic order.
+
 
 ## Verification
 
