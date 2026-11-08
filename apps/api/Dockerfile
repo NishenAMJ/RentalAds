@@ -33,4 +33,4 @@ RUN CI=true corepack pnpm install --prod --filter . --filter api... --filter db 
 EXPOSE 3001
 # Apply any new migrations, then start. Safe to repeat: already-applied migrations are skipped.
 USER node
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy --schema packages/db/prisma/schema.prisma && node apps/api/dist/main.js"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy --schema packages/db/prisma/schema.prisma && echo 'Starting NestJS API...' && node --trace-uncaught apps/api/dist/main.js"]
