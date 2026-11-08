@@ -16,6 +16,7 @@ Statuses describe the current repository and decisions still needed. A completed
 - **Islandwide scope.** The homes pilot is not restricted to Colombo. The search area picker now includes Kandy, Galle and Gampaha quick-start buttons; help text updated to "islandwide across Sri Lanka".
 - **Item rental isolation for homes pilot.** `ENABLED_CATEGORIES=PROPERTY` is now the documented default in `.env.example`. The booking service already blocks PROPERTY listings from the item booking flow (`isItemCategory` check). Item and vehicle booking is switched off during the pilot.
 - API and web container runtime stages now install production dependencies and run as the unprivileged `node` user.
+- A production API switch (`ENABLE_ITEM_BOOKINGS=false`) now returns 404 for all booking and payment routes, including the PayHere callback. The web build switch (`NEXT_PUBLIC_ENABLE_ITEM_BOOKINGS=false`) hides item browsing and booking links. Deployment verification steps are in [DEPLOYMENT.md](DEPLOYMENT.md); keep both disabled until the payment and launch exercises below are complete.
 - Account deletion now requires and calls Supabase identity deletion before anonymising app data; missing credentials or provider failures are reported as failures so users can retry. Set `SUPABASE_SERVICE_ROLE_KEY` for this feature.
 - PayHere success callbacks now re-read and conditionally claim a booking inside the transaction, preventing concurrent duplicate notifications from processing it twice. Sandbox exercise remains open below.
 

@@ -26,6 +26,7 @@ export const CATEGORIES: readonly CategoryInfo[] = [
 
 export const categoryBySlug = (slug: string) => CATEGORIES.find((category) => category.slug === slug);
 export const categoryById = (id: string | undefined) => CATEGORIES.find((category) => category.id === (id ?? "PROPERTY"));
+export const itemBookingsEnabled = () => process.env.NEXT_PUBLIC_ENABLE_ITEM_BOOKINGS === "true";
 
 export const categoryNameKey = (id: CategoryInfo["id"]) => `cat.${id}.name` as MessageKey;
 export const categoryBlurbKey = (id: CategoryInfo["id"]) => `cat.${id}.blurb` as MessageKey;

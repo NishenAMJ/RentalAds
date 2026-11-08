@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ItemDetail } from "@/components/item-detail";
-import { categoryLabel } from "@/lib/categories";
+import { categoryLabel, itemBookingsEnabled } from "@/lib/categories";
 import { fetchPublicItem } from "@/lib/server-api";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!itemBookingsEnabled()) return { title: "Item not available", robots: { index: false } };
   const { id } = await params;
   const item = await fetchPublicItem(id);
   if (!item || item.category === "PROPERTY") return { title: "Item not available", robots: { index: false } };
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ItemPage({ params }: Props) {
+  if (!itemBookingsEnabled()) notFound();
   const { id } = await params;
   const item = await fetchPublicItem(id);
   if (item?.category === "PROPERTY") redirect(`/property/${id}`);

@@ -50,6 +50,7 @@ Build it from the Dockerfile (`apps/api/Dockerfile`, build context = repository 
 | `BOOKING_SERVICE_FEE_PERCENT` | | Default 10 |
 | `CANCEL_FULL_REFUND_DAYS`, `CANCEL_PARTIAL_REFUND_DAYS`, `CANCEL_PARTIAL_REFUND_PERCENT` | | Defaults 7 / 2 / 50. Keep the Terms page in step with these. |
 | `ENABLED_CATEGORIES` | | Comma-separated, e.g. `PROPERTY,VEHICLE`, to open categories one at a time |
+| `ENABLE_ITEM_BOOKINGS` | | Set `false` to make all `/bookings` and `/payments` API paths return 404, including PayHere notify. Defaults to enabled if unset; explicitly set `false` until booking/payment is ready. |
 | `ENABLE_API_DOCS` | | `true` publishes `/docs`; off by default in production |
 | `TRUSTED_PROXY_CIDRS` | behind a proxy | Only the proxy's exact addresses. Never a catch-all range. |
 | `SUPABASE_SERVICE_ROLE_KEY` | required for account deletion | Lets "delete my account" also remove the sign-in identity. Server-side only; without it, a deleted account's old login may still authenticate. |
@@ -72,6 +73,19 @@ Build from `apps/web/Dockerfile`, or `pnpm --filter web build` and `pnpm --filte
 | `NEXT_PUBLIC_CONTACT_EMAIL` | **Required before launch.** A monitored support address shown on help and legal pages; the example value is a placeholder. |
 
 The same values must be present when the server starts, because the Content-Security-Policy is built from them.
+
+For a homes-only pilot, build the web app with `NEXT_PUBLIC_ENABLE_ITEM_BOOKINGS=false` and run the API with `ENABLE_ITEM_BOOKINGS=false`. The web flag hides item category pages, item detail pages, item links in account navigation, and item URLs from the sitemap. The API flag is the security boundary: it returns 404 for every `/bookings/*` and `/payments/*` request, including the public PayHere notification endpoint. Set both values to `true` only after payment and booking readiness is verified. Leave both PayHere credentials unset until then. These web values are public build-time settings; the API flag must be configured in the API runtime environment.
+
+After deployment, verify from a machine outside the hosting network (replace the host with your API origin):
+
+```bash
+curl -i https://api.example.lk/bookings/quote
+curl -i -X POST https://api.example.lk/bookings
+curl -i -X POST https://api.example.lk/bookings/00000000-0000-4000-8000-000000000000/checkout
+curl -i -X POST https://api.example.lk/payments/payhere/notify
+```
+
+Each must return `404`. Also verify the website returns `404` for `/c/vehicles`, `/c/equipment`, `/c/event-gear`, and `/item/<id>`, and that those pages are absent from `/sitemap.xml`. These checks demonstrate route availability only; complete the open launch items in [REMAINING-WORK.md](REMAINING-WORK.md) before inviting users.
 
 ## 5. Going live with payments
 

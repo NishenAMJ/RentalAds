@@ -12,11 +12,29 @@ class CorsProbeController {
   }
 }
 
+@Controller('bookings')
+class BookingProbeController {
+  @Get('quote') get() {
+    return { ok: true };
+  }
+}
+
+@Controller('payments')
+class PaymentProbeController {
+  @Get('probe') get() {
+    return { ok: true };
+  }
+}
+
 describe('CORS configuration', () => {
   let app: INestApplication<App> | undefined;
   async function create(values: Record<string, string> = {}) {
     const module = await Test.createTestingModule({
-      controllers: [CorsProbeController],
+      controllers: [
+        CorsProbeController,
+        BookingProbeController,
+        PaymentProbeController,
+      ],
       providers: [
         {
           provide: ConfigService,
@@ -93,6 +111,23 @@ describe('CORS configuration', () => {
     const api = await create();
     const response = await request(api.getHttpServer()).get('/').expect(200);
     expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  });
+  it('hides every booking and payment route when item bookings are disabled', async () => {
+    const api = await create({ ENABLE_ITEM_BOOKINGS: 'false' });
+    for (const path of [
+      '/bookings/quote',
+      '/bookings/anything',
+      '/payments/payhere/notify',
+      '/payments/probe',
+    ]) {
+      await request(api.getHttpServer()).get(path).expect(404);
+    }
+    await request(api.getHttpServer()).get('/').expect(200);
+  });
+  it('keeps booking and payment routes available when explicitly enabled', async () => {
+    const api = await create({ ENABLE_ITEM_BOOKINGS: 'true' });
+    await request(api.getHttpServer()).get('/bookings/quote').expect(200);
+    await request(api.getHttpServer()).get('/payments/probe').expect(200);
   });
   it('defaults to localhost in development', async () => {
     const api = await create();

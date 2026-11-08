@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { isIP } from 'node:net';
+import type { NextFunction } from 'express';
 import helmet from 'helmet';
 import { requestLogger } from './common/request-logger';
 import type { Express, Request, Response } from 'express';
@@ -90,5 +91,14 @@ export function configureApp(app: INestApplication) {
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
+  if (config.get<string>('ENABLE_ITEM_BOOKINGS') === 'false') {
+    server.use((request: Request, response: Response, next: NextFunction) => {
+      if (/^\/(?:bookings|payments)(?:\/|$)/.test(request.path)) {
+        response.status(404).json({ statusCode: 404, message: 'Not found' });
+        return;
+      }
+      next();
+    });
+  }
   app.enableShutdownHooks();
 }

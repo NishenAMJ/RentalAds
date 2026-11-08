@@ -8,6 +8,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { NotificationsLink } from "./notifications-link";
 import { LanguageSwitcher } from "./language-switcher";
 import { useT } from "./i18n-provider";
+import { itemBookingsEnabled } from "@/lib/categories";
 /** Pages with their own slim top bar: the full navigation would only distract from the form. */
 const BARE_PATHS = ["/", "/login", "/reset-password"];
 
@@ -65,8 +66,10 @@ export function SiteHeader() {
                   <div className="nav-menu-panel">
                     <Link href="/owner/listings">{t("nav.myProperties")}</Link>
                     <Link href="/renter/dashboard">{t("nav.myRequests")}</Link>
-                    <Link href="/bookings" aria-current={pathname === "/bookings" ? "page" : undefined}>{t("nav.bookings")}</Link>
-                    <Link href="/owner/bookings" aria-current={pathname === "/owner/bookings" ? "page" : undefined}>{t("bookings.received.title")}</Link>
+                    {itemBookingsEnabled() && <>
+                      <Link href="/bookings" aria-current={pathname === "/bookings" ? "page" : undefined}>{t("nav.bookings")}</Link>
+                      <Link href="/owner/bookings" aria-current={pathname === "/owner/bookings" ? "page" : undefined}>{t("bookings.received.title")}</Link>
+                    </>}
                   </div>
                 </details>
                 <NotificationsLink pathname={pathname} />
